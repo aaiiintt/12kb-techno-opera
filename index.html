@@ -1,16 +1,33 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>15KB Techno Opera</title>
-<meta name="description" content="Sixty seconds of Silicon Valley, told with 81 dots and a synthesiser, in under 15 kilobytes.">
-<link rel="stylesheet" href="src/style.css">
-</head>
-<body>
-<h1 class="t"><span>15KB</span><span>Techno</span><span>Opera</span></h1>
-<nav class="n"><a id="p" role="button">Play</a><a href="about.html">Info</a></nav>
-<main class="s"><div id="w"><div id="g"></div></div></main>
-<script type="module" src="src/opera.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>15KB Techno Opera</title>
+    <meta
+      name="description"
+      content="A short interactive story that fits in 15 kilobytes. Played out using dots."
+    />
+    <link rel="stylesheet" href="src/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  </head>
+  <body>
+    <div class="bg-gradient" aria-hidden="true"></div>
+
+    <h1 class="t"><span>15KB</span><span>Techno</span><span>Opera</span></h1>
+    <nav class="n">
+      <a href="#play" id="play-btn" role="button">Play</a>
+      <a href="about.html">Info</a>
+    </nav>
+
+    <main class="stage" aria-label="15KB Techno Opera stage">
+      <div id="world" class="world">
+        <div id="grid" class="grid"></div>
+      </div>
+    </main>
+
+    <button id="replay" class="replay" type="button" aria-label="Replay animation">Replay</button>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
 </html>
