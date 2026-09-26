@@ -10,7 +10,7 @@
 
 The **15KB Techno Opera** is an interactive, browser-native audiovisual drama. Constrained to less than 15,360 bytes over the wire (gzipped), it achieves cinematic scale without WebGL, Canvas, pre-rendered video, or sampled audio files.
 
-The entire experience—visual staging, typographic motion, dramatic narrative, through-composed operatic score, formant vocal modeling, and spatial acoustics—is rendered in real time using native web primitives: **DOM**, **CSS Custom Properties**, **GSAP**, and the **Web Audio API**.
+The entire experience—visual staging, typographic motion, dramatic narrative, through-composed operatic score, formant vocal modeling, and spatial acoustics—is rendered in real time using native web primitives: **DOM**, **CSS Custom Properties**, **Web Audio API**, and an in-house timeline engine (**src/tween.js**).
 
 ---
 
@@ -98,20 +98,34 @@ The opera is through-composed across seven distinct musical and choreographic mo
 
 ---
 
+### Constraints
+
+- **Transfer Budget:** Under 15,360 bytes (15 KB) gzipped.
+- **Network:** No network requests after the page loads.
+- **Assets:** No audio samples, video files, Canvas, or WebGL.
+
+### Dependencies
+
+The page has no runtime dependencies. Animation uses `src/tween.js`, a 1.4 KB gzipped timeline and easing engine written for this project.
+
+---
+
 ## Wire Budget & Size Footprint
 
-The project enforces an absolute wire transfer constraint of **15,360 bytes (15 KB)** gzipped. The entire opera is packaged as a **self-contained single file** (`index.html`):
+The project enforces an absolute wire transfer constraint of **15,360 bytes (15 KB)** gzipped. The entire opera is packaged as a **self-contained single file** (`index.html`).
 
-| Asset | Description | Uncompressed | Gzipped |
+*Measurement method:* `node build.js` reports the gzipped size using zlib level 9 (`gzip -9`).
+
+| Asset | Description | Uncompressed | Gzipped (Level 9) |
 |---|---|---|---|
-| `index.html` | Self-contained single-file delivery bundle (HTML + CSS + Audio Engine + Choreography) | 48.6 KB | **13.49 KB** (13,818 B) |
+| `index.html` | Built production bundle (HTML + CSS + In-House Tween Engine + Audio + Cues) | 35.6 KB | **11.88 KB** (12,168 B) |
 | `about.html` | Standalone manifesto poster with dynamic subhead typography | 5.8 KB | **2.27 KB** (2,273 B) |
-| `src/` | Modular source files (`main.js`, `config.js`, `style.css`) for developer reference | 48.2 KB | **13.88 KB** (14,213 B) |
+| `src/tween.js` | In-house timeline and easing engine (minified) | 2.9 KB | **1.34 KB** (1,374 B) |
 
 **Total Opera Delivery (`index.html`):**
-*   **Uncompressed:** 48.6 KB (48,605 bytes)
-*   **Gzipped Wire Transfer:** **13.49 KB (13,818 bytes)**
-*   **Budget Margin:** **1,542 bytes under the strict 15 KB (15,360 byte) ceiling.**
+*   **Uncompressed:** 35.6 KB (35,626 bytes)
+*   **Gzipped Wire Transfer:** **11.88 KB (12,168 bytes)**
+*   **Budget Margin:** **3,192 bytes under the strict 15 KB (15,360 byte) ceiling.**
 
 ### Visual Integrity & Anti-Eclipse Blend Mode
 *   **Additive Screen Blending (`mix-blend-mode: screen`):** All dots render with additive optical blending over `#080706` dark velvet. Dark or dying pixels mathematically cannot occlude or darken neighboring lighter pixels, completely eliminating crescent moon or eclipse cutout artifacts during dynamic scale changes and entropy transitions.
@@ -127,6 +141,19 @@ The About page (`about.html`) is styled as a raw, bold Swiss poster manifesto:
 *   **Scale Reference:** Highlighted directly in the text:
     > *FOR REFERENCE 15KB IS 1/100TH OF A SECOND OF A YOUTUBE VIDEO.*
 *   **Unbroken Navigation:** Smooth vertical scrolling with a footlight fade gradient mask over the fixed bottom navigation (`PLAY` / `BACK`).
+
+---
+
+## Build
+
+Install dependencies and run the build script:
+
+```bash
+npm install
+npm run build
+```
+
+Always edit `src/index.src.html` or `src/tween.js`, never `index.html`. `build.js` minifies HTML, CSS (`clean-css`), and JavaScript (`terser`), inlines `src/tween.js`, and ensures the final gzipped output remains strictly within 15,360 bytes.
 
 ---
 

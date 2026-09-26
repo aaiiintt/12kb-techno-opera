@@ -1,4 +1,437 @@
-import { CONFIG, MODES, COLORS, MOTIF, ROOT, hz, SIZE, CENTER } from './config.js';
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>15KB Techno Opera</title>
+    <meta
+      name="description"
+      content="A short interactive story that fits in 15 kilobytes. Played out using dots."
+    />
+    <script>/* @include tween.js */</script>
+    <style>
+/* Register --dot-color as a real color so mood changes become
+   slow dissolves instead of hard cuts. */
+@property --dot-color {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #ffffff;
+}
+
+:root {
+  --dot-size: clamp(22px, 6.8vmin, 58px);
+  --gap: clamp(4px, 1.2vmin, 12px);
+  --font-swiss: 'Helvetica Neue', Helvetica, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --bg-deep: #080706;
+  --bg-glow: #18130f;
+  --ink-primary: #ffffff;
+  --ink-muted: rgba(255, 255, 255, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--ink-primary);
+  font-family: var(--font-swiss);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Velvet stage ground with warm footlight center */
+.bg-gradient {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 46%, var(--bg-glow) 0%, var(--bg-deep) 72%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* TITLE & NAV */
+.t {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 3vmin 3vw 0;
+  line-height: .82;
+  letter-spacing: -.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 8px rgba(255, 255, 255, 0.5),
+    0 0 22px rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  z-index: 20;
+  font-family: var(--font-swiss);
+}
+
+.t > span {
+  display: block;
+  width: max-content;
+  padding-right: 0.15em; /* Prevents glyph terminal and shadow truncation */
+}
+
+.t .sub {
+  display: block;
+  width: max-content;
+  white-space: nowrap;
+  margin-top: 2vmin;
+  padding-right: 0.15em;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 6px rgba(255, 255, 255, 0.4),
+    0 0 16px rgba(255, 255, 255, 0.2);
+  opacity: 0.92;
+}
+
+.n {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2vw 1.2vh;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  font-size: clamp(32px, 4.2vw, 40px);
+  font-weight: 900;
+  font-family: var(--font-swiss);
+  z-index: 25;
+}
+
+.n a {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 8px rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.n a:hover,
+.n a:focus-visible {
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px #ffffff,
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 24px rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  text-decoration-thickness: .15em;
+  text-underline-offset: .12em;
+  outline: 0;
+  transform: scale(1.08);
+}
+
+.n a:active {
+  transform: scale(0.92);
+}
+
+/* SUBTITLES */
+.cue {
+  position: fixed;
+  left: 50%;
+  bottom: 14vh;
+  transform: translateX(-50%);
+  z-index: 22;
+  max-width: 92vw;
+  padding: 0.06em 0.3em;
+  font-family: var(--font-swiss);
+  font-size: var(--cue-size, clamp(16px, 3.8vw, 56px));
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #ffffff;
+  background: #000000;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* STAGE & GRID */
+.stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--gap);
+  overflow: hidden;
+}
+
+/* The camera: translates/zooms so the hero stays center-frame */
+.world {
+  will-change: transform;
+  transform-origin: center;
+}
+
+.grid {
+  display: grid;
+  gap: var(--gap);
+  justify-content: center;
+  align-content: center;
+}
+
+.dot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--dot-color);
+  opacity: 0;
+  transform: scale(0);
+  will-change: transform, opacity;
+  mix-blend-mode: screen;
+  box-shadow: 
+    0 0 10px var(--dot-color),
+    0 0 25px var(--dot-color),
+    0 0 50px var(--dot-color);
+}
+
+/* Act VII Ghost Beloved: Expansive rose corona (pure colored light, NO white core) */
+.dot.ghost-aria {
+  box-shadow: 
+    0 0 16px var(--dot-color),
+    0 0 40px var(--dot-color),
+    0 0 85px var(--dot-color),
+    0 0 140px rgba(255, 30, 140, 0.45);
+}
+
+
+/* REPLAY BUTTON */
+.replay {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 2;
+  padding: 8px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease, color 0.2s ease, text-shadow 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.replay.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.replay:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%) translateY(-2px) scale(1.06);
+}
+
+.replay:active {
+  transform: translateX(-50%) translateY(1px) scale(0.94);
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    opacity: 0.75 !important;
+    transform: none !important;
+  }
+}
+
+    </style>
+  </head>
+  <body>
+    <div class="bg-gradient" aria-hidden="true"></div>
+
+    <h1 class="t">
+      <span>15KB</span>
+      <span>TECHNO</span>
+      <span>OPERA</span>
+      <span class="sub">81 DOTS. SEVEN ACTS. 15 KILOBYTES.</span>
+    </h1>
+    <nav class="n">
+      <a href="#play" id="play-btn" role="button">Play</a>
+      <a href="about.html">Info</a>
+    </nav>
+
+    <main class="stage" aria-label="15KB Techno Opera stage">
+      <div id="world" class="world">
+        <div id="grid" class="grid"></div>
+      </div>
+    </main>
+    <div id="cue" class="cue" aria-live="polite"></div>
+
+    <button id="replay" class="replay" type="button" aria-label="Replay animation">Replay</button>
+
+    <script>
+const SIZE = 9;
+const CENTER = (SIZE - 1) / 2;
+const ROOT = 130.81;
+const hz = (semi, root = ROOT) => root * Math.pow(2, semi / 12);
+
+const MODES = {
+  PENTA: [0, 2, 4, 7, 9],
+  WOUND: [0, 1, 6],
+  ARP_MAJ: [0, 4, 7, 12],
+  ARP_TENSION: [0, 1, 6, 12],
+  ARP_HARP: [0, 4, 7, 11, 12, 16, 19, 24],
+};
+
+const MOTIF = {
+  heroBirth: [0, 7, 12, 16],
+  heroDev: [12, 16, 19, 24, 21, 19],
+  heroLove: [16, 19, 21, 24],
+  belovedAnswer: [24, 21, 19, 16],
+  heroBetrayed: [12, 15, 18, 11],
+  heroWar: [11, 12, 11, 18],
+  heroTransfigured: [12, 16, 18, 19],
+  heroDying: [12, 16, 7],
+  aria: [19, 21, 23, 24],
+  ariaCadence: [21, 19, 16, 12],
+};
+
+const COLORS = {
+  soul: 'hsl(46, 100%, 54%)',
+  beloved: 'hsl(335, 100%, 54%)',
+  fusion: 'hsl(345, 100%, 62%)',
+  dusk: 'hsl(225, 75%, 16%)',
+  envy: 'hsl(110, 100%, 42%)',
+  rage: 'hsl(0, 100%, 48%)',
+  heroRage: 'hsl(0, 100%, 54%)',
+  ember: 'hsl(14, 95%, 22%)',
+  drain: 'hsl(245, 60%, 20%)',
+  lastEmber: 'hsl(18, 100%, 50%)',
+  memory: 'hsl(335, 100%, 58%)',
+  explore: [
+    'hsl(140, 100%, 45%)',
+    'hsl(195, 100%, 48%)',
+    'hsl(46, 100%, 54%)',
+    'hsl(285, 100%, 54%)',
+    'hsl(22, 100%, 50%)',
+    'hsl(46, 100%, 54%)',
+  ],
+  rowStripe: (d) => `hsl(${[46, 140, 195, 230, 280][Math.min(d, 4)]}, 100%, ${d === 0 ? 54 : 46}%)`,
+  // Synesthetic purple flood: hue shifts upward (272° -> 287°) and brightens as synth ascends
+  peace: (ring, step = 0) => `hsl(${272 + step * 5 + ring * 2}, 100%, ${48 + step * 2 + ring}%)`,
+  healing: [
+    'hsl(0, 100%, 48%)',
+    'hsl(14, 100%, 50%)',
+    'hsl(28, 100%, 52%)',
+    'hsl(38, 100%, 53%)',
+    'hsl(46, 100%, 54%)',
+  ],
+};
+
+const CUES = [
+  [0.5, 'VITA.', 1.4],
+  [8.5, 'AVANTI!', 1.2],
+  [13.8, 'AMORE.', 1.6],
+  [19.3, 'HELP!', 1.2],
+  [21.2, 'GELOSIA.', 1.4],
+  [25.0, 'VENDETTA!', 1.2],
+  [28.7, 'BASTA.', 1.6],
+  [32.0, 'PACE.', 1.6],
+  [46.5, 'SOLO.', 1.1],
+  [48.2, 'ADDIO.', 2.4],
+  [55.5, 'FINE.', 3.0],
+];
+
+const CONFIG = {
+  grid: { size: SIZE, center: CENTER },
+  loop: true,
+  sound: {
+    enabled: true,
+    volume: 0.85,
+    spatial: true,
+  },
+  acts: {
+    act1: { start: 0, heartbeats: 3 },
+    act2: {
+      start: 4.4,
+      rowGap: 0.48,
+      rowChord: [0, 4, 12, 16, 24],
+      wander: [
+        [4, 2],
+        [7, 3],
+        [6, 6],
+        [2, 5],
+        [3, 4],
+        [4, 4],
+      ],
+    },
+    act3: {
+      start: 12.0,
+      zoom: 1.15,
+      hopGap: 0.95,
+      heroDance: [[4, 4], [5, 4], [5, 5], [4, 5], [4, 4]],
+      belovedDance: [[6, 4], [5, 4], [4, 4], [5, 5], [5, 4]],
+    },
+    act4: {
+      start: 19.0,
+      gateStep: 0.55,
+      belovedCell: [5, 4],
+      heroFlee: [[4, 6], [4, 7], [4, 8]],
+    },
+    act5: {
+      start: 25.0,
+      zoom: 0.94,
+      hopGap: 0.38,
+      huntPath: [
+        [5, 7], [3, 6], [6, 6], [2, 5], [7, 5], [1, 4],
+        [4, 4], [7, 4], [2, 3], [5, 2], [3, 1], [4, 0],
+      ],
+    },
+    act6: {
+      start: 31.8,
+      zoom: 1.0,
+      peaceSpread: 0.22,
+      homePath: [[4, 1], [4, 2], [4, 3], [4, 4]],
+      memoryCell: [5, 4],
+      chordGap: 2.0,
+      // Synesthetic Ascending Progression: coupled chord root, pitches, cues, and room acoustics
+      ascension: [
+        { root: 0, chord: [0, 4, 7, 12, 14, 16], cue: 0.4, room: 2800 },
+        { root: 5, chord: [5, 9, 12, 16, 19, 21], cue: 1.8, room: 3100 },
+        { root: 7, chord: [7, 11, 14, 19, 21, 24], cue: 3.2, room: 3500 },
+        { root: 12, chord: [12, 16, 19, 21, 24, 28], cue: 4.6, room: 3900 },
+      ],
+    },
+    act7: {
+      start: 41.5,
+      spread: 0.4,
+      texture: 1.4,
+      noteEvery: 3,
+    },
+  },
+};
+
 
 const worldEl = document.getElementById('world');
 const grid = document.getElementById('grid');
@@ -449,6 +882,28 @@ function silence(tl, time, duration = 0.25) {
     masterGain.gain.setValueAtTime(0.0001, t);
     masterGain.gain.setValueAtTime(CONFIG.sound.volume, t + duration);
   });
+}
+
+function cue(tl, time, text, hold = 1.6) {
+  const el = document.getElementById('cue');
+  const len = Math.max(4, text.length);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  tl.call(() => {
+    if (isAmbient) return;
+    el.textContent = text;
+    el.style.visibility = 'visible';
+    el.getAnimations().forEach((a) => a.cancel());
+    if (reduced) return;
+    el.animate(
+      { clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] },
+      { duration: len * 55, easing: `steps(${len})`, fill: 'forwards' }
+    );
+  }, [], time);
+  tl.call(() => {
+    if (el.textContent !== text) return;
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.visibility = 'hidden';
+  }, [], time + len * 0.055 + hold);
 }
 
 // --- THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE ---
@@ -944,6 +1399,12 @@ function buildOpera() {
 
   opera.set(worldEl, { x: 0, y: 0, scale: 1 }, 0);
   opera.set(dots.map((d) => d.el), { opacity: 0, scale: 0 }, 0);
+  opera.call(() => {
+    const el = document.getElementById('cue');
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.visibility = 'hidden';
+  }, [], 0);
+  CUES.forEach(([t, text, hold]) => cue(opera, t, text, hold));
   opera.call(() => everyDot((d) => {
     d.el.className = 'dot';
     d.el.style.setProperty('--dot-color', COLORS.dusk);
@@ -990,6 +1451,7 @@ function fitTitle() {
   titleEl.style.fontSize = titleSize + 'px';
   if (subEl) {
     subEl.style.fontSize = (titleSize * (maxMainW / sW)) + 'px';
+    document.documentElement.style.setProperty('--cue-size', subEl.style.fontSize);
   }
 }
 
@@ -1092,6 +1554,7 @@ function stopOpera() {
     playBtn.textContent = 'Play';
     playBtn.setAttribute('aria-label', 'Play performance');
   }
+  document.getElementById('cue').style.visibility = 'hidden';
   buildOpera();
 }
 
@@ -1103,9 +1566,10 @@ if (urlParams.get('play') === '1') {
 }
 const seekSec = parseFloat(urlParams.get('seek'));
 if (!isNaN(seekSec) && opera) {
+  isAmbient = false;
   document.body.classList.add('playing');
   if (titleEl) titleEl.style.visibility = 'hidden';
-  opera.seek(seekSec, false);
+  opera.seek(seekSec);
 }
 
 if (playBtn) {
@@ -1134,3 +1598,7 @@ window.addEventListener('resize', () => {
   _cell = 0;
   fitTitle();
 });
+
+    </script>
+  </body>
+</html>
