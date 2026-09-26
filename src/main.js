@@ -564,57 +564,93 @@ function makeDeathMap() {
 // THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE
 // ============================================================
 
-// ACT I — BIRTH: Single PWM soul, sub-bass drone, biological lub-dub heartbeats
-function actBirth(tl, hero) {
-  const { start, heartbeats } = CONFIG.acts.birth;
-  const soul = at(hero.col, hero.row);
+// ============================================================
+// THE 7 ACTS: THROUGH-COMPOSED OPERATIC SCORE & CHOREOGRAPHY
+// ============================================================
 
-  camera(tl, start, { zoom: 2.2, dur: 0.1 });
-  camera(tl, start + 0.3, { zoom: 1.6, dur: 3.5 });
-
-  score(tl, start, () => setRoom(1800, 0.34, 0.1));
-
-  tl.call(() => {
-    soul.el.style.setProperty('--dot-color', COLORS.soul);
-  }, [], start);
-  tl.to(soul.el, { opacity: 0.95, scale: 1.1, duration: 1.4, ease: 'power2.out' }, start);
-
-  // Tenor opening fundamental: C3 (0 semitones) with Galway PWM breathing
-  score(tl, start, () => note(0, { dur: 2.2, vol: 0.16, attack: 0.04, voice: 'tenor' }));
-
-  for (let i = 0; i < heartbeats; i++) {
-    const hb = start + 1.4 + i * 0.85;
-    tl.to(soul.el, { scale: 1.3, duration: 0.12, ease: 'power2.out' }, hb)
-      .to(soul.el, { scale: 1.15, duration: 0.15, ease: 'power2.inOut' }, hb + 0.12)
-      .to(soul.el, { scale: 1.22, duration: 0.10, ease: 'power2.out' }, hb + 0.27)
-      .to(soul.el, { scale: 1.1, duration: 0.35, ease: 'power2.inOut' }, hb + 0.37);
-
-    score(tl, hb, () => drum('lubdub', 0.36, { startF: 78, endF: 34 }));
-  }
+// Theatrical silence utility for breathless operatic fermatas
+function silence(tl, time, duration = 0.25) {
+  score(tl, time, () => {
+    if (!audioCtx || !masterGain) return;
+    const t = audioCtx.currentTime;
+    masterGain.gain.setValueAtTime(0.0001, t);
+    masterGain.gain.setValueAtTime(CONFIG.sound.volume, t + duration);
+  });
 }
 
-// ACT II — DEVELOPMENT: Symmetrical anthem + 50Hz SID arpeggios trailing hops
-function actDevelopment(tl, hero) {
-  const { start, rowGap, rowChord, wander } = CONFIG.acts.development;
+// ACT I — BIRTH: Primordial drone, accelerating mitotic heartbeats, Hero Inception motif
+function actBirth(tl, hero) {
+  const { start } = CONFIG.acts.birth;
+  const soul = at(hero.col, hero.row);
 
-  camera(tl, start, { zoom: 1.35, dur: 1.8 });
+  camera(tl, start, { zoom: 1.65, dur: 0.1 });
+  camera(tl, start + 0.4, { zoom: 1.35, dur: 4.0 });
+
+  score(tl, start, () => setRoom(1600, 0.28, 0.1));
+
+  tl.call(() => soul.el.style.setProperty('--dot-color', COLORS.soul), [], start);
+  tl.to(soul.el, { opacity: 0.95, scale: 1.0, duration: 1.4, ease: 'power2.out' }, start);
+
+  // Primordial C1/C2 drone
+  score(tl, start, () => {
+    note(-24, { dur: 4.2, vol: 0.08, type: 'sine' }); // C1 (32.7 Hz)
+    note(-12, { dur: 4.0, vol: 0.10, type: 'triangle' }); // C2 (65.4 Hz)
+  });
+
+  // 3 Accelerating cardiac lub-dubs with mitotic ripples to orthogonal neighbors
+  const beats = [start + 1.2, start + 2.3, start + 3.2];
+  beats.forEach((hb, i) => {
+    // Cardiac systole-diastole swell
+    tl.to(soul.el, { scale: 1.25, duration: 0.12, ease: 'power2.out' }, hb)
+      .to(soul.el, { scale: 1.10, duration: 0.15, ease: 'power2.inOut' }, hb + 0.12)
+      .to(soul.el, { scale: 1.18, duration: 0.10, ease: 'power2.out' }, hb + 0.27)
+      .to(soul.el, { scale: 1.00, duration: 0.35, ease: 'power2.inOut' }, hb + 0.37);
+
+    score(tl, hb, () => drum('lubdub', 0.34 + i * 0.04, { startF: 78 - i * 4, endF: 32 }));
+
+    // Mitotic cellular ripples
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const neighbor = at(hero.col + dc, hero.row + dr);
+      if (neighbor) {
+        tl.to(neighbor.el, { opacity: 0.15 + i * 0.08, scale: 0.55 + i * 0.1, duration: 0.28 }, hb + 0.1);
+        tl.to(neighbor.el, { opacity: 0, scale: 0.2, duration: 0.4 }, hb + 0.38);
+      }
+    }
+  });
+
+  // Hero Inception Motif reaching upward from the void: C3 -> G3 -> C4 -> E4
+  const inc = start + 3.6;
+  score(tl, inc, () => note(MOTIF.heroBirth[0], { dur: 0.45, vol: 0.13, voice: 'tenor' }));
+  score(tl, inc + 0.25, () => note(MOTIF.heroBirth[1], { dur: 0.45, vol: 0.14, voice: 'tenor' }));
+  score(tl, inc + 0.50, () => note(MOTIF.heroBirth[2], { dur: 0.55, vol: 0.15, voice: 'tenor' }));
+  score(tl, inc + 0.80, () => note(MOTIF.heroBirth[3], { dur: 0.95, vol: 0.16, voice: 'tenor', vibrato: true }));
+}
+
+// ACT II — DEVELOPMENT: Symmetrical row bloom, expansive diatonic motif, 50Hz SID arpeggios
+function actDevelopment(tl, hero) {
+  const { start, rowGap, wander } = CONFIG.acts.development;
+
+  camera(tl, start, { zoom: 1.20, dur: 2.0 });
+  score(tl, start, () => setRoom(2200, 0.36, 1.0));
+
+  // Diatonic harmonic stratification: C3 (0), E3 (4), G3 (7), C4 (12), E4 (16)
+  const diatonicChords = [0, 4, 7, 12, 16];
 
   everyDot((d) => {
     const dist = Math.abs(d.row - CENTER);
-    const time = start + dist * rowGap + d.col * 0.03;
+    const time = start + dist * rowGap + d.col * 0.025;
     tl.call(() => d.el.style.setProperty('--dot-color', COLORS.rowStripe(dist)), [], time);
     const op = dist === 0 ? 0.92 : 0.78;
-    tl.to(d.el, { opacity: op, scale: 1, duration: 0.9, ease: 'elastic.out(1, 0.6)', immediateRender: false }, time);
+    tl.to(d.el, { opacity: op, scale: 1.0, duration: 0.8, ease: 'elastic.out(1, 0.7)', immediateRender: false }, time);
   });
 
-  // Stacked open C Major chords without muddy 5ths
   for (let dist = 0; dist <= CENTER; dist++) {
     const t = start + dist * rowGap;
-    score(tl, t, () => note(rowChord[dist], { dur: 1.8, vol: 0.12, voice: 'pluck' }));
+    score(tl, t, () => note(diatonicChords[dist], { dur: 2.0, vol: 0.12, voice: 'pluck' }));
   }
 
-  // Hero wander: Tenor motif with 50Hz SID arpeggio sparkles
-  let t = start + CENTER * rowGap + 1.2;
+  // Hero Wander: Expansive Aspiration Motif [12, 16, 19, 21] (C4 -> E4 -> G4 -> A4)
+  let t = start + CENTER * rowGap + 0.8;
   wander.forEach(([col, row], i) => {
     const leaveDot = at(hero.col, hero.row);
     const leaveDist = Math.abs(leaveDot.row - CENTER);
@@ -622,211 +658,242 @@ function actDevelopment(tl, hero) {
       leave: {
         color: COLORS.rowStripe(leaveDist),
         opacity: leaveDist === 0 ? 0.92 : 0.78,
-        scale: 1,
+        scale: 1.0,
       },
-      note: MOTIF.hero[i % 2],
+      arriveScale: 1.22,
+      note: MOTIF.heroDev[i],
       vol: 0.14,
       voice: 'tenor',
       echo: true,
     });
-    // Trigger 50Hz sparkling tracker arpeggio
+    // 50Hz sparkling SID tracker arpeggio
     score(tl, t, () => arp(MODES.ARP_MAJ, 0.6, 50, { vol: 0.07, pan: panAt(col) }));
-    camera(tl, t, { col, row, zoom: 1.85, dur: 0.65 });
+    camera(tl, t, { col, row, zoom: 1.55, dur: 0.65 });
     t += 0.7;
   });
-  camera(tl, t + 0.3, { zoom: 1.5, dur: 1.2 });
+  camera(tl, t + 0.3, { zoom: 1.35, dur: 1.2 });
 }
 
-// ACT III — LOVE: The Bel Canto Duet
-// Tenor PWM & Soprano pure bell in parallel thirds + Follin echo counterpoint
+// ACT III — LOVE: Bel Canto Duet with 4–3 and 7–6 suspensions + orbital counter-rotations
 function actLove(tl, hero, beloved) {
   const { start, hopGap, heroDance, belovedDance } = CONFIG.acts.love;
 
   camera(tl, start, { zoom: 1.5, dur: 1.5 });
+  score(tl, start, () => setRoom(2600, 0.42, 1.0));
+
   tl.call(() => everyDot((d) => d.el.style.setProperty('--dot-color', COLORS.dusk)), [], start);
-  tl.to(dots.map((d) => d.el), { opacity: 0.18, scale: 0.85, duration: 1.2, ease: 'power2.inOut' }, start);
+  tl.to(dots.map((d) => d.el), { opacity: 0.16, scale: 0.85, duration: 1.2, ease: 'power2.inOut' }, start);
 
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.soul), [], start + 0.2);
-  tl.to(at(hero.col, hero.row).el, { opacity: 0.8, scale: 1.15, duration: 0.8 }, start + 0.2);
+  tl.to(at(hero.col, hero.row).el, { opacity: 0.92, scale: 1.15, duration: 0.8 }, start + 0.2);
 
-  // 1. THE QUESTION (Tenor Call: C4 -> D4)
-  const callAt = start + 0.5;
-  score(tl, callAt, () => note(MOTIF.heroCall[0], { dur: 0.55, vol: 0.13, pan: -0.2, voice: 'tenor', echo: true }));
-  score(tl, callAt + 0.45, () => note(MOTIF.heroCall[1], { dur: 0.75, vol: 0.14, pan: -0.2, voice: 'tenor', echo: true }));
+  // 1. THE CALL: Lyrical Romance Motif (E4 -> D4 -> C4 -> E4)
+  const callAt = start + 0.4;
+  score(tl, callAt, () => note(MOTIF.heroLove[0], { dur: 0.4, vol: 0.13, pan: -0.2, voice: 'tenor', echo: true }));
+  score(tl, callAt + 0.35, () => note(MOTIF.heroLove[1], { dur: 0.4, vol: 0.13, pan: -0.2, voice: 'tenor', echo: true }));
+  score(tl, callAt + 0.70, () => note(MOTIF.heroLove[2], { dur: 0.4, vol: 0.14, pan: -0.2, voice: 'tenor', echo: true }));
+  score(tl, callAt + 1.05, () => note(MOTIF.heroLove[3], { dur: 0.7, vol: 0.15, pan: -0.2, voice: 'tenor', vibrato: true }));
 
-  // 2. SHE APPEARS at (6, 4) in vibrant rose light
+  // 2. BELOVED AWAKENS at (6, 4) in vibrant rose light
   const [bc, br] = [6, 4];
-  const appearAt = start + 1.4;
+  const appearAt = start + 1.8;
   tl.call(() => at(bc, br).el.style.setProperty('--dot-color', COLORS.beloved), [], appearAt);
   tl.fromTo(
     at(bc, br).el,
     { scale: 0 },
-    { opacity: 0.85, scale: 1.25, duration: 0.8, ease: 'back.out(2)', immediateRender: false },
+    { opacity: 0.95, scale: 1.25, duration: 0.8, ease: 'back.out(1.5)', immediateRender: false },
     appearAt
   );
-  camera(tl, appearAt, { col: bc, row: br, zoom: 2.1, dur: 0.9 });
+  camera(tl, appearAt, { col: bc, row: br, zoom: 1.9, dur: 0.8 });
 
-  // 3. THE ANSWER (Soprano contrary descent: G4 -> E4 with blooming 5.2Hz vibrato)
-  score(tl, appearAt + 0.2, () => note(MOTIF.belovedAnswer[0], { dur: 0.6, vol: 0.14, pan: 0.3, voice: 'soprano' }));
-  score(tl, appearAt + 0.65, () => note(MOTIF.belovedAnswer[1], { dur: 0.95, vol: 0.15, pan: 0.3, voice: 'soprano', vibrato: true }));
+  // 3. THE ANSWER: Contrary descent (A4 -> G4 -> E4 with blooming 5.3Hz vibrato)
+  score(tl, appearAt + 0.1, () => note(MOTIF.belovedAnswer[0], { dur: 0.45, vol: 0.14, pan: 0.3, voice: 'soprano' }));
+  score(tl, appearAt + 0.5, () => note(MOTIF.belovedAnswer[1], { dur: 0.45, vol: 0.15, pan: 0.3, voice: 'soprano' }));
+  score(tl, appearAt + 0.9, () => note(MOTIF.belovedAnswer[2], { dur: 0.90, vol: 0.16, pan: 0.3, voice: 'soprano', vibrato: true }));
 
   beloved.col = bc;
   beloved.row = br;
-  const duskLook = () => ({ color: COLORS.dusk, opacity: 0.18, scale: 0.85 });
-  const stepAt = start + 2.5;
-  hop(tl, beloved, belovedDance[0][0], belovedDance[0][1], stepAt, {
-    leave: duskLook(),
-    note: 16, // E4
-    vol: 0.13,
-    voice: 'soprano',
-    vibrato: true,
-  });
+  const duskLook = () => ({ color: COLORS.dusk, opacity: 0.16, scale: 0.85 });
 
-  // 4. THE DUET: Parallel Thirds on 2x2 box
-  camera(tl, start + 3.0, { col: 4.5, row: 4.5, zoom: 2.3, dur: 1.8 });
+  // 4. THE COUNTER-ROTATIONAL DUET with 4–3 and 7–6 suspensions
+  camera(tl, start + 3.0, { col: 4.5, row: 4.5, zoom: 1.75, dur: 1.8 });
 
-  const duetThirds = [
-    [16, 19], // E4 (Tenor) / G4 (Soprano)
-    [17, 21], // F4 (Tenor) / A4 (Soprano)
-    [19, 23], // G4 (Tenor) / B4 (Soprano)
+  // Classical suspension steps:
+  // Step 1: D4/G4 (4th) -> C4/G4 (5th resolution)
+  // Step 2: F4/A4 -> E4/A4 (7–6 suspension)
+  // Step 3: G4/B4 (sweet parallel 3rd harmony)
+  const suspensions = [
+    { h1: 14, h2: 12, b: 19 },
+    { h1: 17, h2: 16, b: 21 },
+    { h1: 19, h2: 19, b: 23 },
   ];
 
   for (let i = 1; i < heroDance.length; i++) {
     const t = start + 3.4 + (i - 1) * hopGap;
-    const [hSemi, bSemi] = duetThirds[(i - 1) % duetThirds.length];
+    const susp = suspensions[(i - 1) % suspensions.length];
 
     hop(tl, hero, heroDance[i][0], heroDance[i][1], t, {
       leave: duskLook(),
-      note: hSemi,
+      arriveScale: 1.22,
+      note: susp.h1,
       vol: 0.13,
       pan: -0.25,
       voice: 'tenor',
       echo: true,
     });
-    hop(tl, beloved, belovedDance[i][0], belovedDance[i][1], t + 0.15, {
+    // Tenor resolves suspension halfway through step
+    score(tl, t + hopGap * 0.45, () => note(susp.h2, { dur: 0.5, vol: 0.13, pan: -0.25, voice: 'tenor' }));
+
+    hop(tl, beloved, belovedDance[i][0], belovedDance[i][1], t + 0.12, {
       leave: duskLook(),
-      note: bSemi,
-      vol: 0.14,
+      arriveScale: 1.22,
+      note: susp.b,
+      vol: 0.15,
       pan: 0.25,
       voice: 'soprano',
       vibrato: true,
     });
   }
 
-  // 5. HELD TOGETHER: Open cathedral chord + shimmering harp arpeggio
+  // 5. HELD TOGETHER: Open cathedral chord + 12Hz shimmering harp arpeggio
   const held = start + 3.4 + (heroDance.length - 1) * hopGap + 0.7;
   camera(tl, held, { col: 4.5, row: 4.5, zoom: 1.55, dur: 2.2 });
   score(tl, held, () => {
     note(0, { dur: 4.0, vol: 0.11, pan: 0.0, type: 'triangle' }); // C3 deep floor
     note(12, { dur: 3.8, vol: 0.13, pan: -0.25, voice: 'tenor', attack: 0.04 }); // C4 tenor
     note(16, { dur: 3.9, vol: 0.15, pan: 0.25, voice: 'soprano', vibrato: true, attack: 0.04 }); // E4 soprano
-    arp(MODES.ARP_HARP, 3.5, 12, { vol: 0.06, pan: 0.0 }); // 12Hz slow harp shimmer
+    note(19, { dur: 3.6, vol: 0.12, pan: 0.25, voice: 'soprano', vibrato: true, attack: 0.04 }); // G4
+    arp(MODES.ARP_HARP, 3.5, 12, { vol: 0.06, pan: 0.0 });
   });
 }
 
-// ACT IV — JEALOUSY: Crypt room, audio-rate ring modulation, minor-second tension
+// ACT IV — JEALOUSY: 240ms dramatic gasp, green gate, tritone capture, minor wound motif
 function actJealousy(tl, hero, beloved) {
-  const { start, gateStep, belovedCell, heroFlee } = CONFIG.acts.jealousy;
+  const { start, belovedCell, heroFlee } = CONFIG.acts.jealousy;
 
-  // Crypt room acoustics: muffled 600 Hz lowpass
-  score(tl, start, () => setRoom(600, 0.45, 0.8));
-  camera(tl, start, { zoom: 1.3, dur: 1.2 });
+  // THEATRICAL FERMATA: 240ms of dead breathless silence as disaster strikes
+  silence(tl, start, 0.24);
+
+  // Crypt room acoustics: muffled 550 Hz lowpass
+  score(tl, start + 0.24, () => setRoom(550, 0.45, 0.8));
+  camera(tl, start, { zoom: 1.25, dur: 1.2 });
 
   tl.to(
     dots.filter((d) => d.el !== at(hero.col, hero.row).el && d.el !== at(beloved.col, beloved.row).el).map((d) => d.el),
-    { opacity: 0.25, duration: 1.0, ease: 'power2.inOut' },
+    { opacity: 0.22, duration: 1.0, ease: 'power2.inOut' },
     start
   );
 
-  // The gate descends row by row with ring-modulated wound dissonance
+  // Accelerating gate descent (stretto: 0.42s down to 0.28s)
+  let gateT = start + 0.25;
   for (let row = 0; row < SIZE; row++) {
-    const t = start + row * gateStep;
+    const stepDur = 0.42 - row * 0.016;
+    const t = gateT;
     everyDot((d) => {
       if (d.row !== row) return;
       if (d.col === hero.col && d.row === 8) return;
-      tl.call(() => d.el.style.setProperty('--dot-color', COLORS.envy), [], t + d.col * 0.02);
-      tl.to(d.el, { opacity: 0.75, scale: 0.95, duration: 0.5, ease: 'power2.out' }, t + d.col * 0.02);
+      tl.call(() => d.el.style.setProperty('--dot-color', COLORS.envy), [], t + d.col * 0.015);
+      tl.to(d.el, { opacity: 0.75, scale: 0.95, duration: 0.4, ease: 'power2.out' }, t + d.col * 0.015);
     });
     score(tl, t, () => {
-      note(MODES.WOUND[row % 3], { dur: 0.85, vol: 0.08, grit: true });
-      arp(MODES.ARP_TENSION, 0.5, 30, { vol: 0.05, pan: (row / SIZE) * 2 - 1 });
+      note(MODES.WOUND[row % 3], { dur: 0.7, vol: 0.09, grit: true });
+      arp(MODES.ARP_TENSION, 0.45, 25, { vol: 0.06, pan: (row / SIZE) * 2 - 1 });
     });
+    gateT += stepDur;
   }
 
-  // AGONIZING SUSPENSION: Soprano hangs, cold tritone crash beneath
-  const taken = start + belovedCell[1] * gateStep;
+  // AGONIZING CAPTURE: Beloved consumed at (5, 4), soprano tritone shriek on Gb5
+  const taken = start + 2.2;
   tl.call(() => at(belovedCell[0], belovedCell[1]).el.style.setProperty('--dot-color', COLORS.envy), [], taken);
-  tl.to(at(belovedCell[0], belovedCell[1]).el, { scale: 0.9, opacity: 0.75, duration: 0.6 }, taken);
+  tl.to(at(belovedCell[0], belovedCell[1]).el, { scale: 0.85, opacity: 0.75, duration: 0.6 }, taken);
   score(tl, taken, () => {
-    note(16, { dur: 1.1, vol: 0.14, pan: 0.3, voice: 'soprano', vibrato: true }); // suspended E4
-    note(6, { dur: 1.6, vol: 0.13, pan: 0.0, grit: true }); // tritone crash
-    drum('kick', 0.4, { dur: 0.3, startF: 110, endF: 30 });
+    note(18, { dur: 1.2, vol: 0.17, pan: 0.3, voice: 'soprano', vibrato: true }); // Piercing Gb5 shriek
+    note(6, { dur: 1.6, vol: 0.15, pan: 0.0, grit: true }); // Tritone F#3 crash
+    drum('kick', 0.45, { dur: 0.35, startF: 120, endF: 28 });
   });
   beloved.dead = true;
 
-  // Hero flees downward; camera tracks him
+  // Hero flees downward singing the dissonant Horror Motif: [12, 15, 18, 11] (C4 -> Eb4 -> Gb4 -> B3)
   heroFlee.forEach(([col, row], i) => {
-    const t = taken + 0.3 + i * 0.5;
+    const t = taken + 0.35 + i * 0.52;
     hop(tl, hero, col, row, t, {
-      leave: { color: COLORS.dusk, opacity: 0.25, scale: 0.85 },
-      note: MOTIF.hero[i % 2],
-      vol: 0.11,
+      leave: { color: COLORS.dusk, opacity: 0.22, scale: 0.85 },
+      arriveScale: 1.20,
+      note: MOTIF.heroBetrayed[i],
+      vol: 0.14,
       voice: 'tenor',
+      grit: true,
     });
     camera(tl, t, { col, row, zoom: 1.95, dur: 0.45, ease: 'power1.out' });
   });
 }
 
-// ACT V — REVENGE: Crimson fury, ring-mod saw stabs, synthetic percussion, sforzando crash
+// ACT V — REVENGE: Stretto accelerando hunt, chromatic war chant, sfz crash, 0.85s grand pause
 function actRevenge(tl, hero) {
-  const { start, hopGap, huntPath } = CONFIG.acts.revenge;
+  const { start, huntPath } = CONFIG.acts.revenge;
 
   tl.call(() => (hero.color = COLORS.heroRage), [], start);
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.heroRage), [], start);
-  score(tl, start, () => note(MOTIF.heroBroken[0], { vol: 0.16, dur: 0.8, type: 'sawtooth', grit: true, voice: 'tenor' }));
-  camera(tl, start, { col: hero.col, row: hero.row, zoom: 2.1, dur: 0.8 });
+  score(tl, start, () => note(MOTIF.heroWar[0], { vol: 0.17, dur: 0.6, type: 'sawtooth', grit: true, voice: 'tenor' }));
+  camera(tl, start, { col: hero.col, row: hero.row, zoom: 2.1, dur: 0.7 });
 
-  // 12 rapid zigzag hops across the grid with percussive hats & ring-mod stabs
-  huntPath.forEach(([col, row], i) => {
-    const t = start + 0.6 + i * hopGap;
+  // Accelerating 10-strike hunt (hop gap drops from 0.40s down to 0.22s)
+  let huntT = start + 0.5;
+  const path = huntPath.slice(0, 10);
+  path.forEach(([col, row], i) => {
+    const stepDur = 0.40 - i * 0.018;
+    const t = huntT;
+
     hop(tl, hero, col, row, t, {
       leave: { color: COLORS.rage, opacity: 0.75, scale: 0.95 },
       arriveScale: 1.25,
-      note: MOTIF.heroBroken[i % 2],
-      vol: 0.15,
-      dur: 0.45,
+      note: MOTIF.heroWar[i % MOTIF.heroWar.length],
+      vol: 0.16,
+      dur: 0.35,
       pan: panAt(col),
       grit: true,
       voice: 'tenor',
       hat: true,
     });
 
-    const prevCell = huntPath[i - 1] || [4, 8];
-    const burned = [prevCell];
+    // Incineration shockwave to neighbor cells
     for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const nc = col + dc;
       const nr = row + dr;
-      if (nc >= 0 && nc < SIZE && nr >= 0 && nr < SIZE && !(nc === col && nr === row)) burned.push([nc, nr]);
+      if (nc >= 0 && nc < SIZE && nr >= 0 && nr < SIZE && !(nc === col && nr === row)) {
+        const d = at(nc, nr);
+        tl.call(() => d.el.style.setProperty('--dot-color', COLORS.rage), [], t);
+        tl.to(d.el, { opacity: 0.65, scale: 0.95, duration: 0.25 }, t);
+        tl.call(() => d.el.style.setProperty('--dot-color', COLORS.ember), [], t + 0.9);
+        tl.to(d.el, { opacity: 0.16, scale: 0.70, duration: 0.8, ease: 'power2.inOut' }, t + 0.9);
+      }
     }
-    burned.forEach(([c, r]) => {
-      if (c === col && r === row) return;
-      const d = at(c, r);
-      tl.call(() => d.el.style.setProperty('--dot-color', COLORS.rage), [], t);
-      tl.to(d.el, { opacity: 0.65, scale: 0.95, duration: 0.3 }, t);
-      tl.call(() => d.el.style.setProperty('--dot-color', COLORS.ember), [], t + 1.1);
-      tl.to(d.el, { opacity: 0.18, scale: 0.7, duration: 1.0, ease: 'power2.inOut' }, t + 1.1);
-    });
-    camera(tl, t, { col, row, zoom: 1.85, dur: hopGap * 1.2, ease: 'power2.inOut' });
+
+    camera(tl, t, { col, row, zoom: 1.85, dur: stepDur * 1.1, ease: 'power2.inOut' });
+    huntT += stepDur;
   });
 
-  // Final strike at (4, 0): SFORZANDO (sfz) IMPACT + screen shake
-  const finalHuntT = start + 0.6 + (huntPath.length - 1) * hopGap;
-  score(tl, finalHuntT, () => drum('sfz', 0.45));
-  tl.to(worldEl, { y: '+=14', duration: 0.05, yoyo: true, repeat: 3, ease: 'sine.inOut' }, finalHuntT);
+  // Final strike at (4, 0): SFORZANDO (sfz) IMPACT + vertical stage shake
+  const finalHuntT = huntT;
+  hop(tl, hero, 4, 0, finalHuntT, {
+    leave: { color: COLORS.rage, opacity: 0.75, scale: 0.95 },
+    arriveScale: 1.25,
+    note: 18, // High F#4 tritone strike
+    vol: 0.20,
+    dur: 0.5,
+    grit: true,
+    voice: 'tenor',
+  });
+  score(tl, finalHuntT, () => drum('sfz', 0.50));
+  tl.to(worldEl, { y: '+=12', duration: 0.05, yoyo: true, repeat: 3, ease: 'sine.inOut' }, finalHuntT);
 
-  // Embers and silence: solitary hero at (4, 0)
-  const after = finalHuntT + 0.6;
-  camera(tl, after, { col: 4, row: 0, zoom: 1.75, dur: 1.0 });
+  // 0.85s GRAND PAUSE / TOTAL VOID SILENCE: the hollow exhaustion of vengeance
+  const silenceT = finalHuntT + 0.35;
+  silence(tl, silenceT, 0.85);
+
+  // Charred embers and solitary hero at (4, 0)
+  const after = silenceT + 0.85;
+  camera(tl, after, { col: 4, row: 0, zoom: 1.65, dur: 1.0 });
   tl.call(() => everyDot((d) => d.el.style.setProperty('--dot-color', COLORS.ember)), [], after);
   tl.to(
     dots.filter((d) => !(d.col === hero.col && d.row === hero.row)).map((d) => d.el),
@@ -834,18 +901,18 @@ function actRevenge(tl, hero) {
     after
   );
   tl.to(at(hero.col, hero.row).el, { opacity: 1.0, scale: 1.2, duration: 0.8 }, after);
-  score(tl, after + 0.2, () => note(0, { dur: 1.8, vol: 0.09, type: 'triangle' }));
 }
 
-// ACT VI — ACCEPTANCE: Soaring cathedral, healing walk, continuous euphoric harmonic ascension & crystal harp cascades
+// ACT VI — ACCEPTANCE: Lydian transfiguration along spine, outward violet waves, continuous ascending canopy
 function actAcceptance(tl, hero) {
   const { start, peaceSpread, homePath, memoryCell } = CONFIG.acts.acceptance;
 
-  // Cathedral opens wide: 2800 Hz lowpass + warm delay feedback
+  // Cathedral opens wide: 2800 Hz lowpass
   score(tl, start, () => setRoom(2800, 0.44, 1.2));
 
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.healing[0]), [], start);
 
+  // Hero steps down spine singing Transfigured Motif: [12, 16, 18, 19] (C4 -> E4 -> F#4 -> G4, resolving tritone)
   homePath.forEach(([col, row], i) => {
     const t = start + 0.35 + i * 0.85;
     const stepColor = COLORS.healing[i + 1];
@@ -853,20 +920,20 @@ function actAcceptance(tl, hero) {
     hop(tl, hero, col, row, t, {
       leave: { color: COLORS.ember, opacity: 0.14, scale: 0.65 },
       arriveScale: 1.25,
-      note: MOTIF.hero[i % 2],
-      vol: 0.13,
+      note: MOTIF.heroTransfigured[i],
+      vol: 0.14,
       dur: 0.75,
       voice: 'tenor',
       echo: true,
     });
-    camera(tl, t, { col: 4, row, zoom: 1.75, dur: 0.75 });
+    camera(tl, t, { col: 4, row, zoom: 1.65, dur: 0.75 });
   });
 
   const settleT = start + 3.2;
-  camera(tl, settleT, { col: CENTER, row: CENTER, zoom: 1.25, dur: 2.2 });
+  camera(tl, settleT, { col: CENTER, row: CENTER, zoom: 1.20, dur: 2.2 });
 
   const home = at(CENTER, CENTER);
-  tl.to(home.el, { scale: 1.3, duration: 1.6, yoyo: true, repeat: 2, ease: 'sine.inOut' }, settleT);
+  tl.to(home.el, { scale: 1.25, duration: 1.6, yoyo: true, repeat: 2, ease: 'sine.inOut' }, settleT);
 
   // Concentric violet peace rings spreading outward:
   const floodStart = settleT + 0.4;
@@ -874,12 +941,11 @@ function actAcceptance(tl, hero) {
     if (d.col === CENTER && d.row === CENTER) return;
     const t = floodStart + d.ring * peaceSpread;
     tl.call(() => d.el.style.setProperty('--dot-color', COLORS.peace(d.ring)), [], t);
-    tl.to(d.el, { opacity: 0.72, scale: 1, duration: 1.2, ease: 'sine.inOut' }, t);
+    tl.to(d.el, { opacity: 0.72, scale: 1.0, duration: 1.2, ease: 'sine.inOut' }, t);
   });
 
-  // CONTINUOUS EUPHORIC HARMONIC ASCENSION (Building upwards layer by layer, NEVER dropping):
-
-  // Step 1: Foundation (C Major 9) — warm grounded peace
+  // CONTINUOUS EUPHORIC HARMONIC ASCENSION (Climbing higher with every step; NO High C here!)
+  // Step 1: Foundation (C Major 9)
   score(tl, settleT + 0.4, () => {
     note(0, { dur: 3.2, vol: 0.11, type: 'triangle', attack: 0.06 });
     note(4, { dur: 3.2, vol: 0.10, voice: 'tenor', attack: 0.05 });
@@ -888,7 +954,7 @@ function actAcceptance(tl, hero) {
     arp([0, 4, 7, 12, 14, 16], 2.2, 13, { vol: 0.06, pan: -0.2 });
   });
 
-  // Step 2: Rising 4th (F Major 7 / Lydian Lift) — soaring hope
+  // Step 2: Lydian Hope (F Major 7)
   score(tl, settleT + 1.8, () => {
     note(5, { dur: 3.2, vol: 0.11, voice: 'tenor', attack: 0.05 });
     note(9, { dur: 3.2, vol: 0.10, voice: 'pluck', attack: 0.04 });
@@ -897,7 +963,7 @@ function actAcceptance(tl, hero) {
     arp([5, 9, 12, 16, 19, 21], 2.2, 14, { vol: 0.07, pan: 0.2 });
   });
 
-  // Step 3: Rising 5th (G Major 9 / Golden Expansion) — swelling radiance
+  // Step 3: Golden Expansion (G Major 9)
   score(tl, settleT + 3.2, () => {
     setRoom(3500, 0.48, 1.0);
     note(7, { dur: 3.4, vol: 0.11, voice: 'tenor', attack: 0.05 });
@@ -907,31 +973,30 @@ function actAcceptance(tl, hero) {
     arp([7, 11, 14, 19, 21, 24], 2.4, 15, { vol: 0.08, pan: -0.15 });
   });
 
-  // Step 4: Peak Celestial Canopy (High C Major / Transcendent Ascension)
+  // Step 4: Transcendent Canopy (Tenor & Pluck Canopy - High C reserved for Act VII)
   score(tl, settleT + 4.6, () => {
-    setRoom(4000, 0.52, 1.0);
-    note(12, { dur: 3.6, vol: 0.12, voice: 'tenor', attack: 0.05 });
-    note(16, { dur: 3.6, vol: 0.11, voice: 'tenor', attack: 0.04 });
-    note(19, { dur: 3.4, vol: 0.12, voice: 'tenor', vibrato: true });
-    note(24, { dur: 3.6, vol: 0.14, voice: 'soprano', vibrato: true });
-    note(28, { dur: 3.2, vol: 0.09, voice: 'pluck', attack: 0.02 });
-    arp([12, 16, 19, 24, 28, 31], 2.6, 16, { vol: 0.08, pan: 0.25 });
+    setRoom(3900, 0.50, 1.0);
+    note(12, { dur: 3.6, vol: 0.12, voice: 'tenor', attack: 0.05 }); // C4
+    note(16, { dur: 3.6, vol: 0.11, voice: 'tenor', attack: 0.04 }); // E4
+    note(19, { dur: 3.4, vol: 0.12, voice: 'tenor', vibrato: true }); // G4
+    note(21, { dur: 3.2, vol: 0.10, voice: 'pluck', attack: 0.03 });   // A4
+    arp([12, 16, 19, 21, 24, 28], 2.6, 15, { vol: 0.08, pan: 0.25 });
   });
 
-  // Tender rose memory light at (5, 4) ignites during the ascension
+  // Beloved's rose memory light at (5, 4) blossoms at the peak of the violet sea
   const mem = at(memoryCell[0], memoryCell[1]);
   tl.call(() => mem.el.style.setProperty('--dot-color', COLORS.memory), [], settleT + 2.0);
-  tl.to(mem.el, { opacity: 0.95, scale: 1.25, duration: 1.8, ease: 'sine.inOut' }, settleT + 2.0);
+  tl.to(mem.el, { opacity: 0.95, scale: 1.22, duration: 1.8, ease: 'sine.inOut' }, settleT + 2.0);
 }
 
-// ACT VII — DEATH & THE "FAT LADY" ARIA:
-// Dying heartbeats, beloved's ghost halo, High Soprano Aria (G4 -> A4 -> C5), subterranean 32.7Hz C1 pedal
+// ACT VII — DEATH & THE "FAT LADY" LIEBESTOD ARIA:
+// Organic Perlin entropy, dying hero collapse, Beloved ghost aria on High C5, subterranean C1 pedal
 function actDeath(tl, hero) {
   const { start, noteEvery } = CONFIG.acts.death;
   const deathTime = makeDeathMap();
   const heroCell = at(hero.col, hero.row);
 
-  camera(tl, start, { col: 4.5, row: 4, zoom: 2.2, dur: 9 });
+  camera(tl, start, { col: 4.5, row: 4, zoom: 1.75, dur: 9.0 });
 
   const dying = dots.filter((d) => d.el !== heroCell.el);
   const order = [...dying].sort((a, b) => deathTime(a) - deathTime(b));
@@ -942,30 +1007,32 @@ function actDeath(tl, hero) {
       d.el.classList.remove('ghost-aria');
       d.el.style.setProperty('--dot-color', COLORS.drain);
     }, [], t);
-    tl.to(d.el, { opacity: 0, scale: 0.2, duration: 1.5, ease: 'power2.in' }, t + 0.8);
+    tl.to(d.el, { opacity: 0, scale: 0.18, duration: 1.5, ease: 'power2.in' }, t + 0.8);
     if (i % noteEvery === 0) {
       const semi = MODES.PENTA[(order.length - 1 - i) % MODES.PENTA.length];
-      score(tl, t, () => note(semi, { dur: 1.0, vol: 0.05, pan: panAt(d.col), voice: 'pluck' }));
+      score(tl, t, () => note(semi, { dur: 0.9, vol: 0.05, pan: panAt(d.col), voice: 'pluck' }));
     }
   });
 
-  // Hero cools to a solitary tungsten ember
+  // Hero cools to solitary tungsten amber ember at (4, 4)
   const maxDeath = start + Math.max(...order.map(deathTime));
-  const emberAt = maxDeath + 0.6;
+  const emberAt = maxDeath + 0.5;
   tl.call(() => {
     heroCell.el.style.setProperty('--dot-color', COLORS.lastEmber);
   }, [], emberAt);
   tl.to(heroCell.el, { opacity: 0.9, scale: 0.95, duration: 0.8, ease: 'power2.out' }, emberAt);
 
-  // Slow 48 BPM anatomical lub-dub heartbeat:
-  score(tl, emberAt + 0.6, () => drum('lubdub', 0.30, { startF: 68, endF: 26, noise: false }));
-  tl.to(heroCell.el, { scale: 1.1, duration: 0.14 }, emberAt + 0.6)
-    .to(heroCell.el, { scale: 0.95, duration: 0.14 }, emberAt + 0.74)
-    .to(heroCell.el, { scale: 1.03, duration: 0.10 }, emberAt + 0.88)
-    .to(heroCell.el, { scale: 0.9, duration: 0.40 }, emberAt + 0.98);
+  // Slow decelerating 48 BPM anatomical lub-dub heartbeat:
+  score(tl, emberAt + 0.5, () => drum('lubdub', 0.28, { startF: 64, endF: 26, noise: false }));
+  tl.to(heroCell.el, { scale: 1.1, duration: 0.14 }, emberAt + 0.5)
+    .to(heroCell.el, { scale: 0.95, duration: 0.14 }, emberAt + 0.64)
+    .to(heroCell.el, { scale: 1.02, duration: 0.10 }, emberAt + 0.78)
+    .to(heroCell.el, { scale: 0.90, duration: 0.40 }, emberAt + 0.88);
 
-  // Hero begins motif... and stops mid-phrase
-  score(tl, emberAt + 0.6, () => note(MOTIF.hero[0], { dur: 0.85, vol: 0.11, voice: 'tenor' }));
+  // Hero begins motif... and collapses to G3 (heroDying: [12, 16, 7])
+  score(tl, emberAt + 0.5, () => note(MOTIF.heroDying[0], { dur: 0.4, vol: 0.11, voice: 'tenor' }));
+  score(tl, emberAt + 0.85, () => note(MOTIF.heroDying[1], { dur: 0.4, vol: 0.10, voice: 'tenor' }));
+  score(tl, emberAt + 1.25, () => note(MOTIF.heroDying[2], { dur: 0.9, vol: 0.08, voice: 'tenor' }));
 
   // THE "FAT LADY" SINGS (Beloved's Ghost Re-ignites at 5, 4):
   const ariaAt = emberAt + 1.6;
@@ -977,15 +1044,15 @@ function actDeath(tl, hero) {
   tl.fromTo(
     ghostCell.el,
     { scale: 0, opacity: 0 },
-    { scale: 1.2, opacity: 1.0, duration: 1.4, ease: 'power2.out', immediateRender: false },
+    { scale: 1.20, opacity: 1.0, duration: 1.4, ease: 'power2.out', immediateRender: false },
     ariaAt
   );
-  tl.to(ghostCell.el, { scale: 1.1, opacity: 0.92, duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, ariaAt + 1.4);
+  tl.to(ghostCell.el, { scale: 1.10, opacity: 0.92, duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, ariaAt + 1.4);
 
-  // Cathedral acoustics for the grand finale aria:
-  score(tl, ariaAt, () => setRoom(4200, 0.52));
+  // Maximum Cathedral Acoustics for the grand finale aria:
+  score(tl, ariaAt, () => setRoom(4200, 0.55));
 
-  // Climactic Wagnerian Soprano Aria:
+  // Climactic Wagnerian Soprano Liebestod:
   // 1. Pickup: G4 (19) - tender onset
   score(tl, ariaAt + 0.1, () => note(MOTIF.aria[0], { dur: 0.75, vol: 0.14, pan: 0.35, voice: 'soprano' }));
   // 2. Rising Step: A4 (21) - swelling chest resonance
@@ -993,14 +1060,14 @@ function actDeath(tl, hero) {
   // 3. Leading Tone: B4 (23) - soaring tension
   score(tl, ariaAt + 1.5, () => note(MOTIF.aria[2], { dur: 0.65, vol: 0.17, pan: 0.35, voice: 'soprano' }));
   // 4. Climactic High C5 (24 = 523.25 Hz) - grand Messa di Voce, blooming 5.3Hz vibrato + tremolo + Singer's Formant ring!
-  score(tl, ariaAt + 2.1, () => note(MOTIF.aria[3], { dur: 3.2, vol: 0.22, pan: 0.35, voice: 'soprano', vibrato: true }));
+  score(tl, ariaAt + 2.1, () => note(MOTIF.aria[3], { dur: 3.4, vol: 0.22, pan: 0.35, voice: 'soprano', vibrato: true }));
 
   // Final dying cardiac pulse underneath the sustained high C
   const finalBeatAt = ariaAt + 3.2;
-  score(tl, finalBeatAt, () => drum('kick', 0.20, { startF: 52, endF: 22, dur: 0.26, noise: false }));
+  score(tl, finalBeatAt, () => drum('kick', 0.18, { startF: 50, endF: 22, dur: 0.28, noise: false }));
   tl.to(heroCell.el, { scale: 0.96, duration: 0.18 }, finalBeatAt).to(
     heroCell.el,
-    { scale: 0.75, duration: 0.8 },
+    { scale: 0.70, duration: 0.8 },
     finalBeatAt + 0.18
   );
 
@@ -1008,18 +1075,21 @@ function actDeath(tl, hero) {
   score(tl, finalBeatAt + 1.0, () => note(MOTIF.ariaCadence[0], { dur: 0.55, vol: 0.13, pan: 0.3, voice: 'soprano' }));
   score(tl, finalBeatAt + 1.5, () => note(MOTIF.ariaCadence[1], { dur: 0.65, vol: 0.12, pan: 0.3, voice: 'soprano' }));
   score(tl, finalBeatAt + 2.1, () => note(MOTIF.ariaCadence[2], { dur: 0.85, vol: 0.11, pan: 0.3, voice: 'soprano', vibrato: true }));
-  score(tl, finalBeatAt + 2.9, () => note(MOTIF.ariaCadence[3], { dur: 2.2, vol: 0.09, pan: 0.3, voice: 'soprano', vibrato: true }));
+  score(tl, finalBeatAt + 2.9, () => note(MOTIF.ariaCadence[3], { dur: 2.2, vol: 0.10, pan: 0.3, voice: 'soprano', vibrato: true }));
+
+  // Dying Tenor whisper underneath her final C4
+  score(tl, finalBeatAt + 2.9, () => note(0, { dur: 2.6, vol: 0.08, voice: 'tenor' }));
 
   // Silence: celestial star and amber ember dissolve together into eternity
   const fadeAt = finalBeatAt + 4.2;
-  tl.to(heroCell.el, { opacity: 0, scale: 0.1, duration: 3.2, ease: 'power2.in' }, fadeAt);
-  tl.to(ghostCell.el, { opacity: 0, scale: 0.1, duration: 3.2, ease: 'power2.in' }, fadeAt);
-  tl.call(() => ghostCell.el.classList.remove('ghost-aria'), [], fadeAt + 3.2);
+  tl.to(heroCell.el, { opacity: 0, scale: 0.1, duration: 3.5, ease: 'power2.in' }, fadeAt);
+  tl.to(ghostCell.el, { opacity: 0, scale: 0.1, duration: 3.5, ease: 'power2.in' }, fadeAt);
+  tl.call(() => ghostCell.el.classList.remove('ghost-aria'), [], fadeAt + 3.5);
 
   // Subterranean C1 organ pedal fading into eternity
   score(tl, fadeAt, () => {
-    note(-12, { dur: 3.8, vol: 0.12 });               // C2 (65.4 Hz)
-    note(-24, { dur: 5.2, vol: 0.09, type: 'sine' }); // C1 pedal (32.7 Hz)
+    note(-12, { dur: 4.0, vol: 0.11 });               // C2 (65.4 Hz)
+    note(-24, { dur: 5.5, vol: 0.09, type: 'sine' }); // C1 pedal (32.7 Hz)
   });
 }
 

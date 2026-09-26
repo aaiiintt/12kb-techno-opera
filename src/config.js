@@ -33,14 +33,18 @@ export const minor = (m) => m.map(s => (s % 12 === 4 ? s - 1 : s));
 export const invert = (m, pivot = m[0]) => m.map(s => pivot * 2 - s);
 export const fragment = (m, n = 2) => m.slice(0, n);
 
-// Semitone definitions for the leitmotifs (relative to C3 = 0)
+// Through-Composed Wagnerian Leitmotif Evolution
 export const MOTIF = {
-  hero: [12, 16],                // C4 -> E4 (tenor hope)
-  heroCall: [12, 14],            // C4 -> D4 (the question)
-  belovedAnswer: [19, 16],       // G4 -> E4 (tender contrary descent)
-  heroBroken: [11, 16],          // B3 -> E4 (dissonant tritone drop in grief)
-  aria: [19, 21, 23, 24],        // G4 -> A4 -> B4 -> High C5 (Wagnerian soprano ascension)
-  ariaCadence: [21, 19, 16, 12], // A4 -> G4 -> E4 -> C4 (dying melisma descent)
+  heroBirth: [0, 7, 12, 16],          // C3 -> G3 -> C4 -> E4 (Inception: genesis from the void)
+  heroDev: [12, 16, 19, 21],          // C4 -> E4 -> G4 -> A4 (Aspiration: confident diatonic rise)
+  heroLove: [16, 14, 12, 16],         // E4 -> D4 -> C4 -> E4 (Romance: lyrical contrary motion)
+  belovedAnswer: [21, 19, 16],        // A4 -> G4 -> E4 (Soprano contrary descent)
+  heroBetrayed: [12, 15, 18, 11],     // C4 -> Eb4 -> Gb4 -> B3 (Horror: minor-3rd tritone disfigurement)
+  heroWar: [11, 12, 11, 18],          // B3 -> C4 -> B3 -> F#4 (Wrath: chromatic war chant)
+  heroTransfigured: [12, 16, 18, 19], // C4 -> E4 -> F#4 -> G4 (Transfiguration: Lydian peace)
+  heroDying: [12, 16, 7],             // C4 -> E4 -> G3 (Dying breath: unfinished collapse)
+  aria: [19, 21, 23, 24],             // G4 -> A4 -> B4 -> High C5 (Liebestod: climactic ascension)
+  ariaCadence: [21, 19, 16, 12],      // A4 -> G4 -> E4 -> C4 (Apotheosis: resolution into silence)
 };
 
 // PALETTES — Pure spectral colors of light: ZERO beige, ZERO muddy pigments
