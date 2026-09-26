@@ -46,6 +46,7 @@ body {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
   margin: 0;
   padding: 3vmin 2vw 0;
   line-height: .8;
@@ -66,9 +67,20 @@ body.playing .t {
   pointer-events: none;
 }
 
-.t span {
+.t > span {
   display: block;
   width: max-content;
+}
+
+.t .sub {
+  display: block;
+  width: max-content;
+  white-space: nowrap;
+  margin-top: 2vmin;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  opacity: 0.9;
 }
 
 .n {

@@ -816,11 +816,25 @@ const playBtn = document.getElementById('play-btn');
 
 function fitTitle() {
   if (!titleEl || !technoSpan) return;
+  const subEl = titleEl.querySelector('.sub');
+
   titleEl.style.fontSize = '100px';
-  const byWidth = 100 * (innerWidth * 0.96) / technoSpan.offsetWidth;
-  const byHeight = (innerHeight - 92) / (3 * 0.82);
-  titleEl.style.fontSize = Math.min(byWidth, byHeight) + 'px';
+  if (subEl) subEl.style.fontSize = '100px';
+
+  const tW = technoSpan.offsetWidth || 1;
+  const sW = subEl ? (subEl.offsetWidth || 1) : 1;
+
+  const byWidth = 100 * (innerWidth * 0.94) / tW;
+  const byHeight = (innerHeight - 110) / (3.6 * 0.82);
+  const titleSize = Math.min(byWidth, byHeight);
+
+  titleEl.style.fontSize = titleSize + 'px';
+  if (subEl) {
+    subEl.style.fontSize = (titleSize * (tW / sW)) + 'px';
+  }
 }
+
+document.fonts.ready.then(() => fitTitle());
 
 if (titleEl && technoSpan) {
   fitTitle();
