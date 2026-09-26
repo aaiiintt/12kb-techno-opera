@@ -48,7 +48,9 @@ This is the rule that makes the series one system, as in Tenori-on and Electropl
 
 ## The stage
 
-- **The grid is fixed.** Each opera chooses its grid once (9 by 9 is the house default; any odd size from 5 to 13) and it never changes during the piece. Cells never drift, breathe, wobble or tilt.
+- **Everything is on the grid.** There are no floating discs. A character is a grid cell lit in its colour; when it hops, its light moves to the next cell and the old cell cools like an ember. When it grows, shrinks or pulses, the cell it occupies scales in place.
+- **The grid runs edge to edge.** The screen is filled with cells at the house pitch. The story is played on the central stage (9 by 9 by default, any odd size from 5 to 13, chosen once per opera); the cells beyond it rest in dusk and give the sense of expanse. They are used rarely and on purpose: a colour wipe across the whole screen, a ripple that carries past the stage, a rainbow that reaches the edges.
+- **The grid is fixed.** Cells never drift, breathe, wobble or tilt, and the stage never changes size during a piece.
 - **The camera cuts.** It holds still almost always. Rarely, and as a deliberate beat, it makes one energetic move: a hard zoom into a single disc until half of it fills the screen, a snap back, a shake on an impact. Never a drift, never a slow pan, never a perspective.
 - **The background is black**, or one palette light at low L, cut on a beat. No fades of the background, no wipes of it.
 - **Type is the original cue only.** Lower third, typed in letter by letter, held, cleared. Uppercase, one to three words, in the opera's language. No title cards, no labels, no speech boxes.
@@ -95,7 +97,8 @@ Before Iain sees a piece, the coordinator reviews six screenshots taken at its k
 
 - A disc is lit because something is sounding. Brightness is the envelope.
 - Flat discs, eight lights, OKLCH. Name the light, never the value.
-- The grid never moves. The camera cuts.
+- Everything is on the grid. No floating discs.
+- The grid runs edge to edge and never moves. The camera cuts.
 - One mass move and one soloist at a time.
 - Follow the hero.
 - Austere on the surface, sweet underneath.
