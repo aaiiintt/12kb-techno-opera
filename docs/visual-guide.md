@@ -1,145 +1,102 @@
-# Staging the Techno Opera
+# Lighting the Techno Opera
 
-The visual half of the brief. `music-guide.md` says how the sound is made; this says how the stage is used. Read both before touching a story card, a gesture or an opera file. The rules at the end are hard rules.
+The visual half of the brief, third version. `music-guide.md` says how the sound is made; this says how the light is made. The v2 guide is kept as `visual-guide-v2-rejected.md` as a record of what not to do: shaded spheres, drifting 3D grids, invented colours, effects stacked like slide transitions.
 
-## The problem this solves
+Read this and the music guide before touching a story card, a gesture or an opera file. The rules at the end are hard rules.
 
-The first eight drafts were samey. One dot per character, a scene at a time, small moves, and the grid mostly sat there as scenery. Nothing wiped the screen, nothing bloomed to fill it, nothing shook. They read as diagrams of operas. The music was already an emotional roller coaster; the stage was a seating plan.
+## The law in one paragraph
 
-Opera on stage is not literal either. It is a chorus of eighty people moving as one body, a lighting state that turns the whole set red in a bar, a soprano alone in a spotlight the size of a coin, a curtain. We have the same tools: a mass of dots, a background, a camera, colour, scale, and type. Use them the way a lighting designer and a choreographer would, not the way an animator of stick figures would.
+A fixed grid of flat discs on black. Each disc is a bulb behind a perfect diffuser: it has a colour from a palette of eight and a brightness, and nothing else. **A disc is lit because something is sounding.** Its brightness is that sound's envelope. The story is a hero disc's journey through acts, told with choreography and a small vocabulary of LED-display moves. One mass move and one soloist at a time. The presentation is austere; underneath it is sweet, like a rescue-the-princess game. The original 12KB opera is the reference for restraint, energy and refinement.
 
-## The series, and the curator
+## The disc
 
-We are not one director staging eight operas the same way. We are curators of a series. The dots are the same, the four voices are the same, the room is the same. What changes between pieces is the way of telling. Some use the dots as characters. Some are pure feeling: waves, tides, weather, with no one singled out. Some are light shows, abstract but fitting, the grid as an instrument the music plays. Some combine modes. Eight pieces, eight ways of using one canvas.
+- **Flat.** A solid circle. No gradient, no highlight, no core, no 3D.
+- **OKLCH.** A light is `oklch(L C H)`. Brightness is `L` alone, so a step in L looks like the same step in every hue.
+- **Dimming is warm and grey.** Chroma falls as L falls: `C = Cmax × (L − 0.22) / (Lmax − 0.22)`. A bulb greys before it goes out.
+- **Off is not black.** An unlit disc is dusk: `L 0.22`, `C ≈ 0.02`, the hue of the scene's ground. The grid is always faintly visible, as in the original.
+- **Glow is quiet.** A tight halo, the disc's own hue at 70 percent chroma, blurred about a tenth of the disc's width, opacity `L × 0.32`. A second wide halo exists only on large discs, faint. Nothing pulses on its own.
+- **Bigger is closer.** Scale is depth. The tight halo scales with the disc; the wide halo appears as the disc grows past about twice the cell size.
 
-The reference feel is Tenori-on and Electroplankton: a grid of light where the music and the picture are one system, every note visible, every visible thing audible. It should feel like a premium game running at 60 frames a second on the best screen you own, and come in under 48 KB for the whole series.
+## The palette
 
-The dots are discs of light. Not circles: lamps. They have a lit core and a soft edge, they glow, they can flare, and they shimmer. Shimmer is the house texture: light on water, a slow independent twinkle across the field. When in doubt, add shimmer.
+Eight lights. Story cards and scores name a light, never a value. The hues are fixed; `Lmax` is where each reads as itself.
 
-## Series map
+| Light | H | Cmax | Lmax | Meaning in the house |
+| --- | --- | --- | --- | --- |
+| bulb | 85 | 0.03 | 0.94 | warm white, the resting light |
+| gold | 80 | 0.16 | 0.80 | the hero |
+| sakura | 350 | 0.14 | 0.80 | the beloved |
+| coral | 30 | 0.18 | 0.74 | passion, danger |
+| lemon | 105 | 0.17 | 0.92 | joy, alarm |
+| mint | 160 | 0.13 | 0.84 | innocence, the world |
+| sky | 245 | 0.15 | 0.74 | calm, night, distance |
+| violet | 295 | 0.17 | 0.72 | peace, memory, the sacred |
 
-A first curatorial pass. Each piece gets a mode so the eight are different on purpose.
+A rainbow is these seven hues in wheel order: coral, gold, lemon, mint, sky, violet, sakura.
 
-| Piece | Mode | The way of telling |
-| --- | --- | --- |
-| Carmen | Forces and one dot | A red tide and a crowd; José is a dot only when taken and when alone |
-| Pagliacci | Mask | A grid that is a face: a smile of lit dots that cracks. Characters as expressions of one surface |
-| Rigoletto | Characters | The one piece that keeps named dots on stage throughout: a jester, a duke, a daughter; the sack is a reveal |
-| Dido and Aeneas | Pure feeling | No characters. A ground bass as a tide that never stops descending; grief as weather; shimmer draining to black |
-| The Magic Flute | Light show | Night and day as two lighting systems fighting; the Queen's aria is fireworks, Sarastro's is dawn; abstract |
-| Don Giovanni | Wall | A grey mass advancing a row per bar against a red field; geometry as dread; the handshake is a bloom to grey |
-| The Barber of Seville | Instrument | The grid as a Tenori-on: the patter runs across it as a sequencer, every note a lit cell; comedy as rhythm |
-| Turandot | Dawn | Light show from black to white; a single lamp brightening until the whole field is lit at VINCERÒ |
+At most two lights plus bulb on stage in any one section. A rainbow is the one exception, and it is an event, not a state.
 
-The drafting brief for each piece names its mode, and the piece must be recognisably in that mode. Two pieces in the same mode is a curation failure.
+## Light is the voice
 
-## Principles
+This is the rule that makes the series one system, as in Tenori-on and Electroplankton: every visible thing is audible and every audible thing is visible.
 
-**Dots are forces, not people.** A character is a colour and a behaviour of the mass before it is a dot. Carmen is a red tide that takes the grid row by row. The Commendatore is a grey wall advancing a row per bar. The Queen of the Night is a burst that fractures the whole grid upward. A single named dot is singled out only when the story goes intimate: a touch, a death, an aria. It emerges from the mass and returns to it.
-
-**Colour is the set.** The background and the whole grid change together. Every section of every opera has a lighting state: a background colour, a grid colour, a dot size, a density. Moving between states is a wipe, a flood, a blackout or a bloom, never a fade nobody notices. A section with the same colours as the last one is a missed cue.
-
-**Every chord is an event.** The purple section is the model: a chord sounds, the room opens, and the whole grid pulses in rings. Bind stage events to the music's events. A chord change with nothing happening on stage is a bug. A `sing` line with the singer not visibly singing is a bug.
-
-**Scale is emotion.** Big is power, love, terror, ecstasy. Small is fear, loss, death. A dot that grows until it fills the screen, as in the reference frame where the red disc rises behind HELLO, is the biggest feeling we have. Use it once per opera, at the moment that deserves it. A grid that shrinks to a single pixel and goes out is a death.
-
-**Nothing stands still.** Between the set pieces the stage breathes. The energy curve (below) keeps the grid alive without a hand-placed gesture for every bar. But breathing is a floor, not a ceiling: each section needs at least one deliberate move of the mass.
-
-**Type is a set piece.** Cues are not captions in the lower third. They can be the whole screen. A single word at 40 percent of the viewport height, as in the reference frames, is a chord in itself. Labels bracket the action, speech boxes sit on a dot, and both can be as big as the moment.
-
-**Passion and violence are allowed.** These are operas about murder, jealousy, lust, defiance and grief. A stab is a strobe and a hard cut to red. A chase is the whole grid streaming. A death is a collapse. Timid staging of Carmen is wrong staging of Carmen.
+- **Every light change is scheduled by the call that schedules its sound.** A disc does not light on its own. When a voice plays a note, the disc bound to that voice takes the note's envelope as its L: attack, decay, sustain and release from the same instrument object that shapes the gain.
+- **Named actors carry their voice.** The hero's disc is lit by the hero's voice. When the hero sings, the disc rises on each attack, holds through the vibrato, falls through the release. For long held notes the disc's L may follow the voice's real output through an analyser, so vibrato and tremolo are visible.
+- **The field is the arp and the chorus.** A chord arpeggio lights the cells it plays, one per note, in the order and at the rate the arp runs. Percussion lights cells too: a kick is a flash, a hat is a sparkle.
+- **Silence is dark.** When nothing sounds, everything is dusk. A held note with a four-second tail is a disc fading over four seconds.
+- **Brightness never exceeds the sound.** Loud is bright, quiet is dim. A crescendo is a disc brightening. There is no way to make a disc flash that does not also make a sound.
 
 ## The stage
 
-The stage is no longer fixed. Each opera declares a stage, and each section can change it.
+- **The grid is fixed.** Each opera chooses its grid once (9 by 9 is the house default; any odd size from 5 to 13) and it never changes during the piece. Cells never drift, breathe, wobble or tilt.
+- **The camera cuts.** It holds still almost always. Rarely, and as a deliberate beat, it makes one energetic move: a hard zoom into a single disc until half of it fills the screen, a snap back, a shake on an impact. Never a drift, never a slow pan, never a perspective.
+- **The background is black**, or one palette light at low L, cut on a beat. No fades of the background, no wipes of it.
+- **Type is the original cue only.** Lower third, typed in letter by letter, held, cleared. Uppercase, one to three words, in the opera's language. No title cards, no labels, no speech boxes.
 
-| Property | Range | What it means |
-| --- | --- | --- |
-| `bg` | any colour | The background. Black is the default and the resting state. A coloured background is a lighting state and reads as full-screen colour. |
-| `grid` | 5 to 13 | Dots per side. 5 is monumental, 13 is a crowd. Changing density mid-opera is a set change. |
-| `dot` | 0.2 to 4 | Base dot scale relative to the cell. Below 0.5 the grid reads as pixels or stars; above 1.5 the dots touch and the grid reads as a surface or a wall. |
-| `gap` | 0 to 2 | Spacing relative to the dot. Zero is a solid field. |
+## Choreography
 
-The stage is set at the top of the opera and changed by the `stage` gesture. A stage change is instantaneous by default so it lands as a cut. Give it a `dur` to make it a morph.
+The original told its story as a hero disc's journey through acts: alone, out into the world, love, loss, a fight, a return, an ending. That is the model. Each opera finds its own acts from its source, but every one has a hero disc whose journey we follow.
 
-## The energy curve
+- **One mass move and one soloist at a time.** The field can do one thing (a chase, a fill, a rainbow from the centre) while the hero does another (a hop, a flee, a bounce). Never two mass moves together.
+- **Movement is hops.** A disc travels cell to cell with the original's elastic, snappy ease, leaving an ember behind. Travel is on the beat.
+- **Scale is feeling.** The hero grows when brave or in love, shrinks when afraid, and a close-up is the camera's hard zoom, not a disc inflating to fill the screen.
+- **Each act is one lighting state and one idea.** Hold it long enough to feel it. Change it on a cut.
 
-Each section of the score carries an energy from 0 to 10. The engine derives from it, every frame, with no per-bar data:
+## Kawaii underneath
 
-- Grid brightness: 0 is near-black dots, 10 is full.
-- Breathing: a slow scale oscillation on every dot, amplitude and rate rising with energy. At 0 the grid is still. At 10 it seethes.
-- Camera drift: a slow, unforced pan and zoom that widens with energy.
-- Beat pulse: at energy 6 and above, the whole grid ticks on the beat.
+The presentation is austere. The charm comes from:
 
-This is the guide's "derive, don't store" applied to the stage. It costs one number per section and keeps the stage alive between set pieces. Set pieces sit on top of it.
+- **Characters.** Small round discs with big feelings. A gold hero with a heartbeat. A sakura beloved. Something that can be taken, rescued, lost.
+- **Sound.** A music-box arp, a soprano that scoops up a little more, a heartbeat kick, a bright little pluck when a disc lands.
+- **Colour.** Milky, luminous lights; rainbows and sparkles as rewards, used sparingly.
+- **Cues.** The register of a 1980s game: HELP!, AVANTI!, ADDIO. Knowing, quiet, one word where one will do.
 
-## The spectacle family
+## The vocabulary
 
-New gestures. Each is a move of the whole mass, the background or the camera. Each has a sound pairing, because a set piece with no sound is a slide.
+A tasteful LED display, from `led-vocabulary.md`. Every gesture lights cells by scheduling sounds, so each has a sound pairing. This is the whole vocabulary; nothing outside it.
 
-| name | spec | params (default) | sound pairing |
-| --- | --- | --- | --- |
-| `stage` | set bg, grid, dot, gap; a cut or a morph | `bg`, `grid`, `dot`, `gap`, `dur(0)` | none; pair with a chord |
-| `wipe` | a colour sweeps the grid from one edge to the other, dot by dot in rows or columns | `color`, `from('left')`, `dur(0.8)`, `bg(false)` also wipes the background | filtered noise swell in the wipe direction, panned |
-| `flood` | a colour spreads from a point outward in rings | `color`, `center`, `dur(1)`, `bg(false)` | chord swell, room opens with the rings |
-| `blackout` | everything to black, instant or over dur; dots and bg | `dur(0)`, `hold(0.5)` | silence, then room feedback drops |
-| `strobe` | the grid and bg flash between two colours on a rate for a duration | `a('#fff')`, `b('#000')`, `rate(12)`, `dur(0.5)` | noise hats on each flash |
-| `tide` | rows roll across the grid like a wave, repeating | `dir('down')`, `period(1.2)`, `repeat(3)`, `color` | slow arp rising and falling with the rows |
-| `swarm` | every dot streams toward a cell or an actor, then hangs there | `target`, `dur(1.5)`, `spread(0.5)` | crescendo, room closing |
-| `shatter` | every dot flies outward from a point and off the grid | `center`, `dur(0.6)` | one hard chord, then silence |
-| `collapse` | the grid falls off the bottom, row by row, or all at once | `dur(1.5)`, `stagger(0.06)` | bass drops an octave, room cutoff falls |
-| `bloom` | one dot grows until it covers the screen, holding its colour; the bg becomes that colour | `actor`, `dur(2)`, `hold(1)` | held soprano note or chord, crescendo; the grand gesture |
-| `quake` | camera shake plus every dot jitters | `amount(8)`, `dur(0.6)` | ring-mod growl on the bass |
-| `zoomCrash` | camera slams into a cell then holds | `target`, `zoom(3)`, `dur(0.25)` | one accent |
-| `titleCard` | a cue at full-screen scale, centred, held | `text`, `size(40)` (percent of viewport height), `hold(1.5)`, `color` | none; pair with silence or a chord |
-| `energy` | set the energy curve for what follows | `level(5)`, `dur(1)` to ramp | none |
-| `shimmer` | every dot twinkles independently, a slow sine of brightness and scale with a random phase per dot and a small hue drift; light on water | `amount(0.3)`, `rate(2)`, `hue(10)`, `dur(4)` | quiet high arp at 14 Hz |
+| Family | Gestures |
+| --- | --- |
+| Hero | hop, bounce, flee, pulse (heartbeat), grow, shrink, pop, fade |
+| Travel | chase, comet, scan, draw, spiral, orbit |
+| Fill | fillTop, fillCentre, fillEdge, stripe, map (an arbitrary shape) |
+| Burst | flash, explode, ripple, sparkle, glitter, confetti |
+| Colour | rainbowCentre, rainbowCycle, jumpCut |
+| Ending | decay, burn, snow, soloFade |
+| Camera | closeUp (hard zoom into one disc), snapBack, shake |
+| Sound-only | sing, chord, arp, drum, silence, crescendo, ritardando, room |
+| Text | cue |
 
-`bloom` and `titleCard` are the two reference frames: the red disc behind HELLO, the huge NO YOU CAN'T. `flood` and `wipe` are the purple section generalised to any colour and any origin. The rest are what passion and violence need.
+## The taste gate
 
-## How a visual score is written
-
-A story card now has a visual score, not a cast list. For each section:
-
-1. **Lighting state.** Background, grid colour, density, dot size. Named in words first ("black, a field of grey pixels", "the whole screen goes blood red"), then as `stage` values.
-2. **Energy.** A number, 0 to 10.
-3. **The mass.** What the whole grid does. One deliberate move at least, from the spectacle family or the crowd family.
-4. **The singled-out dot**, if any. Who, why, and what the intimate move is.
-5. **Type.** Which cue, at what scale, where.
-6. **The bind.** Which musical event each stage event is tied to: a chord, a `sing`, a silence, the room opening.
-
-The eight cards also carry an arc line: the colour journey of the whole piece in one sentence ("black to red to white to black"), and the one bloom.
+Before Iain sees a piece, the coordinator reviews six screenshots taken at its key beats against the four reference frames and the original. "No console errors" is not a pass. A piece fails if any frame shows a gradient, a drifting or tilted grid, a colour outside the palette, more than two lights plus bulb outside a rainbow, two mass moves at once, a disc lit with nothing sounding, or type other than the cue.
 
 ## Rules to write on the wall
 
-- Every section changes the lighting state. Same colours as before is a missed cue.
-- Every chord is an event on stage. Every `sing` is visible.
-- The mass moves at least once per section. Named dots appear only for intimate beats.
-- One bloom per opera, at the moment that deserves it.
-- Cues can be the whole screen. Use the size.
-- Energy is set per section and never left at the default.
-- If the stage could be a diagram of the plot, it is wrong.
-- The dots are lamps. If they look like flat circles, the look is wrong.
-- Each piece is in its own mode from the series map. Same mode twice is a curation failure.
-
-## Performance: 60 frames a second
-
-Premium means smooth. Every animated property is `transform`, `opacity` or a custom property consumed by a transform or a filter. Never animate `top`, `left`, `width`, `height` or `box-shadow` per frame. The glow is a pseudo-element whose opacity animates, not a shadow that changes. The energy loop touches custom properties, not layout. If a gesture drops frames on a laptop, it is wrong.
-
-## Budget: 48 KB for the series
-
-Site total, gzipped: engine, shell, index and all eight operas, under 49,152 bytes. Currently around 19 KB, so the ceiling is generous; spend it on shimmer, not on a framework.
-
-## Things that look expensive and aren't
-
-- A full-screen colour: one background property.
-- The whole grid streaming to a point: one loop over the dots with a stagger.
-- A strobe: a class toggled on an interval.
-- A word the size of the screen: font-size.
-- The grid breathing for a minute: one number and a sine.
-
-## Things that look cheap and aren't
-
-- A separate animation per named character across the whole piece. Use the mass.
-- Twelve small moves in a section. One big one beats them.
-- Hand-placed brightness per bar. Use the energy curve.
+- A disc is lit because something is sounding. Brightness is the envelope.
+- Flat discs, eight lights, OKLCH. Name the light, never the value.
+- The grid never moves. The camera cuts.
+- One mass move and one soloist at a time.
+- Follow the hero.
+- Austere on the surface, sweet underneath.
+- If it looks like a slide transition, it is wrong.
