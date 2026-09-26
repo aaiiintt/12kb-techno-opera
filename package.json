@@ -1,5 +1,5 @@
 {
-  "name": "15kb-techno-opera",
+  "name": "12kb-techno-opera",
   "private": true,
   "scripts": { "build": "node build.js" },
   "devDependencies": { "terser": "^5", "clean-css": "^5" }

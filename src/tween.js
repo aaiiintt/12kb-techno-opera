@@ -1,4 +1,4 @@
-/* Minimal timeline and easing engine for the 15KB Techno Opera.
+/* Minimal timeline and easing engine for the 12KB Techno Opera.
    timeline({onComplete}).to/fromTo/set/call/seek/kill, plus fromTo and delayedCall.
    Props: opacity, scale, x, y. Options: duration, ease, yoyo, repeat.
    Eases are Robert Penner's equations: power1, power2, sine, back, elastic. */

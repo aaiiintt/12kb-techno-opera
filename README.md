@@ -1,15 +1,15 @@
-# 15KB Techno Opera
+# 12KB Techno Opera
 
-A short opera in seven acts, performed by 81 dots and sung by oscillators. The whole page, including the score, the synthesizer, the choreography and the subtitles, is under 15 kilobytes over the wire.
+A short opera in seven acts, performed by 81 dots and sung by oscillators. The whole page, including the score, the synthesizer, the choreography and the subtitles, is under 12 kilobytes over the wire.
 
-For scale, 15 KB is about one hundredth of a second of a YouTube video.
+For scale, 12 KB is about one hundredth of a second of a YouTube video.
 
 ## Constraints
 
 The project follows these rules:
 
 - One file. Everything ships in `index.html`.
-- 15,360 bytes or less, measured as the gzipped size of `index.html`.
+- 12,288 bytes or less, measured as the gzipped size of `index.html`.
 - No audio samples. Every sound is synthesized when you press Play.
 - No images, Canvas or WebGL. The stage is 81 `<div>` elements styled with CSS.
 - No network requests after the page loads.
@@ -21,7 +21,7 @@ The project follows these rules:
 | --- | --- | --- |
 | `index.html` | 35,648 bytes | 12,177 bytes |
 
-Measured by `node build.js`, which reports the gzipped size using zlib level 9 and fails the build if the output exceeds 15,360 bytes.
+Measured by `node build.js`, which reports the gzipped size using zlib level 9 and fails the build if the output exceeds 12,288 bytes.
 
 ## Dependencies
 

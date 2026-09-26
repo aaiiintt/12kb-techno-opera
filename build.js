@@ -3,7 +3,7 @@ const zlib = require('zlib');
 const { minify } = require('terser');
 const CleanCSS = require('clean-css');
 
-const LIMIT = 15360;
+const LIMIT = 12288;
 
 (async () => {
   let html = fs.readFileSync('src/index.src.html', 'utf8');
