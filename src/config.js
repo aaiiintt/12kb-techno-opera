@@ -35,9 +35,10 @@ export const fragment = (m, n = 2) => m.slice(0, n);
 
 // Semitone definitions for the leitmotifs (relative to C3 = 0)
 export const MOTIF = {
-  hero: [12, 16],          // C4 -> E4 (tenor hope)
-  heroCall: [12, 14],      // C4 -> D4 (the question)
-  belovedAnswer: [19, 16], // G4 -> E4 (tender contrary descent)
+  hero: [12, 16],                // C4 -> E4 (tenor hope)
+  heroCall: [12, 14],            // C4 -> D4 (the question)
+  belovedAnswer: [19, 16],       // G4 -> E4 (tender contrary descent)
+  heroBroken: [11, 16],          // B3 -> E4 (dissonant tritone drop in grief)
   aria: [19, 21, 23, 24],        // G4 -> A4 -> B4 -> High C5 (Wagnerian soprano ascension)
   ariaCadence: [21, 19, 16, 12], // A4 -> G4 -> E4 -> C4 (dying melisma descent)
 };
