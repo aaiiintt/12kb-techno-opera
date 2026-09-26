@@ -8,8 +8,242 @@
       name="description"
       content="A short interactive story that fits in 15 kilobytes. Played out using dots."
     />
-    <link rel="stylesheet" href="src/style.css" />
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <style>
+/* Register --dot-color as a real color so mood changes become
+   slow dissolves instead of hard cuts. */
+@property --dot-color {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: #ffffff;
+}
+
+:root {
+  --dot-size: clamp(22px, 6.8vmin, 58px);
+  --gap: clamp(4px, 1.2vmin, 12px);
+  --font-swiss: 'Helvetica Neue', Helvetica, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --bg-deep: #080706;
+  --bg-glow: #18130f;
+  --ink-primary: #ffffff;
+  --ink-muted: rgba(255, 255, 255, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--ink-primary);
+  font-family: var(--font-swiss);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Velvet stage ground with warm footlight center */
+.bg-gradient {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 46%, var(--bg-glow) 0%, var(--bg-deep) 72%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* TITLE & NAV */
+.t {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 3vmin 3vw 0;
+  line-height: .82;
+  letter-spacing: -.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 8px rgba(255, 255, 255, 0.5),
+    0 0 22px rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  z-index: 20;
+  font-family: var(--font-swiss);
+}
+
+.t > span {
+  display: block;
+  width: max-content;
+  padding-right: 0.15em; /* Prevents glyph terminal and shadow truncation */
+}
+
+.t .sub {
+  display: block;
+  width: max-content;
+  white-space: nowrap;
+  margin-top: 2vmin;
+  padding-right: 0.15em;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 6px rgba(255, 255, 255, 0.4),
+    0 0 16px rgba(255, 255, 255, 0.2);
+  opacity: 0.92;
+}
+
+.n {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2vw 1.2vh;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  font-size: clamp(32px, 4.2vw, 40px);
+  font-weight: 900;
+  font-family: var(--font-swiss);
+  z-index: 25;
+}
+
+.n a {
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 8px rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.n a:hover,
+.n a:focus-visible {
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px #ffffff,
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 24px rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  text-decoration-thickness: .15em;
+  text-underline-offset: .12em;
+  outline: 0;
+  transform: scale(1.08);
+}
+
+.n a:active {
+  transform: scale(0.92);
+}
+
+/* STAGE & GRID */
+.stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: var(--gap);
+  overflow: hidden;
+}
+
+/* The camera: translates/zooms so the hero stays center-frame */
+.world {
+  will-change: transform;
+  transform-origin: center;
+}
+
+.grid {
+  display: grid;
+  gap: var(--gap);
+  justify-content: center;
+  align-content: center;
+}
+
+.dot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--dot-color);
+  opacity: 0;
+  transform: scale(0);
+  will-change: transform, opacity;
+  mix-blend-mode: screen;
+  box-shadow: 
+    0 0 10px var(--dot-color),
+    0 0 25px var(--dot-color),
+    0 0 50px var(--dot-color);
+}
+
+/* Act VII Ghost Beloved: Expansive rose corona (pure colored light, NO white core) */
+.dot.ghost-aria {
+  box-shadow: 
+    0 0 16px var(--dot-color),
+    0 0 40px var(--dot-color),
+    0 0 85px var(--dot-color),
+    0 0 140px rgba(255, 30, 140, 0.45);
+}
+
+
+/* REPLAY BUTTON */
+.replay {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 2;
+  padding: 8px 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease, color 0.2s ease, text-shadow 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.replay.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.replay:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%) translateY(-2px) scale(1.06);
+}
+
+.replay:active {
+  transform: translateX(-50%) translateY(1px) scale(0.94);
+}
+
+
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    opacity: 0.75 !important;
+    transform: none !important;
+  }
+}
+
+    </style>
   </head>
   <body>
     <div class="bg-gradient" aria-hidden="true"></div>
@@ -33,6 +267,1270 @@
 
     <button id="replay" class="replay" type="button" aria-label="Replay animation">Replay</button>
 
-    <script type="module" src="src/main.js"></script>
+    <script>
+const SIZE = 9;
+const CENTER = (SIZE - 1) / 2;
+const ROOT = 130.81;
+const hz = (semi, root = ROOT) => root * Math.pow(2, semi / 12);
+
+const MODES = {
+  PENTA: [0, 2, 4, 7, 9],
+  WOUND: [0, 1, 6],
+  ARP_MAJ: [0, 4, 7, 12],
+  ARP_TENSION: [0, 1, 6, 12],
+  ARP_HARP: [0, 4, 7, 11, 12, 16, 19, 24],
+};
+
+const MOTIF = {
+  heroBirth: [0, 7, 12, 16],
+  heroDev: [12, 16, 19, 24, 21, 19],
+  heroLove: [16, 19, 21, 24],
+  belovedAnswer: [24, 21, 19, 16],
+  heroBetrayed: [12, 15, 18, 11],
+  heroWar: [11, 12, 11, 18],
+  heroTransfigured: [12, 16, 18, 19],
+  heroDying: [12, 16, 7],
+  aria: [19, 21, 23, 24],
+  ariaCadence: [21, 19, 16, 12],
+};
+
+const COLORS = {
+  soul: 'hsl(46, 100%, 54%)',
+  beloved: 'hsl(335, 100%, 54%)',
+  fusion: 'hsl(345, 100%, 62%)',
+  dusk: 'hsl(225, 75%, 16%)',
+  envy: 'hsl(110, 100%, 42%)',
+  rage: 'hsl(0, 100%, 48%)',
+  heroRage: 'hsl(0, 100%, 54%)',
+  ember: 'hsl(14, 95%, 22%)',
+  drain: 'hsl(245, 60%, 20%)',
+  lastEmber: 'hsl(18, 100%, 50%)',
+  memory: 'hsl(335, 100%, 58%)',
+  explore: [
+    'hsl(140, 100%, 45%)',
+    'hsl(195, 100%, 48%)',
+    'hsl(46, 100%, 54%)',
+    'hsl(285, 100%, 54%)',
+    'hsl(22, 100%, 50%)',
+    'hsl(46, 100%, 54%)',
+  ],
+  rowStripe: (d) => `hsl(${[46, 140, 195, 230, 280][Math.min(d, 4)]}, 100%, ${d === 0 ? 54 : 46}%)`,
+  // Synesthetic purple flood: hue shifts upward (272° -> 287°) and brightens as synth ascends
+  peace: (ring, step = 0) => `hsl(${272 + step * 5 + ring * 2}, 100%, ${48 + step * 2 + ring}%)`,
+  healing: [
+    'hsl(0, 100%, 48%)',
+    'hsl(14, 100%, 50%)',
+    'hsl(28, 100%, 52%)',
+    'hsl(38, 100%, 53%)',
+    'hsl(46, 100%, 54%)',
+  ],
+};
+
+const CONFIG = {
+  grid: { size: SIZE, center: CENTER },
+  loop: true,
+  sound: {
+    enabled: true,
+    volume: 0.85,
+    spatial: true,
+  },
+  acts: {
+    birth: { start: 0, heartbeats: 3 },
+    development: {
+      start: 4.4,
+      rowGap: 0.48,
+      rowChord: [0, 4, 12, 16, 24],
+      wander: [
+        [4, 2],
+        [7, 3],
+        [6, 6],
+        [2, 5],
+        [3, 4],
+        [4, 4],
+      ],
+    },
+    love: {
+      start: 12.0,
+      zoom: 1.15,
+      hopGap: 0.95,
+      heroDance: [[4, 4], [5, 4], [5, 5], [4, 5], [4, 4]],
+      belovedDance: [[6, 4], [5, 4], [4, 4], [5, 5], [5, 4]],
+    },
+    jealousy: {
+      start: 19.0,
+      gateStep: 0.55,
+      belovedCell: [5, 4],
+      heroFlee: [[4, 6], [4, 7], [4, 8]],
+    },
+    revenge: {
+      start: 25.0,
+      zoom: 0.94,
+      hopGap: 0.38,
+      huntPath: [
+        [5, 7], [3, 6], [6, 6], [2, 5], [7, 5], [1, 4],
+        [4, 4], [7, 4], [2, 3], [5, 2], [3, 1], [4, 0],
+      ],
+    },
+    acceptance: {
+      start: 31.8,
+      zoom: 1.0,
+      peaceSpread: 0.22,
+      homePath: [[4, 1], [4, 2], [4, 3], [4, 4]],
+      memoryCell: [5, 4],
+      chordGap: 2.0,
+      // Synesthetic Ascending Progression: coupled chord root, pitches, cues, and room acoustics
+      ascension: [
+        { root: 0, chord: [0, 4, 7, 12, 14, 16], cue: 0.4, room: 2800 },
+        { root: 5, chord: [5, 9, 12, 16, 19, 21], cue: 1.8, room: 3100 },
+        { root: 7, chord: [7, 11, 14, 19, 21, 24], cue: 3.2, room: 3500 },
+        { root: 12, chord: [12, 16, 19, 21, 24, 28], cue: 4.6, room: 3900 },
+      ],
+    },
+    death: {
+      start: 41.5,
+      spread: 0.4,
+      texture: 1.4,
+      noteEvery: 3,
+    },
+  },
+};
+
+
+const worldEl = document.getElementById('world');
+const grid = document.getElementById('grid');
+const replayBtn = document.getElementById('replay');
+
+let dots = [];
+let opera;
+let audioCtx, masterGain, roomFilter, delayL, delayR, delayGainL, delayGainR, noiseBuf;
+let isAmbient = true;
+
+// Grid matrix construction
+function buildGrid() {
+  grid.innerHTML = '';
+  grid.style.gridTemplateColumns = `repeat(${SIZE}, var(--dot-size))`;
+  grid.style.gridTemplateRows = `repeat(${SIZE}, var(--dot-size))`;
+  dots = [];
+
+  for (let row = 0; row < SIZE; row++) {
+    for (let col = 0; col < SIZE; col++) {
+      const el = document.createElement('div');
+      el.className = 'dot';
+      el.style.gridColumn = col + 1;
+      el.style.gridRow = row + 1;
+      grid.appendChild(el);
+      const ring = Math.max(Math.abs(col - CENTER), Math.abs(row - CENTER));
+      dots.push({ el, col, row, ring });
+    }
+  }
+}
+
+const at = (col, row) => dots[row * SIZE + col];
+const everyDot = (fn) => dots.forEach(fn);
+const panAt = (col) => (CONFIG.sound.spatial ? (col - CENTER) / CENTER : 0);
+const toFreq = (p) => (typeof p === 'number' && p < 60 ? hz(p) : p);
+
+// Web Audio DSP Micro-Helpers
+const env = (p, val, t, att = 0.02, dur = 0.4, endVal = 0.0008) => {
+  p.setValueAtTime(0.0001, t);
+  p.linearRampToValueAtTime(val, t + att);
+  p.exponentialRampToValueAtTime(endVal, t + dur);
+};
+
+const mkOsc = (type, freq, t, dur) => {
+  const o = audioCtx.createOscillator();
+  o.type = type;
+  if (freq) o.frequency.setValueAtTime(freq, t);
+  o.start(t);
+  if (dur) o.stop(t + dur);
+  return o;
+};
+
+const mkGain = (val, t, dest) => {
+  const g = audioCtx.createGain();
+  if (val !== undefined) g.gain.setValueAtTime(val, t);
+  if (dest) g.connect(dest);
+  return g;
+};
+
+const mkFilt = (type, freq, q, dest) => {
+  const f = audioCtx.createBiquadFilter();
+  f.type = type;
+  if (freq) f.frequency.value = freq;
+  if (q) f.Q.value = q;
+  if (dest) f.connect(dest);
+  return f;
+};
+
+// Opera House Acoustics & Feedback Delay
+function initAudio() {
+  if (!CONFIG.sound.enabled || audioCtx) {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return;
+  }
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  masterGain = mkGain(CONFIG.sound.volume, audioCtx.currentTime, audioCtx.destination);
+  roomFilter = mkFilt('lowpass', 1800, 0.7, masterGain);
+
+  delayL = audioCtx.createDelay(1.0);
+  delayR = audioCtx.createDelay(1.0);
+  delayL.delayTime.value = 0.28;
+  delayR.delayTime.value = 0.38;
+
+  const merger = audioCtx.createChannelMerger(2);
+  delayL.connect(merger, 0, 0);
+  delayR.connect(merger, 0, 1);
+  merger.connect(roomFilter);
+
+  const splitter = audioCtx.createChannelSplitter(2);
+  roomFilter.connect(splitter);
+
+  delayGainL = mkGain(0.34, audioCtx.currentTime);
+  delayGainR = mkGain(0.34, audioCtx.currentTime);
+  splitter.connect(delayGainL, 0);
+  delayGainL.connect(delayR);
+  splitter.connect(delayGainR, 1);
+  delayGainR.connect(delayL);
+
+  noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+  const data = noiseBuf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+}
+
+function setRoom(freq, feedback = 0.34, time = 1.0) {
+  if (!audioCtx || !roomFilter) return;
+  const t = audioCtx.currentTime;
+  roomFilter.frequency.setTargetAtTime(freq, t, time);
+  if (delayGainL && delayGainR) {
+    delayGainL.gain.setTargetAtTime(feedback, t, time);
+    delayGainR.gain.setTargetAtTime(feedback, t, time);
+  }
+}
+
+// Operatic Voice Synthesizer: Tenor (Galway PWM), Soprano (Singer's Formant + 5.3Hz LFO), Pluck
+function note(pitchOrSemi, { dur = 0.5, vol = 0.12, pan = 0, grit = false, voice = 'tenor', vibrato = false, attack = null, echo = false } = {}) {
+  if (isAmbient || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const freq = toFreq(pitchOrSemi);
+  const isSoprano = voice === 'soprano';
+  const isPluck = voice === 'pluck';
+  const att = attack !== null ? attack : (isSoprano ? 0.04 : isPluck ? 0.005 : 0.02);
+
+  const gain = mkGain(0.0001, t);
+  if (isSoprano && dur > 1.2) {
+    gain.gain.linearRampToValueAtTime(vol * 0.42, t + 0.08);
+    gain.gain.linearRampToValueAtTime(vol, t + dur * 0.38);
+    gain.gain.setValueAtTime(vol, t + dur * 0.72);
+    gain.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+  } else {
+    env(gain.gain, vol, t, att, dur);
+  }
+
+  let out = gain;
+  if (audioCtx.createStereoPanner) {
+    const panner = audioCtx.createStereoPanner();
+    panner.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t);
+    gain.connect(panner);
+    out = panner;
+  }
+  out.connect(masterGain);
+
+  if (delayL && delayR) {
+    const send = mkGain(isSoprano ? 0.62 : 0.40, t, delayL);
+    out.connect(send);
+    send.connect(delayR);
+  }
+
+  let vibGain = null;
+  if (vibrato && dur > 0.5) {
+    const lfo = mkOsc('sine', isSoprano ? 5.3 : 4.8, t, dur + 0.2);
+    vibGain = mkGain(0, t);
+    vibGain.gain.setValueAtTime(0, t + (isSoprano ? 0.15 : 0.18));
+    vibGain.gain.linearRampToValueAtTime(isSoprano ? 5.8 : 3.4, t + (isSoprano ? 0.50 : 0.65));
+    lfo.connect(vibGain);
+
+    if (isSoprano) {
+      const trem = mkGain(vol * 0.20, t, gain.gain);
+      vibGain.connect(trem);
+    }
+  }
+
+  if (grit) {
+    const ringOsc = mkOsc('sawtooth', freq * 0.5, t, dur + 0.15);
+    const ringGain = mkGain(0.55, t);
+    ringOsc.connect(ringGain.gain);
+  }
+
+  if (isSoprano) {
+    const f1 = mkFilt('bandpass', 850, 2.8, gain);
+    const f2 = mkFilt('bandpass', 1550, 3.0, gain);
+    const f3 = mkFilt('bandpass', 2950, 4.5, gain);
+    const gF1 = mkGain(0.65, t, f1);
+    const gF2 = mkGain(0.55, t, f2);
+    const gF3 = mkGain(1.25, t, f3);
+    const glottis = mkGain(1, t);
+    glottis.connect(gF1);
+    glottis.connect(gF2);
+    glottis.connect(gF3);
+
+    [
+      [1.0, 'sine', 0.85, 0],
+      [2.0, 'triangle', 0.38, 2.5],
+      [3.0, 'sine', 0.22, -1.5],
+      [4.0, 'sine', 0.10, 1.0],
+      [5.0, 'sine', 0.05, 0],
+    ].forEach(([mult, type, lvl, det]) => {
+      const targetF = freq * mult;
+      const osc = mkOsc(type, null, t, dur + 0.2);
+      osc.frequency.setValueAtTime(targetF * 0.915, t);
+      osc.frequency.exponentialRampToValueAtTime(targetF, t + 0.075);
+      osc.detune.setValueAtTime(det, t);
+      if (vibGain) vibGain.connect(osc.frequency);
+      const g = mkGain(lvl, t, glottis);
+      osc.connect(g);
+    });
+
+    if (vibGain) {
+      const f3Mod = mkGain(24, t, f3.frequency);
+      vibGain.connect(f3Mod);
+    }
+
+    if (noiseBuf) {
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuf;
+      const nFilt = mkFilt('bandpass', 3600, 2.0);
+      const nG = mkGain(0.0001, t, gain);
+      env(nG.gain, 0.015 * vol, t, 0.01, 0.08, 0.0001);
+      nSrc.connect(nFilt);
+      nFilt.connect(nG);
+      nSrc.start(t);
+      nSrc.stop(t + 0.09);
+    }
+  } else {
+    const vFilter = mkFilt('lowpass', isPluck ? 4200 : 550, isPluck ? 3.2 : 1.1, gain);
+    vFilter.frequency.exponentialRampToValueAtTime(isPluck ? 4200 : 2400, t + (isPluck ? 0.01 : att * 1.5));
+    vFilter.frequency.exponentialRampToValueAtTime(isPluck ? 400 : 600, t + dur);
+
+    const o1 = mkOsc('sawtooth', freq, t, dur + 0.15);
+    const o2 = mkOsc('sawtooth', freq, t, dur + 0.15);
+    const oSub = mkOsc('sine', freq * 0.5, t, dur + 0.15);
+    o1.detune.setValueAtTime(-4.5, t);
+    o2.detune.setValueAtTime(4.5, t);
+
+    if (vibGain) {
+      vibGain.connect(o1.frequency);
+      vibGain.connect(o2.frequency);
+    }
+
+    const g1 = mkGain(0.52, t, vFilter);
+    const g2 = mkGain(0.52, t, vFilter);
+    const gSub = mkGain(0.22, t, vFilter);
+    o1.connect(g1);
+    o2.connect(g2);
+    oSub.connect(gSub);
+  }
+
+  if (echo && dur > 0.4) {
+    const echoT = t + 0.14;
+    const echoG = mkGain(0.0001, echoT);
+    env(echoG.gain, vol * 0.45, echoT, 0.02, dur * 0.8);
+    const echoOsc = mkOsc('triangle', freq, echoT, dur + 0.1);
+    if (audioCtx.createStereoPanner) {
+      const echoPanner = audioCtx.createStereoPanner();
+      echoPanner.pan.setValueAtTime(-pan * 0.8, echoT);
+      echoG.connect(echoPanner);
+      echoPanner.connect(masterGain);
+    } else {
+      echoG.connect(masterGain);
+    }
+    echoOsc.connect(echoG);
+  }
+}
+
+// 50Hz / 16Hz Tracker Arpeggio Shimmer
+function arp(chordSemis, dur = 0.8, rateHz = 50, { vol = 0.08, root = ROOT, pan = 0, type = 'triangle' } = {}) {
+  if (isAmbient || !audioCtx) return;
+  const t = audioCtx.currentTime;
+  const osc = mkOsc(type, null, t, dur + 0.05);
+  const gain = mkGain(0.0001, t);
+  env(gain.gain, vol, t, 0.015, dur);
+
+  const filter = mkFilt('lowpass', 2600, null, gain);
+  filter.frequency.exponentialRampToValueAtTime(800, t + dur);
+
+  const stepDur = 1 / rateHz;
+  const totalSteps = Math.floor(dur / stepDur);
+  for (let i = 0; i < totalSteps; i++) {
+    const semi = chordSemis[i % chordSemis.length];
+    osc.frequency.setValueAtTime(hz(semi, root), t + i * stepDur);
+  }
+
+  let out = gain;
+  if (audioCtx.createStereoPanner) {
+    const panner = audioCtx.createStereoPanner();
+    panner.pan.setValueAtTime(pan, t);
+    gain.connect(panner);
+    out = panner;
+  }
+  out.connect(masterGain);
+
+  if (delayL && delayR) {
+    const send = mkGain(0.35, t, delayL);
+    out.connect(send);
+    send.connect(delayR);
+  }
+
+  osc.connect(filter);
+}
+
+// Synthetic Percussion & Biological Sounds (Zero Samples)
+function drum(type = 'kick', vol = 0.32, { dur = 0.16, noise = true, startF = 140, endF = 38 } = {}) {
+  if (isAmbient || !audioCtx) return;
+  const t = audioCtx.currentTime;
+
+  if (type === 'kick' || type === 'heartbeat') {
+    const osc = mkOsc('sine', startF, t, dur + 0.02);
+    osc.frequency.exponentialRampToValueAtTime(endF, t + dur * 0.75);
+    const g = mkGain(0.001, t, masterGain);
+    env(g.gain, vol, t, 0.008, dur, 0.001);
+    osc.connect(g);
+
+    if (noise && noiseBuf) {
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuf;
+      const f = mkFilt('lowpass', 120, null);
+      const nG = mkGain(vol * 0.38, t, masterGain);
+      nG.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.5);
+      nSrc.connect(f);
+      f.connect(nG);
+      nSrc.start(t);
+      nSrc.stop(t + dur * 0.6);
+    }
+  } else if (type === 'breath') {
+    if (noiseBuf) {
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuf;
+      const bp = mkFilt('bandpass', 750, 1.2);
+      bp.frequency.exponentialRampToValueAtTime(320, t + dur);
+      const nG = mkGain(0.001, t, masterGain);
+      env(nG.gain, vol * 0.45, t, 0.08, dur, 0.0001);
+      nSrc.connect(bp);
+      bp.connect(nG);
+      nSrc.start(t);
+      nSrc.stop(t + dur + 0.05);
+    }
+  } else if (type === 'lubdub') {
+    drum('heartbeat', vol, { dur, startF, endF, noise });
+    setTimeout(() => {
+      drum('heartbeat', vol * 0.65, { dur: dur * 0.85, startF: startF * 1.15, endF: endF * 1.15, noise });
+    }, 170);
+  } else if (type === 'hat') {
+    if (noiseBuf) {
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuf;
+      const hp = mkFilt('highpass', 6500, null);
+      const nG = mkGain(vol * 0.5, t, masterGain);
+      nG.gain.exponentialRampToValueAtTime(0.0008, t + 0.04);
+      nSrc.connect(hp);
+      hp.connect(nG);
+      nSrc.start(t);
+      nSrc.stop(t + 0.05);
+    }
+  } else if (type === 'sfz') {
+    drum('kick', vol * 1.2, { dur: 0.6, startF: 160, endF: 30, noise: true });
+    note(-12, { dur: 1.4, vol: 0.22, grit: true });
+  }
+}
+
+const score = (tl, time, fn) => tl.call(() => fn(), [], time);
+
+// Stage Camera & Movement
+let _cell = 0;
+const cellSize = () => {
+  if (!_cell) {
+    const d = grid.querySelector('.dot');
+    _cell = d.offsetWidth + parseFloat(getComputedStyle(grid).columnGap);
+  }
+  return _cell;
+};
+
+const camera = (tl, time, { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut' } = {}) => {
+  tl.to(
+    worldEl,
+    {
+      x: () => (CENTER - col) * cellSize() * zoom,
+      y: () => (CENTER - row) * cellSize() * zoom,
+      scale: zoom,
+      duration: dur,
+      ease,
+    },
+    time
+  );
+};
+
+function hop(tl, light, col, row, time, opts = {}) {
+  const { leave = null, arriveScale = 1.25, note: pitch = null, vol = 0.11, dur = 0.45, pan = null, grit = false, voice = 'tenor', vibrato = false, echo = false, hat = false, spring = true } = opts;
+  const prev = at(light.col, light.row);
+  const next = at(col, row);
+
+  if (prev && prev !== next && leave) {
+    tl.call(() => {
+      prev.el.style.setProperty('--dot-color', leave.color);
+      prev.el.style.zIndex = '1';
+    }, [], time);
+    tl.to(prev.el, { opacity: leave.opacity, scale: leave.scale, duration: 0.45, ease: 'back.in(1.5)' }, time);
+  }
+  tl.call(() => {
+    next.el.style.setProperty('--dot-color', light.color);
+    next.el.style.zIndex = '2';
+  }, [], time);
+  tl.fromTo(
+    next.el,
+    { scale: 0.4 },
+    { opacity: 1, scale: arriveScale, duration: spring ? 0.52 : 0.45, ease: spring ? 'elastic.out(1.0, 0.45)' : 'back.out(2)', immediateRender: false },
+    time
+  );
+  if (pitch !== null) {
+    score(tl, time, () => note(pitch, { vol, dur, pan: pan !== null ? pan : panAt(col), grit, voice, vibrato, echo }));
+  }
+  if (hat) {
+    score(tl, time, () => drum('hat', 0.18));
+  }
+
+  light.col = col;
+  light.row = row;
+}
+
+// Organic Entropy Field for Act VII
+const noise01 = (x, y) =>
+  (Math.sin(x * 1.7 + 2.1) * Math.cos(y * 1.3 + 0.7) +
+    Math.sin((x + y) * 0.9 + 4.2) * 0.6 +
+    Math.sin(x * 0.5 - y * 0.8 + 1.3) * 0.4 +
+    2) / 4;
+
+function makeDeathMap() {
+  const seeds = [];
+  while (seeds.length < 4) {
+    const edge = Math.floor(Math.random() * 4);
+    const i = Math.floor(Math.random() * SIZE);
+    const cell = [[i, 0], [i, SIZE - 1], [0, i], [SIZE - 1, i]][edge];
+    if (!seeds.some(([c, r]) => c === cell[0] && r === cell[1])) seeds.push(cell);
+  }
+  const dist = new Array(SIZE * SIZE).fill(Infinity);
+  const queue = [];
+  for (const [c, r] of seeds) {
+    dist[r * SIZE + c] = 0;
+    queue.push([c, r]);
+  }
+  while (queue.length) {
+    const [c, r] = queue.shift();
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nc = c + dc;
+      const nr = r + dr;
+      if (nc >= 0 && nc < SIZE && nr >= 0 && nr < SIZE && dist[nr * SIZE + nc] === Infinity) {
+        dist[nr * SIZE + nc] = dist[r * SIZE + c] + 1;
+        queue.push([nc, nr]);
+      }
+    }
+  }
+  const { spread, texture } = CONFIG.acts.death;
+  return (d) => dist[d.row * SIZE + d.col] * spread + noise01(d.col, d.row) * texture;
+}
+
+function silence(tl, time, duration = 0.25) {
+  score(tl, time, () => {
+    if (!audioCtx || !masterGain) return;
+    const t = audioCtx.currentTime;
+    masterGain.gain.setValueAtTime(0.0001, t);
+    masterGain.gain.setValueAtTime(CONFIG.sound.volume, t + duration);
+  });
+}
+
+// --- THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE ---
+
+// ACT I — BIRTH
+function actBirth(tl, hero) {
+  const { start } = CONFIG.acts.birth;
+  const soul = at(hero.col, hero.row);
+
+  camera(tl, start, { zoom: 1.65, dur: 0.1 });
+  camera(tl, start + 0.4, { zoom: 1.35, dur: 4.0 });
+  score(tl, start, () => setRoom(1600, 0.28, 0.1));
+
+  tl.call(() => soul.el.style.setProperty('--dot-color', COLORS.soul), [], start);
+  tl.to(soul.el, { opacity: 0.95, scale: 1.0, duration: 1.4, ease: 'power2.out' }, start);
+
+  score(tl, start, () => {
+    note(-24, { dur: 4.2, vol: 0.08, type: 'sine' });
+    note(-12, { dur: 4.0, vol: 0.10, type: 'triangle' });
+  });
+
+  [start + 1.2, start + 2.3, start + 3.2].forEach((hb, i) => {
+    tl.to(soul.el, { scale: 1.25, duration: 0.12, ease: 'power2.out' }, hb)
+      .to(soul.el, { scale: 1.00, duration: 0.45, ease: 'elastic.out(1.25, 0.35)' }, hb + 0.12);
+
+    score(tl, hb, () => drum('lubdub', 0.34 + i * 0.04, { startF: 78 - i * 4, endF: 32 }));
+
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const neighbor = at(hero.col + dc, hero.row + dr);
+      if (neighbor) {
+        tl.to(neighbor.el, { opacity: 0.18 + i * 0.08, scale: 0.6 + i * 0.1, duration: 0.35, ease: 'elastic.out(1.1, 0.4)' }, hb + 0.1);
+        tl.to(neighbor.el, { opacity: 0, scale: 0.2, duration: 0.4 }, hb + 0.45);
+      }
+    }
+  });
+
+  const inc = start + 3.6;
+  MOTIF.heroBirth.forEach((p, i) => {
+    score(tl, inc + i * 0.26, () => note(p, { dur: i === 3 ? 0.95 : 0.45, vol: 0.13 + i * 0.01, voice: 'tenor', vibrato: i === 3 }));
+  });
+}
+
+// ACT II — DEVELOPMENT: Joyous 6-Step Wide Exploration & Bouncy Galway Bass
+function actDevelopment(tl, hero) {
+  const { start, rowGap, wander } = CONFIG.acts.development;
+
+  camera(tl, start, { zoom: 1.18, dur: 2.0 });
+  score(tl, start, () => setRoom(2300, 0.38, 1.0));
+
+  const diatonicChords = [0, 4, 7, 12, 16];
+
+  everyDot((d) => {
+    const dist = Math.abs(d.row - CENTER);
+    const time = start + dist * rowGap + d.col * 0.022;
+    tl.call(() => d.el.style.setProperty('--dot-color', COLORS.rowStripe(dist)), [], time);
+    tl.to(d.el, { opacity: dist === 0 ? 0.94 : 0.82, scale: 1.0, duration: 0.75, ease: 'elastic.out(1, 0.7)', immediateRender: false }, time);
+  });
+
+  for (let dist = 0; dist <= CENTER; dist++) {
+    const t = start + dist * rowGap;
+    score(tl, t, () => {
+      note(diatonicChords[dist], { dur: 2.2, vol: 0.13, voice: 'pluck' });
+      if (dist % 2 === 0) {
+        note(diatonicChords[dist] - 24, { dur: 0.38, vol: 0.16, type: 'triangle' });
+      }
+    });
+  }
+
+  let t = start + CENTER * rowGap + 0.55;
+  wander.forEach(([col, row], i) => {
+    const exploreColor = COLORS.explore[i % COLORS.explore.length];
+    tl.call(() => (hero.color = exploreColor), [], t);
+    hop(tl, hero, col, row, t, {
+      leave: { color: exploreColor, opacity: 0.82, scale: 1.05 },
+      arriveScale: 1.25,
+      note: MOTIF.heroDev[i],
+      vol: 0.15,
+      voice: 'tenor',
+      echo: true,
+      spring: true,
+    });
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const n = at(col + dc, row + dr);
+      if (n) {
+        tl.to(n.el, { scale: 1.12, duration: 0.14, yoyo: true, repeat: 1, ease: 'elastic.out(1.2, 0.32)' }, t + 0.05);
+      }
+    }
+    score(tl, t, () => arp(MODES.ARP_MAJ, 0.52, 50, { vol: 0.08, pan: panAt(col) }));
+    camera(tl, t, { col, row, zoom: 1.62, dur: 0.52 });
+    t += 0.58;
+  });
+  camera(tl, t + 0.2, { zoom: 1.35, dur: 1.0 });
+}
+
+// ACT III — LOVE: Intimate Magnetic Courting Dance & Optical Fusion
+function actLove(tl, hero, beloved) {
+  const { start, hopGap, heroDance, belovedDance } = CONFIG.acts.love;
+
+  camera(tl, start, { zoom: 1.45, dur: 1.5 });
+  score(tl, start, () => setRoom(2600, 0.44, 1.0));
+
+  tl.call(() => everyDot((d) => d.el.style.setProperty('--dot-color', COLORS.dusk)), [], start);
+  tl.to(dots.map((d) => d.el), { opacity: 0.16, scale: 0.85, duration: 1.2, ease: 'power2.inOut' }, start);
+
+  tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.soul), [], start + 0.2);
+  tl.to(at(hero.col, hero.row).el, { opacity: 0.95, scale: 1.15, duration: 0.8 }, start + 0.2);
+
+  const callAt = start + 0.4;
+  MOTIF.heroLove.forEach((p, i) => {
+    score(tl, callAt + i * 0.35, () => note(p, { dur: i === 3 ? 0.75 : 0.4, vol: 0.14 + i * 0.01, pan: -0.2, voice: 'tenor', vibrato: i === 3, echo: i < 3 }));
+  });
+
+  const [bc, br] = [6, 4];
+  const appearAt = start + 1.8;
+  tl.call(() => at(bc, br).el.style.setProperty('--dot-color', COLORS.beloved), [], appearAt);
+  tl.fromTo(at(bc, br).el, { scale: 0 }, { opacity: 0.95, scale: 1.25, duration: 0.75, ease: 'elastic.out(1.2, 0.4)', immediateRender: false }, appearAt);
+  camera(tl, appearAt, { col: bc, row: br, zoom: 1.85, dur: 0.8 });
+
+  MOTIF.belovedAnswer.forEach((p, i) => {
+    score(tl, appearAt + 0.1 + i * 0.35, () => note(p, { dur: i === 3 ? 0.95 : 0.45, vol: 0.15 + i * 0.01, pan: 0.3, voice: 'soprano', vibrato: i === 3 }));
+  });
+
+  beloved.col = bc;
+  beloved.row = br;
+  const duskLook = () => ({ color: COLORS.dusk, opacity: 0.16, scale: 0.85 });
+
+  const courtingHarmonies = [
+    { h: 16, b: 24, touch: true },
+    { h: 19, b: 21, touch: false },
+    { h: 21, b: 19, touch: true },
+    { h: 24, b: 16, touch: true },
+  ];
+
+  camera(tl, start + 3.2, { col: 4.5, row: 4.5, zoom: 1.70, dur: 1.6 });
+
+  for (let i = 1; i < heroDance.length; i++) {
+    const t = start + 3.4 + (i - 1) * hopGap;
+    const harm = courtingHarmonies[(i - 1) % courtingHarmonies.length];
+
+    hop(tl, hero, heroDance[i][0], heroDance[i][1], t, {
+      leave: duskLook(),
+      arriveScale: 1.25,
+      note: harm.h,
+      vol: 0.14,
+      pan: -0.22,
+      voice: 'tenor',
+      echo: true,
+      spring: true,
+    });
+
+    hop(tl, beloved, belovedDance[i][0], belovedDance[i][1], t + 0.08, {
+      leave: duskLook(),
+      arriveScale: 1.25,
+      note: harm.b,
+      vol: 0.16,
+      pan: 0.22,
+      voice: 'soprano',
+      vibrato: true,
+      spring: true,
+    });
+
+    if (harm.touch) {
+      const midCol = (heroDance[i][0] + belovedDance[i][0]) / 2;
+      const midRow = (heroDance[i][1] + belovedDance[i][1]) / 2;
+      for (const [dc, dr] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const neighbor = at(Math.round(midCol) + dc, Math.round(midRow) + dr);
+        if (neighbor && !(neighbor.col === heroDance[i][0] && neighbor.row === heroDance[i][1]) && !(neighbor.col === belovedDance[i][0] && neighbor.row === belovedDance[i][1])) {
+          tl.call(() => neighbor.el.style.setProperty('--dot-color', COLORS.fusion), [], t + 0.1);
+          tl.to(neighbor.el, { opacity: 0.45, scale: 1.05, duration: 0.35, yoyo: true, repeat: 1, ease: 'elastic.out(1.15, 0.35)' }, t + 0.1);
+        }
+      }
+      score(tl, t + 0.1, () => arp(MODES.ARP_HARP, 0.75, 50, { vol: 0.07, pan: 0 }));
+    }
+  }
+
+  const held = start + 3.4 + (heroDance.length - 1) * hopGap + 0.6;
+  camera(tl, held, { col: 4.5, row: 4.5, zoom: 1.60, dur: 2.2 });
+  tl.to([at(4, 4).el, at(5, 4).el], { scale: 1.25, duration: 0.6, yoyo: true, repeat: 3, ease: 'elastic.out(1.1, 0.4)' }, held);
+
+  score(tl, held, () => {
+    note(0, { dur: 4.2, vol: 0.12, pan: 0, type: 'triangle' });
+    note(12, { dur: 4.0, vol: 0.14, pan: -0.22, voice: 'tenor', attack: 0.04 });
+    note(16, { dur: 4.0, vol: 0.15, pan: 0.22, voice: 'soprano', vibrato: true, attack: 0.04 });
+    note(19, { dur: 3.8, vol: 0.13, pan: 0.22, voice: 'soprano', vibrato: true, attack: 0.04 });
+    arp(MODES.ARP_HARP, 3.8, 14, { vol: 0.07, pan: 0 });
+  });
+}
+
+// ACT IV — JEALOUSY: Green Gate Invasion & Tritone Shriek
+function actJealousy(tl, hero, beloved) {
+  const { start, belovedCell, heroFlee } = CONFIG.acts.jealousy;
+
+  silence(tl, start, 0.24);
+  score(tl, start + 0.24, () => setRoom(550, 0.45, 0.8));
+  camera(tl, start, { zoom: 1.25, dur: 1.2 });
+
+  tl.to(
+    dots.filter((d) => d.el !== at(hero.col, hero.row).el && d.el !== at(beloved.col, beloved.row).el).map((d) => d.el),
+    { opacity: 0.22, duration: 1.0, ease: 'power2.inOut' },
+    start
+  );
+
+  let gateT = start + 0.25;
+  for (let row = 0; row < SIZE; row++) {
+    const stepDur = 0.42 - row * 0.016;
+    const t = gateT;
+    everyDot((d) => {
+      if (d.row !== row) return;
+      if (d.col === hero.col && d.row === 8) return;
+      tl.call(() => d.el.style.setProperty('--dot-color', COLORS.envy), [], t + d.col * 0.015);
+      tl.to(d.el, { opacity: 0.75, scale: 0.95, duration: 0.4, ease: 'power2.out' }, t + d.col * 0.015);
+    });
+    score(tl, t, () => {
+      note(MODES.WOUND[row % 3], { dur: 0.7, vol: 0.09, grit: true });
+      arp(MODES.ARP_TENSION, 0.45, 25, { vol: 0.06, pan: (row / SIZE) * 2 - 1 });
+    });
+    gateT += stepDur;
+  }
+
+  const taken = start + 2.2;
+  tl.call(() => at(belovedCell[0], belovedCell[1]).el.style.setProperty('--dot-color', COLORS.envy), [], taken);
+  tl.to(at(belovedCell[0], belovedCell[1]).el, { scale: 0.85, opacity: 0.75, duration: 0.6 }, taken);
+  score(tl, taken, () => {
+    note(18, { dur: 1.2, vol: 0.17, pan: 0.3, voice: 'soprano', vibrato: true });
+    note(6, { dur: 1.6, vol: 0.15, pan: 0, grit: true });
+    drum('kick', 0.45, { dur: 0.35, startF: 120, endF: 28 });
+  });
+  beloved.dead = true;
+
+  heroFlee.forEach(([col, row], i) => {
+    const t = taken + 0.35 + i * 0.52;
+    hop(tl, hero, col, row, t, {
+      leave: { color: COLORS.dusk, opacity: 0.22, scale: 0.85 },
+      arriveScale: 1.20,
+      note: MOTIF.heroBetrayed[i],
+      vol: 0.14,
+      voice: 'tenor',
+      grit: true,
+    });
+    camera(tl, t, { col, row, zoom: 1.95, dur: 0.45, ease: 'power1.out' });
+  });
+}
+
+// ACT V — REVENGE: Stretto Climax, Living Breath & Cavernous Dissipation
+function actRevenge(tl, hero) {
+  const { start, huntPath } = CONFIG.acts.revenge;
+
+  tl.call(() => (hero.color = COLORS.heroRage), [], start);
+  tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.heroRage), [], start);
+  score(tl, start, () => note(MOTIF.heroWar[0], { vol: 0.17, dur: 0.6, type: 'sawtooth', grit: true, voice: 'tenor' }));
+  camera(tl, start, { col: hero.col, row: hero.row, zoom: 2.1, dur: 0.7 });
+
+  let huntT = start + 0.5;
+  huntPath.slice(0, 10).forEach(([col, row], i) => {
+    const stepDur = 0.40 - i * 0.018;
+    const t = huntT;
+
+    hop(tl, hero, col, row, t, {
+      leave: { color: COLORS.rage, opacity: 0.75, scale: 0.95 },
+      arriveScale: 1.25,
+      note: MOTIF.heroWar[i % MOTIF.heroWar.length],
+      vol: 0.16,
+      dur: 0.35,
+      pan: panAt(col),
+      grit: true,
+      voice: 'tenor',
+      hat: true,
+    });
+
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nc = col + dc;
+      const nr = row + dr;
+      if (nc >= 0 && nc < SIZE && nr >= 0 && nr < SIZE && !(nc === col && nr === row)) {
+        const d = at(nc, nr);
+        tl.call(() => d.el.style.setProperty('--dot-color', COLORS.rage), [], t);
+        tl.to(d.el, { opacity: 0.65, scale: 0.95, duration: 0.25 }, t);
+        tl.call(() => d.el.style.setProperty('--dot-color', COLORS.ember), [], t + 0.9);
+        tl.to(d.el, { opacity: 0.16, scale: 0.70, duration: 0.8, ease: 'power2.inOut' }, t + 0.9);
+      }
+    }
+
+    camera(tl, t, { col, row, zoom: 1.85, dur: stepDur * 1.1, ease: 'power2.inOut' });
+    huntT += stepDur;
+  });
+
+  const finalHuntT = huntT;
+  hop(tl, hero, 4, 0, finalHuntT, {
+    leave: { color: COLORS.rage, opacity: 0.75, scale: 0.95 },
+    arriveScale: 1.25,
+    note: 18,
+    vol: 0.20,
+    dur: 0.5,
+    grit: true,
+    voice: 'tenor',
+  });
+  score(tl, finalHuntT, () => drum('sfz', 0.50));
+  tl.to(worldEl, { y: '+=12', duration: 0.05, yoyo: true, repeat: 3, ease: 'sine.inOut' }, finalHuntT);
+
+  // Living breath pause & subterranean cavernous tail (No hard mute)
+  const pauseT = finalHuntT + 0.35;
+  score(tl, pauseT, () => setRoom(320, 0.65, 2.2));
+  score(tl, pauseT + 0.15, () => drum('lubdub', 0.22, { startF: 50, endF: 22 }));
+  tl.to(at(4, 0).el, { scale: 1.25, duration: 0.14, yoyo: true, repeat: 1 }, pauseT + 0.15);
+
+  score(tl, pauseT + 0.45, () => drum('breath', 0.16, { dur: 0.38 }));
+  score(tl, pauseT + 0.72, () => drum('lubdub', 0.18, { startF: 44, endF: 20 }));
+  tl.to(at(4, 0).el, { scale: 1.20, duration: 0.14, yoyo: true, repeat: 1 }, pauseT + 0.72);
+
+  const after = pauseT + 0.95;
+  camera(tl, after, { col: 4, row: 0, zoom: 1.65, dur: 1.0 });
+  tl.call(() => everyDot((d) => d.el.style.setProperty('--dot-color', COLORS.ember)), [], after);
+  tl.to(
+    dots.filter((d) => !(d.col === hero.col && d.row === hero.row)).map((d) => d.el),
+    { opacity: 0.14, scale: 0.65, duration: 1.2, ease: 'power2.inOut' },
+    after
+  );
+  tl.to(at(hero.col, hero.row).el, { opacity: 1.0, scale: 1.2, duration: 0.8 }, after);
+}
+
+// Concentric ring pulse radiating from center (4, 4) in lockstep with synth ascension
+function pulseCenterRings(tl, time, step = 0) {
+  for (let r = 0; r <= 4; r++) {
+    const ringDots = dots.filter((d) => d.ring === r);
+    const ringColor = COLORS.peace(r, step);
+    tl.call(() => ringDots.forEach((d) => d.el.style.setProperty('--dot-color', ringColor)), [], time + r * 0.075);
+    tl.to(
+      ringDots.map((d) => d.el),
+      {
+        scale: 1.25,
+        opacity: 1.0,
+        duration: 0.36,
+        yoyo: true,
+        repeat: 1,
+        ease: 'elastic.out(1.15, 0.35)',
+      },
+      time + r * 0.075
+    );
+  }
+}
+
+// ACT VI — ACCEPTANCE: Full Bleed Radiant Purple Flood & Synesthetic Synth Ascension
+function actAcceptance(tl, hero) {
+  const { start, peaceSpread, homePath, memoryCell, ascension } = CONFIG.acts.acceptance;
+
+  score(tl, start, () => setRoom(2800, 0.44, 1.2));
+  tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.healing[0]), [], start);
+
+  homePath.forEach(([col, row], i) => {
+    const t = start + 0.35 + i * 0.85;
+    const stepColor = COLORS.healing[i + 1];
+    tl.call(() => (hero.color = stepColor), [], t);
+    hop(tl, hero, col, row, t, {
+      leave: { color: COLORS.ember, opacity: 0.14, scale: 0.65 },
+      arriveScale: 1.25,
+      note: MOTIF.heroTransfigured[i],
+      vol: 0.14,
+      dur: 0.75,
+      voice: 'tenor',
+      echo: true,
+    });
+    camera(tl, t, { col: 4, row, zoom: 1.65, dur: 0.75 });
+  });
+
+  const settleT = start + 3.2;
+  camera(tl, settleT, { col: CENTER, row: CENTER, zoom: 1.15, dur: 2.2 });
+  const home = at(CENTER, CENTER);
+  tl.to(home.el, { scale: 1.25, duration: 1.6, yoyo: true, repeat: 2, ease: 'sine.inOut' }, settleT);
+
+  // Full bleed radiant purple flood across all 81 dots
+  const floodStart = settleT + 0.3;
+  everyDot((d) => {
+    const t = floodStart + d.ring * peaceSpread;
+    tl.call(() => d.el.style.setProperty('--dot-color', COLORS.peace(d.ring, 0)), [], t);
+    tl.to(d.el, { opacity: 0.95, scale: 1.0, duration: 0.8, ease: 'sine.out' }, t);
+  });
+
+  // Synesthetic Ascending Chords coupled with Center Ring Pulses
+  ascension.forEach(({ chord, cue, room }, step) => {
+    const s = settleT + cue;
+    pulseCenterRings(tl, s, step);
+    score(tl, s, () => {
+      if (room) setRoom(room, 0.44 + step * 0.02, 1.0);
+      chord.slice(0, 4).forEach((pitch, i) => {
+        note(pitch, {
+          dur: 3.4 - i * 0.2,
+          vol: 0.11 - i * 0.01,
+          voice: i === 2 ? 'pluck' : 'tenor',
+          vibrato: i === 3,
+          attack: 0.04,
+        });
+      });
+      arp(chord, 2.4, 14 + step, { vol: 0.07, pan: step % 2 === 0 ? -0.2 : 0.2 });
+    });
+  });
+
+  const mem = at(memoryCell[0], memoryCell[1]);
+  tl.call(() => mem.el.style.setProperty('--dot-color', COLORS.memory), [], settleT + 2.0);
+  tl.to(mem.el, { opacity: 0.95, scale: 1.22, duration: 1.8, ease: 'sine.inOut' }, settleT + 2.0);
+}
+
+// ACT VII — DEATH & BELOVED'S GHOST ARIA (Liebestod on High C5)
+function actDeath(tl, hero) {
+  const { start, noteEvery } = CONFIG.acts.death;
+  const deathTime = makeDeathMap();
+  const heroCell = at(hero.col, hero.row);
+
+  camera(tl, start, { col: 4.5, row: 4, zoom: 1.75, dur: 9.0 });
+
+  const dying = dots.filter((d) => d.el !== heroCell.el);
+  const order = [...dying].sort((a, b) => deathTime(a) - deathTime(b));
+
+  order.forEach((d, i) => {
+    const t = start + deathTime(d);
+    tl.call(() => {
+      d.el.classList.remove('ghost-aria');
+      d.el.style.setProperty('--dot-color', COLORS.drain);
+    }, [], t);
+    tl.to(d.el, { opacity: 0, scale: 0.15, duration: 1.2, ease: 'power2.in' }, t);
+    if (i % noteEvery === 0) {
+      const semi = MODES.PENTA[(order.length - 1 - i) % MODES.PENTA.length];
+      score(tl, t, () => note(semi, { dur: 0.9, vol: 0.05, pan: panAt(d.col), voice: 'pluck' }));
+    }
+  });
+
+  const maxDeath = start + Math.max(...order.map(deathTime));
+  const emberAt = maxDeath + 0.5;
+  tl.call(() => heroCell.el.style.setProperty('--dot-color', COLORS.lastEmber), [], emberAt);
+  tl.to(heroCell.el, { opacity: 0.9, scale: 0.95, duration: 0.8, ease: 'power2.out' }, emberAt);
+
+  score(tl, emberAt + 0.5, () => drum('lubdub', 0.28, { startF: 64, endF: 26, noise: false }));
+  tl.to(heroCell.el, { scale: 1.1, duration: 0.14 }, emberAt + 0.5)
+    .to(heroCell.el, { scale: 0.95, duration: 0.14 }, emberAt + 0.64)
+    .to(heroCell.el, { scale: 1.02, duration: 0.10 }, emberAt + 0.78)
+    .to(heroCell.el, { scale: 0.90, duration: 0.40 }, emberAt + 0.88);
+
+  MOTIF.heroDying.forEach((p, i) => {
+    score(tl, emberAt + 0.5 + i * 0.36, () => note(p, { dur: i === 2 ? 0.9 : 0.4, vol: 0.11 - i * 0.015, voice: 'tenor' }));
+  });
+
+  const ariaAt = emberAt + 1.6;
+  const ghostCell = at(5, 4);
+  tl.call(() => {
+    ghostCell.el.classList.add('ghost-aria');
+    ghostCell.el.style.setProperty('--dot-color', COLORS.beloved);
+  }, [], ariaAt);
+  tl.fromTo(ghostCell.el, { scale: 0, opacity: 0 }, { scale: 1.20, opacity: 1.0, duration: 1.4, ease: 'power2.out', immediateRender: false }, ariaAt);
+  tl.to(ghostCell.el, { scale: 1.10, opacity: 0.92, duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, ariaAt + 1.4);
+
+  score(tl, ariaAt, () => setRoom(4200, 0.55));
+
+  MOTIF.aria.forEach((p, i) => {
+    const t = ariaAt + [0.1, 0.8, 1.5, 2.1][i];
+    score(tl, t, () => note(p, { dur: i === 3 ? 3.4 : 0.75, vol: [0.14, 0.16, 0.17, 0.22][i], pan: 0.35, voice: 'soprano', vibrato: i === 3 }));
+  });
+
+  const finalBeatAt = ariaAt + 3.2;
+  score(tl, finalBeatAt, () => drum('kick', 0.18, { startF: 50, endF: 22, dur: 0.28, noise: false }));
+  tl.to(heroCell.el, { scale: 0.96, duration: 0.18 }, finalBeatAt).to(heroCell.el, { scale: 0.70, duration: 0.8 }, finalBeatAt + 0.18);
+
+  MOTIF.ariaCadence.forEach((p, i) => {
+    const t = finalBeatAt + [1.0, 1.5, 2.1, 2.9][i];
+    score(tl, t, () => note(p, { dur: [0.55, 0.65, 0.85, 2.2][i], vol: [0.13, 0.12, 0.11, 0.10][i], pan: 0.3, voice: 'soprano', vibrato: i >= 2 }));
+  });
+  score(tl, finalBeatAt + 2.9, () => note(0, { dur: 2.6, vol: 0.08, voice: 'tenor' }));
+
+  const fadeAt = finalBeatAt + 4.2;
+  tl.to(heroCell.el, { opacity: 0, scale: 0.1, duration: 3.5, ease: 'power2.in' }, fadeAt);
+  tl.to(ghostCell.el, { opacity: 0, scale: 0.1, duration: 3.5, ease: 'power2.in' }, fadeAt);
+  tl.call(() => ghostCell.el.classList.remove('ghost-aria'), [], fadeAt + 3.5);
+
+  score(tl, fadeAt, () => {
+    note(-12, { dur: 4.0, vol: 0.11 });
+    note(-24, { dur: 5.5, vol: 0.09, type: 'sine' });
+  });
+}
+
+// Master Stage Timeline Orchestrator
+function buildOpera() {
+  if (opera) opera.kill();
+
+  const hero = { col: CENTER, row: CENTER, color: COLORS.soul };
+  const beloved = { col: 6, row: 4, color: COLORS.beloved, dead: false };
+
+  opera = gsap.timeline({
+    onComplete: () => {
+      if (isAmbient || CONFIG.loop) {
+        gsap.delayedCall(1.5, buildOpera);
+      } else {
+        stopOpera();
+      }
+    },
+  });
+
+  opera.set(worldEl, { x: 0, y: 0, scale: 1 }, 0);
+  opera.set(dots.map((d) => d.el), { opacity: 0, scale: 0 }, 0);
+  opera.call(() => everyDot((d) => {
+    d.el.className = 'dot';
+    d.el.style.setProperty('--dot-color', COLORS.dusk);
+  }), [], 0);
+
+  if (isAmbient) {
+    const centerDot = at(CENTER, CENTER);
+    centerDot.el.style.setProperty('--dot-color', COLORS.soul);
+    opera.set(centerDot.el, { opacity: 0.92, scale: 1.15 }, 0);
+  }
+
+  actBirth(opera, hero);
+  actDevelopment(opera, hero);
+  actLove(opera, hero, beloved);
+  actJealousy(opera, hero, beloved);
+  actRevenge(opera, hero);
+  actAcceptance(opera, hero);
+  actDeath(opera, hero);
+}
+
+// Typography & Navigation Controls
+const titleEl = document.querySelector('.t');
+const technoSpan = titleEl ? titleEl.children[1] : null;
+const playBtn = document.getElementById('play-btn');
+
+function fitTitle() {
+  if (!titleEl) return;
+  const spans = [...titleEl.children];
+  const subEl = titleEl.querySelector('.sub');
+
+  titleEl.style.fontSize = '100px';
+  if (subEl) subEl.style.fontSize = '100px';
+
+  // Measure all main title lines to find the true widest line
+  const mainSpans = spans.filter((s) => s !== subEl);
+  const maxMainW = Math.max(...mainSpans.map((s) => s.offsetWidth || 1));
+  const sW = subEl ? (subEl.offsetWidth || 1) : 1;
+
+  // 0.88 viewport width provides a guaranteed 6% margin on both sides so text never truncates
+  const byWidth = 100 * (innerWidth * 0.88) / maxMainW;
+  const byHeight = (innerHeight - 120) / (3.6 * 0.84);
+  const titleSize = Math.min(byWidth, byHeight);
+
+  titleEl.style.fontSize = titleSize + 'px';
+  if (subEl) {
+    subEl.style.fontSize = (titleSize * (maxMainW / sW)) + 'px';
+  }
+}
+
+function clearTypeAnim() {
+  if (!titleEl) return;
+  [...titleEl.children].forEach((s) => s.getAnimations().forEach((a) => a.cancel()));
+}
+
+function typeIn() {
+  if (!titleEl) return;
+  clearTypeAnim();
+  titleEl.style.visibility = 'visible';
+  titleEl.style.opacity = '1';
+  const children = [...titleEl.children];
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    children.forEach((s) => (s.style.clipPath = 'none'));
+    return;
+  }
+  children.forEach((s, i) => {
+    const len = Math.max(4, s.textContent.trim().length);
+    const anim = s.animate(
+      { clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] },
+      { duration: 280, delay: 60 + i * 140, easing: `steps(${len})`, fill: 'backwards' }
+    );
+    anim.onfinish = () => {
+      s.style.clipPath = 'none'; // Unclip on completion so glyph overhang and shadows are never cut off
+    };
+  });
+}
+
+function typeOut(onComplete) {
+  if (!titleEl) {
+    if (onComplete) onComplete();
+    return;
+  }
+  clearTypeAnim();
+  const children = [...titleEl.children];
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    titleEl.style.visibility = 'hidden';
+    if (onComplete) onComplete();
+    return;
+  }
+  let remaining = children.length;
+  children.forEach((s, i) => {
+    const revIndex = children.length - 1 - i;
+    const len = Math.max(4, s.textContent.trim().length);
+    const anim = s.animate(
+      { clipPath: ['inset(0 0 0 0)', 'inset(0 100% 0 0)'] },
+      { duration: 180, delay: revIndex * 60, easing: `steps(${len})`, fill: 'forwards' }
+    );
+    anim.onfinish = () => {
+      remaining--;
+      if (remaining === 0) {
+        titleEl.style.visibility = 'hidden';
+        if (onComplete) onComplete();
+      }
+    };
+  });
+}
+
+document.fonts.ready.then(() => fitTitle());
+if (titleEl && technoSpan) {
+  fitTitle();
+  typeIn();
+}
+
+buildGrid();
+
+function startOpera() {
+  isAmbient = false;
+  document.body.classList.add('playing');
+  typeOut();
+  initAudio();
+  if (masterGain && audioCtx) {
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(CONFIG.sound.volume, audioCtx.currentTime);
+  }
+  if (playBtn) {
+    playBtn.textContent = 'Pause';
+    playBtn.setAttribute('aria-label', 'Pause performance');
+  }
+  if (replayBtn) replayBtn.classList.remove('visible');
+  buildOpera();
+}
+
+function stopOpera() {
+  document.body.classList.remove('playing');
+  typeIn();
+  if (replayBtn) replayBtn.classList.remove('visible');
+
+  isAmbient = true;
+  if (audioCtx && masterGain) {
+    const t = audioCtx.currentTime;
+    masterGain.gain.cancelScheduledValues(t);
+    masterGain.gain.setValueAtTime(masterGain.gain.value, t);
+    masterGain.gain.linearRampToValueAtTime(0.0001, t + 0.2);
+  }
+
+  if (playBtn) {
+    playBtn.textContent = 'Play';
+    playBtn.setAttribute('aria-label', 'Play performance');
+  }
+  buildOpera();
+}
+
+buildOpera();
+
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('play') === '1') {
+  startOpera();
+}
+const seekSec = parseFloat(urlParams.get('seek'));
+if (!isNaN(seekSec) && opera) {
+  document.body.classList.add('playing');
+  if (titleEl) titleEl.style.visibility = 'hidden';
+  opera.seek(seekSec, false);
+}
+
+if (playBtn) {
+  playBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isAmbient) startOpera();
+    else stopOpera();
+  });
+}
+
+window.addEventListener('click', (e) => {
+  if (e.target.closest('a') || e.target.closest('button')) return;
+  const dotEl = e.target.closest('.dot');
+  if (dotEl) {
+    gsap.fromTo(dotEl, { scale: 0.7 }, { scale: 1.25, duration: 0.5, ease: 'elastic.out(1.3, 0.3)' });
+  }
+  if (isAmbient) startOpera();
+});
+
+if (replayBtn) {
+  replayBtn.addEventListener('click', startOpera);
+}
+
+window.addEventListener('resize', () => {
+  _cell = 0;
+  fitTitle();
+});
+
+    </script>
   </body>
 </html>

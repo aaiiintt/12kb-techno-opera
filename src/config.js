@@ -6,9 +6,7 @@ export const hz = (semi, root = ROOT) => root * Math.pow(2, semi / 12);
 export const MODES = {
   PENTA: [0, 2, 4, 7, 9],
   WOUND: [0, 1, 6],
-  OPEN: [0, 4, 12, 16, 24],
   ARP_MAJ: [0, 4, 7, 12],
-  ARP_MIN: [0, 3, 7, 12],
   ARP_TENSION: [0, 1, 6, 12],
   ARP_HARP: [0, 4, 7, 11, 12, 16, 19, 24],
 };

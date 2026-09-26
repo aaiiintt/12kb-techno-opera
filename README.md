@@ -100,20 +100,19 @@ The opera is through-composed, tracking the Hero leitmotif (`MOTIF`) as it mutat
 
 ## Wire Budget & Size Footprint
 
-The project enforces an absolute wire transfer constraint of **15,360 bytes (15 KB)** gzipped.
+The project enforces an absolute wire transfer constraint of **15,360 bytes (15 KB)** gzipped. The entire opera is packaged as a **self-contained single file** (`index.html`):
 
 | Asset | Description | Uncompressed | Gzipped |
 |---|---|---|---|
-| `src/main.js` | Audio synthesis engine, GSAP spring choreography, stage logic | 40.1 KB | **10.7 KB** (10,954 B) |
-| `src/config.js` | Musical score, motif definitions, tuning tables | 3.4 KB | **1.3 KB** (1,323 B) |
-| `src/style.css` | Swiss typography, stage velvet ground, light coronas, spring UI | 5.1 KB | **1.7 KB** (1,734 B) |
-| `index.html` | Stage markup, canvas-free DOM container | 1.2 KB | **0.6 KB** (591 B) |
-| `about.html` | Manifest-style manifesto with dynamic subhead typography | 5.9 KB | **2.2 KB** (2,273 B) |
+| `index.html` | Self-contained single-file delivery bundle (HTML + CSS + Audio Engine + Choreography) | 49.2 KB | **13.81 KB** (14,145 B) |
+| `about.html` | Standalone manifesto poster with dynamic subhead typography | 5.8 KB | **2.27 KB** (2,273 B) |
+| `src/` | Modular source files (`main.js`, `config.js`, `style.css`) for developer reference | 48.6 KB | **14.01 KB** (14,351 B) |
 
-**Total Opera Delivery (`index.html` + `src/style.css` + `src/config.js` + `src/main.js`):**
-*   **Uncompressed:** 49.7 KB (49,743 bytes)
-*   **Gzipped Wire Transfer:** **14.26 KB (14,602 bytes)**
-*   **Budget Margin:** **758 bytes under the strict 15 KB (15,360 byte) ceiling.**
+**Total Opera Delivery (`index.html`):**
+*   **Uncompressed:** 49.2 KB (49,230 bytes)
+*   **Gzipped Wire Transfer:** **13.81 KB (14,145 bytes)**
+*   **Brotli Wire Transfer:** **11.82 KB (12,099 bytes)**
+*   **Budget Margin:** **1,215 bytes under the strict 15 KB (15,360 byte) ceiling.**
 
 ### Visual Integrity & Anti-Eclipse Blend Mode
 *   **Additive Screen Blending (`mix-blend-mode: screen`):** All dots render with additive optical blending over `#080706` dark velvet. Dark or dying pixels mathematically cannot occlude or darken neighboring lighter pixels, completely eliminating crescent moon or eclipse cutout artifacts during dynamic scale changes and entropy transitions.
