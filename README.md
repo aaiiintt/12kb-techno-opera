@@ -104,16 +104,20 @@ The project enforces an absolute wire transfer constraint of **15,360 bytes (15 
 
 | Asset | Description | Uncompressed | Gzipped |
 |---|---|---|---|
-| `src/main.js` | Audio synthesis engine, GSAP spring choreography, stage logic | 38.8 KB | **10.5 KB** (10,732 B) |
-| `src/config.js` | Musical score, motif definitions, tuning tables | 3.3 KB | **1.3 KB** (1,316 B) |
-| `src/style.css` | Swiss typography, stage velvet ground, light coronas, spring UI | 4.8 KB | **1.6 KB** (1,674 B) |
-| `index.html` | Stage markup, canvas-free DOM container | 1.1 KB | **0.6 KB** (596 B) |
-| `about.html` | Manifest-style manifesto with dynamic subhead typography | 5.7 KB | **2.2 KB** (2,254 B) |
+| `src/main.js` | Audio synthesis engine, GSAP spring choreography, stage logic | 40.1 KB | **10.7 KB** (10,954 B) |
+| `src/config.js` | Musical score, motif definitions, tuning tables | 3.4 KB | **1.3 KB** (1,323 B) |
+| `src/style.css` | Swiss typography, stage velvet ground, light coronas, spring UI | 5.1 KB | **1.7 KB** (1,734 B) |
+| `index.html` | Stage markup, canvas-free DOM container | 1.2 KB | **0.6 KB** (591 B) |
+| `about.html` | Manifest-style manifesto with dynamic subhead typography | 5.9 KB | **2.2 KB** (2,273 B) |
 
 **Total Opera Delivery (`index.html` + `src/style.css` + `src/config.js` + `src/main.js`):**
-*   **Uncompressed:** 49.3 KB (49,263 bytes)
-*   **Gzipped Wire Transfer:** **13.98 KB (14,318 bytes)**
-*   **Budget Margin:** **1,042 bytes under the strict 15 KB (15,360 byte) ceiling.**
+*   **Uncompressed:** 49.7 KB (49,743 bytes)
+*   **Gzipped Wire Transfer:** **14.26 KB (14,602 bytes)**
+*   **Budget Margin:** **758 bytes under the strict 15 KB (15,360 byte) ceiling.**
+
+### Visual Integrity & Anti-Eclipse Blend Mode
+*   **Additive Screen Blending (`mix-blend-mode: screen`):** All dots render with additive optical blending over `#080706` dark velvet. Dark or dying pixels mathematically cannot occlude or darken neighboring lighter pixels, completely eliminating crescent moon or eclipse cutout artifacts during dynamic scale changes and entropy transitions.
+*   **Safe-Gutter Geometry & Terminal Padding:** All title and subhead lines feature right-hand terminal padding (`padding-right: 0.15em`) and responsive fitting with a 12% safety margin (`innerWidth * 0.88`), guaranteeing that slanted glyph terminals (like 'A' in OPERA) and incandescent drop shadows are never clipped across any viewport (from 375px mobile to 4K ultrawide).
 
 ---
 

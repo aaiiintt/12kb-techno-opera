@@ -78,8 +78,8 @@
         bottom: 0;
         display: flex;
         justify-content: space-between;
-        padding: 40px 4vw 18px;
-        background: linear-gradient(to top, rgba(8, 7, 6, 0.98) 55%, rgba(8, 7, 6, 0.8) 80%, transparent 100%);
+        padding: 70px 4vw 20px;
+        background: linear-gradient(to top, #080706 45%, rgba(8, 7, 6, 0.85) 75%, transparent 100%);
         pointer-events: none;
         z-index: 30;
       }
@@ -191,8 +191,8 @@
         refS.style.fontSize = '100px';
         const tW = refT.offsetWidth || 1;
         const sW = refS.offsetWidth || 1;
-        const byWidth = 100 * (innerWidth * 0.94) / tW;
-        const byHeight = (innerHeight - 110) / (3.6 * 0.82);
+        const byWidth = 100 * (innerWidth * 0.88) / tW;
+        const byHeight = (innerHeight - 120) / (3.6 * 0.84);
         const titleSize = Math.min(byWidth, byHeight);
         const subSize = titleSize * (tW / sW);
         document.documentElement.style.setProperty('--subhead-size', subSize + 'px');

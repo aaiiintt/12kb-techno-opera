@@ -379,14 +379,20 @@ function hop(tl, light, col, row, time, opts = {}) {
   const next = at(col, row);
 
   if (prev && prev !== next && leave) {
-    tl.call(() => prev.el.style.setProperty('--dot-color', leave.color), [], time);
+    tl.call(() => {
+      prev.el.style.setProperty('--dot-color', leave.color);
+      prev.el.style.zIndex = '1';
+    }, [], time);
     tl.to(prev.el, { opacity: leave.opacity, scale: leave.scale, duration: 0.45, ease: 'back.in(1.5)' }, time);
   }
-  tl.call(() => next.el.style.setProperty('--dot-color', light.color), [], time);
+  tl.call(() => {
+    next.el.style.setProperty('--dot-color', light.color);
+    next.el.style.zIndex = '2';
+  }, [], time);
   tl.fromTo(
     next.el,
     { scale: 0.4 },
-    { opacity: 1, scale: arriveScale, duration: spring ? 0.52 : 0.45, ease: spring ? 'elastic.out(1.2, 0.38)' : 'back.out(2)', immediateRender: false },
+    { opacity: 1, scale: arriveScale, duration: spring ? 0.52 : 0.45, ease: spring ? 'elastic.out(1.0, 0.45)' : 'back.out(2)', immediateRender: false },
     time
   );
   if (pitch !== null) {
@@ -818,7 +824,7 @@ function actAcceptance(tl, hero) {
   everyDot((d) => {
     const t = floodStart + d.ring * peaceSpread;
     tl.call(() => d.el.style.setProperty('--dot-color', COLORS.peace(d.ring, 0)), [], t);
-    tl.to(d.el, { opacity: 0.95, scale: 1.15, duration: 0.8, ease: 'sine.out' }, t);
+    tl.to(d.el, { opacity: 0.95, scale: 1.0, duration: 0.8, ease: 'sine.out' }, t);
   });
 
   // Synesthetic Ascending Chords coupled with Center Ring Pulses
@@ -862,7 +868,7 @@ function actDeath(tl, hero) {
       d.el.classList.remove('ghost-aria');
       d.el.style.setProperty('--dot-color', COLORS.drain);
     }, [], t);
-    tl.to(d.el, { opacity: 0, scale: 0.18, duration: 1.5, ease: 'power2.in' }, t + 0.8);
+    tl.to(d.el, { opacity: 0, scale: 0.15, duration: 1.2, ease: 'power2.in' }, t);
     if (i % noteEvery === 0) {
       const semi = MODES.PENTA[(order.length - 1 - i) % MODES.PENTA.length];
       score(tl, t, () => note(semi, { dur: 0.9, vol: 0.05, pan: panAt(d.col), voice: 'pluck' }));
@@ -966,19 +972,27 @@ const technoSpan = titleEl ? titleEl.children[1] : null;
 const playBtn = document.getElementById('play-btn');
 
 function fitTitle() {
-  if (!titleEl || !technoSpan) return;
+  if (!titleEl) return;
+  const spans = [...titleEl.children];
   const subEl = titleEl.querySelector('.sub');
+
   titleEl.style.fontSize = '100px';
   if (subEl) subEl.style.fontSize = '100px';
 
-  const tW = technoSpan.offsetWidth || 1;
+  // Measure all main title lines to find the true widest line
+  const mainSpans = spans.filter((s) => s !== subEl);
+  const maxMainW = Math.max(...mainSpans.map((s) => s.offsetWidth || 1));
   const sW = subEl ? (subEl.offsetWidth || 1) : 1;
-  const byWidth = 100 * (innerWidth * 0.94) / tW;
-  const byHeight = (innerHeight - 110) / (3.6 * 0.82);
+
+  // 0.88 viewport width provides a guaranteed 6% margin on both sides so text never truncates
+  const byWidth = 100 * (innerWidth * 0.88) / maxMainW;
+  const byHeight = (innerHeight - 120) / (3.6 * 0.84);
   const titleSize = Math.min(byWidth, byHeight);
 
   titleEl.style.fontSize = titleSize + 'px';
-  if (subEl) subEl.style.fontSize = (titleSize * (tW / sW)) + 'px';
+  if (subEl) {
+    subEl.style.fontSize = (titleSize * (maxMainW / sW)) + 'px';
+  }
 }
 
 function clearTypeAnim() {
@@ -990,20 +1004,21 @@ function typeIn() {
   if (!titleEl) return;
   clearTypeAnim();
   titleEl.style.visibility = 'visible';
+  titleEl.style.opacity = '1';
   const children = [...titleEl.children];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    children.forEach((s) => (s.style.clipPath = 'inset(0 0 0 0)'));
-    titleEl.style.opacity = '1';
+    children.forEach((s) => (s.style.clipPath = 'none'));
     return;
   }
-  titleEl.style.opacity = '1';
   children.forEach((s, i) => {
     const len = Math.max(4, s.textContent.trim().length);
-    s.style.clipPath = 'inset(0 0 0 0)';
-    s.animate(
+    const anim = s.animate(
       { clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] },
       { duration: 280, delay: 60 + i * 140, easing: `steps(${len})`, fill: 'backwards' }
     );
+    anim.onfinish = () => {
+      s.style.clipPath = 'none'; // Unclip on completion so glyph overhang and shadows are never cut off
+    };
   });
 }
 
@@ -1015,7 +1030,6 @@ function typeOut(onComplete) {
   clearTypeAnim();
   const children = [...titleEl.children];
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    children.forEach((s) => (s.style.clipPath = 'inset(0 100% 0 0)'));
     titleEl.style.visibility = 'hidden';
     if (onComplete) onComplete();
     return;
@@ -1029,7 +1043,6 @@ function typeOut(onComplete) {
       { duration: 180, delay: revIndex * 60, easing: `steps(${len})`, fill: 'forwards' }
     );
     anim.onfinish = () => {
-      s.style.clipPath = 'inset(0 100% 0 0)';
       remaining--;
       if (remaining === 0) {
         titleEl.style.visibility = 'hidden';
