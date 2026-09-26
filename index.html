@@ -358,7 +358,7 @@ const CUES = [
   [25.0, 'VENDETTA!', 1.2],
   [28.7, 'BASTA.', 1.6],
   [32.0, 'PACE.', 1.6],
-  [46.5, 'SOLO.', 1.6],
+  [46.5, 'SOLO.', 1.1],
   [48.2, 'ADDIO.', 2.4],
   [55.5, 'FINE.', 3.0],
 ];
@@ -900,6 +900,7 @@ function cue(tl, time, text, hold = 1.6) {
     );
   }, [], time);
   tl.call(() => {
+    if (el.textContent !== text) return;
     el.getAnimations().forEach((a) => a.cancel());
     el.style.visibility = 'hidden';
   }, [], time + len * 0.055 + hold);
