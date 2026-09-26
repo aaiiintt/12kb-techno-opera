@@ -605,7 +605,7 @@ O.G = {
 
   stage: (tl, t, a, p = {}) => {
     const { bg, grid, dot, gap, dur = 0 } = p;
-    if (!dur) { O.applyStage({ bg, grid, dot, gap }); return t; }
+    if (!dur) { tl.call(() => O.applyStage({ bg, grid, dot, gap }), [], t); return t; }
     if (bg != null) tl.call(() => O.transitionBg(bg, dur), [], t);
     if (grid != null) {
       tl.to(gridEl, { opacity: 0, duration: dur / 2 }, t);
