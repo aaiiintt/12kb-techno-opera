@@ -1,81 +1,75 @@
+// Mode: mask. Canio and Nedda are never dots — they are voices only, never
+// entered or appeared. The grid itself is the face: painted amber for the
+// smile, a blue flood for the eye's private truth, a shrinking mouth as the
+// cadence goes wrong. The mask — not a character — is the one dot that
+// blooms and shatters when the face finally splits.
 O.opera = {
   title: 'PAGLIACCI', lang: 'it',
   tempo: 96,
   root: 9, mode: 'minor',
+  stage: { bg: '#000', grid: 9, dot: 0.5, gap: 1 },
   cast: {
-    a: { color: '#e8a33d', size: 1.3, voice: 'tenor' },
+    a: { color: '#e8a33d', size: 1, voice: 'tenor' },
     b: { color: '#4a7ebf', size: 0.8, voice: 'soprano' },
+    c: { color: '#c98a3c', size: 1, voice: 'tenor' },
   },
   motif: ['1 -3 -4 2 1', 'x-x.xx-.'],
   chords: 'i iv v vi',
   room: [700, 0.25],
-  intro: 6, outro: 9,
+  intro: 5, outro: 7,
   score: [
-    [0, 'appear', 'a', { cell: [4, 4], scale: 1.3 }],
+    // intro — RIDI! — black face barely legible, the mouth painted on
+    [0, 'energy', null, { level: 2, dur: 0.5 }],
     [0, 'cue', null, { text: 'RIDI!', hold: 1.4 }],
     [0.05, 'roomChange', null, { cutoff: 700, feedback: 0.25, dur: 0.1 }],
-    [0.6, 'fillRing', null, { center: [4, 4], ring: 4, color: '#4a4a4a' }],
-    [1.4, 'sing', 'a', {}],
+    [0.3, 'wipe', null, { color: '#c98a3c', from: 'left', dur: 1.2 }],
+    [1.5, 'sing', 'a', {}],
 
-    ['1.1', 'freeze', 'a', { dur: 2.4 }],
-    ['1.1', 'sing', 'a', { transform: ['frag', 2] }],
-    ['1.1', 'arpChorus', null, { numeral: 'i', dur: 1.2, rate: 55 }],
+    // mask — PAGLIACCIO! — held amber smile, energy up for the beat-pulse
+    ['1.1', 'energy', null, { level: 6, dur: 1 }],
+    ['1.1', 'colourWash', 'grid', { color: '#c98a3c', dur: 0.6 }],
     ['1.1', 'cue', null, { text: 'PAGLIACCIO!', hold: 1.2 }],
+    ['1.1', 'sing', 'a', { transform: 'frag' }],
+    ['1.1', 'arpChorus', null, { numeral: 'i', dur: 1.2, rate: 50 }],
+    ['2.1', 'sing', 'a', { transform: 'frag' }],
+    ['2.1', 'shimmer', null, { amount: 0.25, rate: 2, hue: 10, dur: 2 }],
 
-    ['2.1', 'pulse', 'a', { beats: 4, amount: 1.15 }],
-    ['2.1', 'sing', 'a', { transform: ['frag', 3] }],
-
-    ['3.1', 'enter', 'b', { edge: 'right', to: [7, 1], dur: 0.8 }],
-    ['3.1', 'sing', 'b', {}],
+    // crack — NEDDA — the eye's truth, then the wrong laugh
+    ['3.1', 'stage', null, { bg: '#0a0a12', dur: 1 }],
+    ['3.1', 'energy', null, { level: 4, dur: 1 }],
+    ['3.1', 'sing', 'b', { transform: 'ma' }],
+    ['3.1', 'flood', null, { color: '#4a7ebf', center: [2, 2], dur: 1, bg: false }],
+    ['3.1', 'chord', null, { numeral: 'iv', dur: 1, voice: 'tenor' }],
     ['3.1', 'cue', null, { text: 'NEDDA.', hold: 1.2 }],
-
+    ['3.3', 'chord', null, { numeral: 'i', dur: 1, voice: 'bass' }],
+    ['3.3', 'flood', null, { color: '#0a0a12', center: [2, 2], dur: 1, bg: false }],
     ['4.1', 'sing', 'a', { transform: 'mi' }],
-    ['4.1', 'chord', null, { numeral: 'iv', dur: 2, voice: 'bass' }],
+    ['4.1', 'flood', null, { color: '#8a5a2a', center: [4, 4], dur: 0.8, bg: false }],
+    ['4.1', 'chord', null, { numeral: 'v', dur: 2, voice: 'tenor' }],
+    ['4.3', 'ritardando', null, { stretch: 1.15, beats: 1 }],
+    ['5.1', 'chord', null, { numeral: 'vi', dur: 2, voice: 'tenor' }],
+    ['5.1', 'stage', null, { dot: 0.35, dur: 1 }],
+    ['5.3', 'silence', null, { dur: 0.4 }],
 
-    ['5.1', 'pulse', 'a', { beats: 4, amount: 1.3 }],
-    ['5.1', 'chord', null, { numeral: 'v', dur: 2.2, voice: 'tenor' }],
+    // split — FINITA — the mask, not a face, blooms and breaks
+    ['6.1', 'energy', null, { level: 8, dur: 1 }],
+    ['6.1', 'roomChange', null, { cutoff: 3000, feedback: 0.6, dur: 2 }],
+    ['6.1', 'appear', 'c', { cell: [4, 4], scale: 0.6 }],
+    ['6.1', 'sing', 'a', { transform: 'aug' }],
+    ['6.1', 'crescendo', null, { to: 0.95, dur: 2.4 }],
+    ['7.1', 'bloom', 'c', { dur: 1.5, hold: 0.8 }],
+    ['7.1', 'energy', null, { level: 9, dur: 0.5 }],
+    ['7.1', 'titleCard', null, { text: 'FINITA.', size: 40, hold: 1.6, color: '#c98a3c' }],
+    ['8.1', 'strobe', null, { a: '#c98a3c', b: '#000', rate: 14, dur: 0.6 }],
+    ['8.1', 'sing', 'a', { transform: 'dim' }],
+    ['8.2', 'shatter', null, { center: [4, 4], dur: 0.6 }],
 
-    ['6.1', 'hold', 'a', { dur: 2.2 }],
-    ['6.1', 'chord', null, { numeral: 'v', dur: 2.2, voice: 'tenor' }],
-
-    ['7.1', 'chord', null, { numeral: 'vi', dur: 2, voice: 'tenor' }],
-    ['7.3', 'silence', null, { dur: 0.4 }],
-
-    ['8.1', 'hold', 'a', { dur: 2.2 }],
-
-    ['9.1', 'shrink', 'a', { to: 0.7, dur: 1.2 }],
-    ['9.1', 'flicker', 'a', { beats: 6, amount: 0.3 }],
-    ['9.1', 'sing', 'a', { transform: 'dim' }],
-    ['9.1', 'cue', null, { text: 'AH!', hold: 1 }],
-
-    ['10.1', 'sing', 'a', { transform: 'dim' }],
-    ['10.1', 'crescendo', null, { to: 0.9, dur: 2.2 }],
-    ['10.1', 'roomChange', null, { cutoff: 2200, feedback: 0.58, dur: 2.2 }],
-
-    ['11.1', 'sing', 'a', { transform: 'dim' }],
-    ['11.1', 'shrink', 'a', { to: 0.5, dur: 1.2 }],
-
-    ['12.1', 'silence', null, { dur: 0.6 }],
-    ['12.1', 'freeze', 'a', { dur: 2.2 }],
-    ['12.1', 'hold', 'a', { dur: 1.6 }],
-
-    ['13.1', 'split', 'a', { to: [[1, 1], [7, 7]], dur: 1.6 }],
-    ['13.1', 'sing', 'a', { transform: 'aug' }],
-    ['13.1', 'ascend', null, { gap: 1.5, hue: 30 }],
-    ['13.1', 'cue', null, { text: 'FINITA.', hold: 1.8 }],
-
-    ['15.1', 'freeze', 'a', { dur: 0.1 }],
-
-    ['o0', 'shrink', 'a', { to: 0.45, dur: 1.8 }],
-    ['o0', 'dim', 'a', { to: 0.4, dur: 1.8 }],
-    ['o0', 'chord', null, { numeral: 'i', dur: 3.4, voice: 'bass' }],
-    ['o0', 'roomChange', null, { cutoff: 700, feedback: 0.25, dur: 3.6 }],
-    ['o0', 'cue', null, { text: 'LA COMMEDIA.', hold: 2.4 }],
-
-    ['o4.2', 'exit', 'b', { edge: 'right', speed: 1 }],
-    ['o4.2', 'hold', 'a', { dur: 1.8 }],
-
-    ['o6.5', 'path', 'a', { cells: [[1, 1], [3, 3], [4, 4]], stepDur: 0.7, trail: true }],
-    ['o6.5', 'grow', 'a', { to: 1.3, dur: 2.0 }],
+    // outro — LA COMMEDIA — black returns, the same dim face waiting
+    ['o0', 'stage', null, { bg: '#000', grid: 9, dot: 0.5, gap: 1, dur: 2.5 }],
+    ['o0', 'energy', null, { level: 1, dur: 2.5 }],
+    ['o0', 'shimmer', null, { amount: 0.3, rate: 1.5, hue: 8, dur: 3 }],
+    ['o0', 'chord', null, { numeral: 'i', dur: 3, voice: 'bass' }],
+    ['o0', 'roomChange', null, { cutoff: 700, feedback: 0.25, dur: 3 }],
+    ['o0', 'cue', null, { text: 'LA COMMEDIA.', hold: 2 }],
   ],
 };
