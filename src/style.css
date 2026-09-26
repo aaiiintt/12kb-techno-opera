@@ -56,15 +56,6 @@ body {
   pointer-events: none;
   z-index: 20;
   font-family: var(--font-swiss);
-  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  opacity: 1;
-  transform: translateY(0);
-}
-
-body.playing .t {
-  opacity: 0;
-  transform: translateY(-24px);
-  pointer-events: none;
 }
 
 .t > span {

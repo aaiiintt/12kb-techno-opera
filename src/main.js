@@ -834,18 +834,71 @@ function fitTitle() {
   }
 }
 
-document.fonts.ready.then(() => fitTitle());
+function clearTypeAnim() {
+  if (!titleEl) return;
+  [...titleEl.children].forEach((s) => s.getAnimations().forEach((a) => a.cancel()));
+}
+
+function typeIn() {
+  if (!titleEl) return;
+  clearTypeAnim();
+  titleEl.style.visibility = 'visible';
+  const children = [...titleEl.children];
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    children.forEach((s) => (s.style.clipPath = 'inset(0 0 0 0)'));
+    titleEl.style.opacity = '1';
+    return;
+  }
+  titleEl.style.opacity = '1';
+  children.forEach((s, i) => {
+    const len = Math.max(4, s.textContent.trim().length);
+    s.style.clipPath = 'inset(0 0 0 0)';
+    s.animate(
+      { clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] },
+      { duration: 280, delay: 60 + i * 140, easing: `steps(${len})`, fill: 'backwards' }
+    );
+  });
+}
+
+function typeOut(onComplete) {
+  if (!titleEl) {
+    if (onComplete) onComplete();
+    return;
+  }
+  clearTypeAnim();
+  const children = [...titleEl.children];
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    children.forEach((s) => (s.style.clipPath = 'inset(0 100% 0 0)'));
+    titleEl.style.visibility = 'hidden';
+    if (onComplete) onComplete();
+    return;
+  }
+  let remaining = children.length;
+  children.forEach((s, i) => {
+    const revIndex = children.length - 1 - i;
+    const len = Math.max(4, s.textContent.trim().length);
+    const anim = s.animate(
+      { clipPath: ['inset(0 0 0 0)', 'inset(0 100% 0 0)'] },
+      { duration: 180, delay: revIndex * 60, easing: `steps(${len})`, fill: 'forwards' }
+    );
+    anim.onfinish = () => {
+      s.style.clipPath = 'inset(0 100% 0 0)';
+      remaining--;
+      if (remaining === 0) {
+        titleEl.style.visibility = 'hidden';
+        if (onComplete) onComplete();
+      }
+    };
+  });
+}
+
+document.fonts.ready.then(() => {
+  fitTitle();
+});
 
 if (titleEl && technoSpan) {
   fitTitle();
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    [...titleEl.children].forEach((s, i) =>
-      s.animate(
-        { clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] },
-        { duration: 420, delay: 200 + i * 260, easing: `steps(${s.textContent.length})`, fill: 'backwards' }
-      )
-    );
-  }
+  typeIn();
 }
 
 buildGrid();
@@ -853,6 +906,7 @@ buildGrid();
 function startOpera() {
   isAmbient = false;
   document.body.classList.add('playing');
+  typeOut();
   initAudio();
   if (masterGain && audioCtx) {
     masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -868,6 +922,7 @@ function startOpera() {
 
 function stopOpera() {
   document.body.classList.remove('playing');
+  typeIn();
   if (replayBtn) replayBtn.classList.remove('visible');
 
   // Mute audio smoothly
