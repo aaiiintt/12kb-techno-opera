@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>About — 15KB Techno Opera</title>
+    <meta
+      name="description"
+      content="15KB Techno Opera is a short interactive story that fits in 15 kilobytes. Played out using dots."
+    />
+    <link rel="stylesheet" href="src/style.css" />
+    <style>
+      .about-swiss-stage {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 60px 24px;
+        position: relative;
+        z-index: 1;
+      }
+      .about-swiss-card {
+        max-width: 620px;
+        width: 100%;
+        font-family: var(--font-swiss);
+      }
+      .about-swiss-title {
+        font-size: clamp(3.2rem, 7.5vw, 4.8rem);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 0.86;
+        text-transform: uppercase;
+        margin: 0 0 32px;
+        color: #ffffff;
+      }
+      .about-swiss-title span {
+        display: block;
+      }
+      .about-lead {
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1.45;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        margin: 0 0 28px;
+      }
+      .about-breakdown {
+        margin: 28px 0 36px;
+        border-top: 2px solid rgba(255, 255, 255, 0.9);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+        padding: 12px 0;
+      }
+      .breakdown-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .breakdown-row.total {
+        border-bottom: none;
+        font-weight: 900;
+        color: #ffffff;
+        font-size: 15px;
+        padding-top: 12px;
+      }
+      .about-heading {
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
+        margin: 40px 0 16px;
+        color: #ffffff;
+      }
+      .about-body p {
+        font-size: 16px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 0 0 20px;
+        letter-spacing: -0.01em;
+      }
+      .about-link {
+        color: #ffffff;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        font-weight: 700;
+        transition: color 0.2s ease;
+      }
+      .about-link:hover {
+        color: hsl(46, 100%, 56%);
+      }
+      .about-back-btn {
+        display: inline-block;
+        margin-top: 28px;
+        font-weight: 900;
+        font-size: 16px;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+      .about-back-btn:hover {
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-gradient" aria-hidden="true"></div>
+
+    <main class="about-swiss-stage">
+      <div class="about-swiss-card">
+        <h1 class="about-swiss-title">
+          <span>15KB</span>
+          <span>Techno</span>
+          <span>Opera</span>
+        </h1>
+
+        <div class="about-body">
+          <p class="about-lead">
+            15KB Techno Opera is a short interactive story that fits in 15 kilobytes.
+          </p>
+
+          <div class="about-breakdown">
+            <div class="breakdown-row"><span>Audio synthesis & choreography</span><span>9.8 KB</span></div>
+            <div class="breakdown-row"><span>Musical score & act storyboards</span><span>2.6 KB</span></div>
+            <div class="breakdown-row"><span>Photonic bloom & Swiss typography</span><span>1.5 KB</span></div>
+            <div class="breakdown-row"><span>HTML stage & markup</span><span>0.5 KB</span></div>
+            <div class="breakdown-row total"><span>Total transfer footprint</span><span>14.5 KB (fits in 15 KB)</span></div>
+          </div>
+
+          <h2 class="about-heading">About this project</h2>
+
+          <p>
+            Large AI systems make it easier to build small software. We can use them to make tools that serve one purpose, one person, or a small group. The more of these small tools we make, the less we might rely on large systems in the future. Maybe it's time for some less is more, digitally too.
+          </p>
+
+          <p>
+            I wanted to see if I could tell a story in a few kilobytes. This was my attempt. It ended up being a short opera about technology. Played out using dots.
+          </p>
+
+          <p>
+            Repo: <a href="https://github.com/aaiiintt/15kb-techno-opera/" class="about-link" target="_blank" rel="noopener noreferrer">github.com/aaiiintt/15kb-techno-opera/</a>
+          </p>
+
+          <a href="index.html" class="about-back-btn">&larr; BACK</a>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
