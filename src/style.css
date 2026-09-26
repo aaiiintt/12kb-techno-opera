@@ -52,7 +52,11 @@ body {
   line-height: .8;
   letter-spacing: -.05em;
   text-transform: uppercase;
-  mix-blend-mode: difference;
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.9),
+    0 0 8px rgba(255, 255, 255, 0.5),
+    0 0 22px rgba(255, 255, 255, 0.25);
   pointer-events: none;
   z-index: 20;
   font-family: var(--font-swiss);
@@ -71,7 +75,12 @@ body {
   line-height: 1;
   letter-spacing: -0.03em;
   font-weight: 800;
-  opacity: 0.9;
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 6px rgba(255, 255, 255, 0.4),
+    0 0 16px rgba(255, 255, 255, 0.2);
+  opacity: 0.92;
 }
 
 .n {
@@ -91,16 +100,25 @@ body {
 }
 
 .n a {
-  color: #fff;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 
+    0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 8px rgba(255, 255, 255, 0.35);
   text-decoration: none;
   min-height: 48px;
   display: flex;
   align-items: center;
   cursor: pointer;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
 }
 
 .n a:hover,
 .n a:focus-visible {
+  color: #ffffff;
+  text-shadow: 
+    0 0 2px #ffffff,
+    0 0 10px rgba(255, 255, 255, 0.8),
+    0 0 24px rgba(255, 255, 255, 0.5);
   text-decoration: underline;
   text-decoration-thickness: .15em;
   text-underline-offset: .12em;
