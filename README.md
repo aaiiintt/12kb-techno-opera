@@ -79,22 +79,22 @@ To synthesize an authentic dramatic soprano voice (*the fat lady singing*) witho
 
 ## The Seven Acts (Narrative & Score)
 
-The opera is through-composed, tracking the Hero leitmotif (`MOTIF`) as it mutates across seven distinct emotional and dramatic states:
+The opera is through-composed across seven distinct musical and choreographic movements:
 
-| Act | Name | Mood / Mode | Tempo | Leitmotif Transformation | Grid Choreography |
-|---|---|---|---|---|---|
-| **I** | **Birth** | Wonder (C Lydian) | 76 BPM | `heroBirth`: C3 $\to$ G3 $\to$ C4 $\to$ E4 inception motif | Macro zoom on center `(4, 4)` cell; mitotic cardiac ripples outward |
-| **II** | **Development** | Joyous Curiosity (C Major) | 118 BPM | `heroDev`: C4 $\to$ E4 $\to$ G4 $\to$ C5 $\to$ A4 $\to$ G4 | 6-step wide exploration across quadrants; Galway bass bounce & 50Hz SID arps |
-| **III** | **Love** | Romantic Passion (C Major / A Minor) | 94 BPM | `heroLove` $\leftrightarrow$ `belovedAnswer` counterpoint | Close magnetic courting waltz; peach-magenta optical fusion; 50Hz flutter |
-| **IV** | **Jealousy** | Betrayal (Dorian / Tritone) | 134 BPM | `heroBetrayed`: C4 $\to$ Eb4 $\to$ Gb4 $\to$ B3 horror motif | Green gate invasion descending; tritone shriek; Beloved captured at `(5, 4)` |
-| **V** | **Revenge** | Wrath & Exhaustion (Locrian / Ring Mod) | 148 BPM | `heroWar`: B3 $\to$ C4 $\to$ B3 $\to$ F#4 battle chant | 10-strike hunt; incinerated embers; sfz crash; living breath pause & lowpass tail |
-| **VI** | **Acceptance** | Euphoria (Lydian #4) | 128 BPM | `heroTransfigured`: C4 $\to$ E4 $\to$ F#4 $\to$ G4 resolution | Full-bleed radiant purple flood; concentric ring pulses locked to synth strikes |
-| **VII** | **Death** | Tragedy (Phrygian / C Minor) | 52 BPM | `heroDying` lament into Beloved's ghost `aria` on High C5 | Breadth-first Perlin entropy decay; solitary amber ember; subterranean C1 pedal |
+| Act | Mood / Mode | Tempo | Leitmotif Transformation | Grid Choreography |
+|---|---|---|---|---|
+| **ACT 1** | Wonder (C Lydian) | 76 BPM | Inception motif (C3 $\to$ G3 $\to$ C4 $\to$ E4) | Macro zoom on center `(4, 4)` cell; mitotic cardiac ripples outward |
+| **ACT 2** | Curiosity (C Major) | 118 BPM | Kinetic exploration motif (C4 $\to$ E4 $\to$ G4 $\to$ C5 $\to$ A4 $\to$ G4) | 6-step wide exploration across quadrants; Galway bass bounce & 50Hz SID arps |
+| **ACT 3** | Passion (C Major / A Minor) | 94 BPM | Polyphonic counterpoint duet | Close magnetic courting waltz; optical fusion; 50Hz flutter |
+| **ACT 4** | Conflict (Dorian / Tritone) | 134 BPM | Tritone tension motif (C4 $\to$ Eb4 $\to$ Gb4 $\to$ B3) | Green gate invasion descending; tritone shriek; target captured at `(5, 4)` |
+| **ACT 5** | Climax (Locrian / Ring Mod) | 148 BPM | Furious battle chant (B3 $\to$ C4 $\to$ B3 $\to$ F#4) | 10-strike hunt; incinerated embers; sfz crash; living breath pause & lowpass tail |
+| **ACT 6** | Resolution (Lydian #4) | 128 BPM | Transfigured resolution (C4 $\to$ E4 $\to$ F#4 $\to$ G4) | Full-bleed radiant purple flood; concentric ring pulses locked to synth strikes |
+| **ACT 7** | Transcendence (Phrygian / C Minor) | 52 BPM | Solitary lament into ghost `aria` on High C5 | Breadth-first Perlin entropy decay; solitary amber ember; subterranean C1 pedal |
 
 ### Synesthetic Architecture & Theatrical Pauses
-*   **Synesthetic Coupling:** Synth pitch values directly parameterize dot hue and luminescence. In Act VI Acceptance, as the 4-step chord progression ascends, the purple flood lifts from deep ultraviolet (272°) to luminous royal violet (288°), radiating in concentric waves from center `(4, 4)` in exact mathematical lockstep with the synth.
-*   **Act IV Prelude:** A **240ms theatrical breath** precedes the crushing Green Gate invasion.
-*   **Act V Living Pause:** Following the revenge climax, an intentional living pause unfolds—not an unnatural digital mute, but cavernous acoustic dissipation (`320Hz`), staggered anatomical heartbeats (`lubdub`), and biological exhalation (`breath`).
+*   **Synesthetic Coupling:** Synth pitch values directly parameterize dot hue and luminescence. In Act 6, as the 4-step chord progression ascends, the purple flood lifts from deep ultraviolet (272°) to luminous royal violet (288°), radiating in concentric waves from center `(4, 4)` in exact mathematical lockstep with the synth.
+*   **Act 4 Prelude:** A **240ms theatrical breath** precedes the crushing Green Gate invasion.
+*   **Act 5 Living Pause:** Following the revenge climax, an intentional living pause unfolds—not an unnatural digital mute, but cavernous acoustic dissipation (`320Hz`), staggered anatomical heartbeats (`lubdub`), and biological exhalation (`breath`).
 
 ---
 
@@ -104,15 +104,14 @@ The project enforces an absolute wire transfer constraint of **15,360 bytes (15 
 
 | Asset | Description | Uncompressed | Gzipped |
 |---|---|---|---|
-| `index.html` | Self-contained single-file delivery bundle (HTML + CSS + Audio Engine + Choreography) | 49.2 KB | **13.81 KB** (14,145 B) |
+| `index.html` | Self-contained single-file delivery bundle (HTML + CSS + Audio Engine + Choreography) | 48.6 KB | **13.49 KB** (13,818 B) |
 | `about.html` | Standalone manifesto poster with dynamic subhead typography | 5.8 KB | **2.27 KB** (2,273 B) |
-| `src/` | Modular source files (`main.js`, `config.js`, `style.css`) for developer reference | 48.6 KB | **14.01 KB** (14,351 B) |
+| `src/` | Modular source files (`main.js`, `config.js`, `style.css`) for developer reference | 48.2 KB | **13.88 KB** (14,213 B) |
 
 **Total Opera Delivery (`index.html`):**
-*   **Uncompressed:** 49.2 KB (49,230 bytes)
-*   **Gzipped Wire Transfer:** **13.81 KB (14,145 bytes)**
-*   **Brotli Wire Transfer:** **11.82 KB (12,099 bytes)**
-*   **Budget Margin:** **1,215 bytes under the strict 15 KB (15,360 byte) ceiling.**
+*   **Uncompressed:** 48.6 KB (48,605 bytes)
+*   **Gzipped Wire Transfer:** **13.49 KB (13,818 bytes)**
+*   **Budget Margin:** **1,542 bytes under the strict 15 KB (15,360 byte) ceiling.**
 
 ### Visual Integrity & Anti-Eclipse Blend Mode
 *   **Additive Screen Blending (`mix-blend-mode: screen`):** All dots render with additive optical blending over `#080706` dark velvet. Dark or dying pixels mathematically cannot occlude or darken neighboring lighter pixels, completely eliminating crescent moon or eclipse cutout artifacts during dynamic scale changes and entropy transitions.

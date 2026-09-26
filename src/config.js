@@ -65,8 +65,8 @@ export const CONFIG = {
     spatial: true,
   },
   acts: {
-    birth: { start: 0, heartbeats: 3 },
-    development: {
+    act1: { start: 0, heartbeats: 3 },
+    act2: {
       start: 4.4,
       rowGap: 0.48,
       rowChord: [0, 4, 12, 16, 24],
@@ -79,20 +79,20 @@ export const CONFIG = {
         [4, 4],
       ],
     },
-    love: {
+    act3: {
       start: 12.0,
       zoom: 1.15,
       hopGap: 0.95,
       heroDance: [[4, 4], [5, 4], [5, 5], [4, 5], [4, 4]],
       belovedDance: [[6, 4], [5, 4], [4, 4], [5, 5], [5, 4]],
     },
-    jealousy: {
+    act4: {
       start: 19.0,
       gateStep: 0.55,
       belovedCell: [5, 4],
       heroFlee: [[4, 6], [4, 7], [4, 8]],
     },
-    revenge: {
+    act5: {
       start: 25.0,
       zoom: 0.94,
       hopGap: 0.38,
@@ -101,7 +101,7 @@ export const CONFIG = {
         [4, 4], [7, 4], [2, 3], [5, 2], [3, 1], [4, 0],
       ],
     },
-    acceptance: {
+    act6: {
       start: 31.8,
       zoom: 1.0,
       peaceSpread: 0.22,
@@ -116,7 +116,7 @@ export const CONFIG = {
         { root: 12, chord: [12, 16, 19, 21, 24, 28], cue: 4.6, room: 3900 },
       ],
     },
-    death: {
+    act7: {
       start: 41.5,
       spread: 0.4,
       texture: 1.4,

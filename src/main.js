@@ -438,7 +438,7 @@ function makeDeathMap() {
       }
     }
   }
-  const { spread, texture } = CONFIG.acts.death;
+  const { spread, texture } = CONFIG.acts.act7;
   return (d) => dist[d.row * SIZE + d.col] * spread + noise01(d.col, d.row) * texture;
 }
 
@@ -451,13 +451,11 @@ function silence(tl, time, duration = 0.25) {
   });
 }
 
-// ============================================================
-// THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE
-// ============================================================
+// --- THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE ---
 
-// ACT I — BIRTH
-function actBirth(tl, hero) {
-  const { start } = CONFIG.acts.birth;
+// ACT 1
+function act1(tl, hero) {
+  const { start } = CONFIG.acts.act1;
   const soul = at(hero.col, hero.row);
 
   camera(tl, start, { zoom: 1.65, dur: 0.1 });
@@ -493,9 +491,9 @@ function actBirth(tl, hero) {
   });
 }
 
-// ACT II — DEVELOPMENT: Joyous 6-Step Wide Exploration & Bouncy Galway Bass
-function actDevelopment(tl, hero) {
-  const { start, rowGap, wander } = CONFIG.acts.development;
+// ACT 2
+function act2(tl, hero) {
+  const { start, rowGap, wander } = CONFIG.acts.act2;
 
   camera(tl, start, { zoom: 1.18, dur: 2.0 });
   score(tl, start, () => setRoom(2300, 0.38, 1.0));
@@ -545,9 +543,9 @@ function actDevelopment(tl, hero) {
   camera(tl, t + 0.2, { zoom: 1.35, dur: 1.0 });
 }
 
-// ACT III — LOVE: Intimate Magnetic Courting Dance & Optical Fusion
-function actLove(tl, hero, beloved) {
-  const { start, hopGap, heroDance, belovedDance } = CONFIG.acts.love;
+// ACT 3
+function act3(tl, hero, beloved) {
+  const { start, hopGap, heroDance, belovedDance } = CONFIG.acts.act3;
 
   camera(tl, start, { zoom: 1.45, dur: 1.5 });
   score(tl, start, () => setRoom(2600, 0.44, 1.0));
@@ -639,9 +637,9 @@ function actLove(tl, hero, beloved) {
   });
 }
 
-// ACT IV — JEALOUSY: Green Gate Invasion & Tritone Shriek
-function actJealousy(tl, hero, beloved) {
-  const { start, belovedCell, heroFlee } = CONFIG.acts.jealousy;
+// ACT 4
+function act4(tl, hero, beloved) {
+  const { start, belovedCell, heroFlee } = CONFIG.acts.act4;
 
   silence(tl, start, 0.24);
   score(tl, start + 0.24, () => setRoom(550, 0.45, 0.8));
@@ -694,9 +692,9 @@ function actJealousy(tl, hero, beloved) {
   });
 }
 
-// ACT V — REVENGE: Stretto Climax, Living Breath & Cavernous Dissipation
-function actRevenge(tl, hero) {
-  const { start, huntPath } = CONFIG.acts.revenge;
+// ACT 5
+function act5(tl, hero) {
+  const { start, huntPath } = CONFIG.acts.act5;
 
   tl.call(() => (hero.color = COLORS.heroRage), [], start);
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.heroRage), [], start);
@@ -791,9 +789,9 @@ function pulseCenterRings(tl, time, step = 0) {
   }
 }
 
-// ACT VI — ACCEPTANCE: Full Bleed Radiant Purple Flood & Synesthetic Synth Ascension
-function actAcceptance(tl, hero) {
-  const { start, peaceSpread, homePath, memoryCell, ascension } = CONFIG.acts.acceptance;
+// ACT 6
+function act6(tl, hero) {
+  const { start, peaceSpread, homePath, memoryCell, ascension } = CONFIG.acts.act6;
 
   score(tl, start, () => setRoom(2800, 0.44, 1.2));
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.healing[0]), [], start);
@@ -851,9 +849,9 @@ function actAcceptance(tl, hero) {
   tl.to(mem.el, { opacity: 0.95, scale: 1.22, duration: 1.8, ease: 'sine.inOut' }, settleT + 2.0);
 }
 
-// ACT VII — DEATH & BELOVED'S GHOST ARIA (Liebestod on High C5)
-function actDeath(tl, hero) {
-  const { start, noteEvery } = CONFIG.acts.death;
+// ACT 7
+function act7(tl, hero) {
+  const { start, noteEvery } = CONFIG.acts.act7;
   const deathTime = makeDeathMap();
   const heroCell = at(hero.col, hero.row);
 
@@ -957,13 +955,13 @@ function buildOpera() {
     opera.set(centerDot.el, { opacity: 0.92, scale: 1.15 }, 0);
   }
 
-  actBirth(opera, hero);
-  actDevelopment(opera, hero);
-  actLove(opera, hero, beloved);
-  actJealousy(opera, hero, beloved);
-  actRevenge(opera, hero);
-  actAcceptance(opera, hero);
-  actDeath(opera, hero);
+  act1(opera, hero);
+  act2(opera, hero);
+  act3(opera, hero, beloved);
+  act4(opera, hero, beloved);
+  act5(opera, hero);
+  act6(opera, hero);
+  act7(opera, hero);
 }
 
 // Typography & Navigation Controls
