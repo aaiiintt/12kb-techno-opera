@@ -41,19 +41,16 @@ function runBuild(only) {
   execFileSync('node', args, { cwd: ROOT, stdio: 'pipe' });
 }
 
-// Fixed row order: scratch first, then whatever else exists in operas/*.js,
-// alphabetically. Excludes the __preview* temp files this server writes
-// while building alternatives.
+// Site order for the eight. Anything else in operas/ (scratch scores) comes
+// after, alphabetically. Excludes the __preview* temp files this server writes.
+const SITE_ORDER = ['carmen', 'pagliacci', 'rigoletto', 'dido', 'flute', 'giovanni', 'barber', 'turandot'];
 function listOperaIds() {
   const files = fs.existsSync(OPERAS_DIR)
     ? fs.readdirSync(OPERAS_DIR).filter((f) => f.endsWith('.js') && !f.startsWith('__'))
     : [];
   const ids = files.map((f) => path.basename(f, '.js'));
-  ids.sort((a, b) => {
-    if (a === 'scratch') return -1;
-    if (b === 'scratch') return 1;
-    return a.localeCompare(b);
-  });
+  const rank = (id) => { const i = SITE_ORDER.indexOf(id); return i < 0 ? 99 : i; };
+  ids.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
   return ids;
 }
 
