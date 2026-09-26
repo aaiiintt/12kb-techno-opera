@@ -163,7 +163,6 @@ body {
     0 0 10px var(--dot-color),
     0 0 25px var(--dot-color),
     0 0 50px var(--dot-color);
-  transition: --dot-color 0.9s ease;
 }
 
 /* Act VII Ghost Beloved: Expansive rose corona (pure colored light, NO white core) */

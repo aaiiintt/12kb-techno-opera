@@ -83,18 +83,18 @@ The opera is through-composed, tracking the Hero leitmotif (`MOTIF`) as it mutat
 
 | Act | Name | Mood / Mode | Tempo | Leitmotif Transformation | Grid Choreography |
 |---|---|---|---|---|---|
-| **I** | **Birth** | Wonder (C Lydian) | 76 BPM | `heroBirth`: C3 $\to$ G3 $\to$ C4 rising fifth of innocence | Macro zoom on center `(4, 4)` cell; cellular mitosis ripples outward |
-| **II** | **Development** | Curiosity (C Major) | 118 BPM | `heroDev`: C4 $\to$ D4 $\to$ E4 $\to$ G4 stepwise exploration | Kinetic wandering across equator; stacked harmonic row expansions |
-| **III** | **Love** | Passion (A Minor / C Major) | 94 BPM | `heroLove`: C4 $\to$ E4 $\to$ G4 $\to$ A4 triad + `belovedAnswer` | Counter-rotational orbital duet between Hero (Gold) and Beloved (Rose) |
-| **IV** | **Jealousy** | Betrayal (Dorian / Tritone) | 134 BPM | `heroBetrayed`: F#4 $\to$ F4 $\to$ Eb4 chromatic descent | Green gate invasion descending from north; cornering of Beloved at `(5, 4)` |
-| **V** | **Revenge** | Fury (Locrian / Ring Mod) | 148 BPM | `heroWar`: C3 $\to$ C4 $\to$ F#3 battle cry with distortion | Violent diagonal hunting strikes; incinerated shockwaves; stage tremor |
-| **VI** | **Acceptance** | Euphoria (Lydian #4) | 128 BPM | `heroTransfigured`: C4 $\to$ E4 $\to$ G4 $\to$ C5 continuous ascension | Concentric violet waves propagate from spine; euphoric harmonic lift |
-| **VII** | **Death** | Tragedy (Phrygian / C Minor) | 52 BPM | `heroDying` lament into Beloved's ghost `aria` on High C5 | Breadth-first Perlin entropy decay; solitary ember; subterranean C1 pedal |
+| **I** | **Birth** | Wonder (C Lydian) | 76 BPM | `heroBirth`: C3 $\to$ G3 $\to$ C4 $\to$ E4 inception motif | Macro zoom on center `(4, 4)` cell; mitotic cardiac ripples outward |
+| **II** | **Development** | Joyous Curiosity (C Major) | 118 BPM | `heroDev`: C4 $\to$ E4 $\to$ G4 $\to$ C5 $\to$ A4 $\to$ G4 | 6-step wide exploration across quadrants; Galway bass bounce & 50Hz SID arps |
+| **III** | **Love** | Romantic Passion (C Major / A Minor) | 94 BPM | `heroLove` $\leftrightarrow$ `belovedAnswer` counterpoint | Close magnetic courting waltz; peach-magenta optical fusion; 50Hz flutter |
+| **IV** | **Jealousy** | Betrayal (Dorian / Tritone) | 134 BPM | `heroBetrayed`: C4 $\to$ Eb4 $\to$ Gb4 $\to$ B3 horror motif | Green gate invasion descending; tritone shriek; Beloved captured at `(5, 4)` |
+| **V** | **Revenge** | Wrath & Exhaustion (Locrian / Ring Mod) | 148 BPM | `heroWar`: B3 $\to$ C4 $\to$ B3 $\to$ F#4 battle chant | 10-strike hunt; incinerated embers; sfz crash; living breath pause & lowpass tail |
+| **VI** | **Acceptance** | Euphoria (Lydian #4) | 128 BPM | `heroTransfigured`: C4 $\to$ E4 $\to$ F#4 $\to$ G4 resolution | Full-bleed radiant purple flood; concentric ring pulses locked to synth strikes |
+| **VII** | **Death** | Tragedy (Phrygian / C Minor) | 52 BPM | `heroDying` lament into Beloved's ghost `aria` on High C5 | Breadth-first Perlin entropy decay; solitary amber ember; subterranean C1 pedal |
 
-### Theatrical Silences & Dramatic Fermatas
-Music is punctuated by intentional theatrical pauses:
+### Synesthetic Architecture & Theatrical Pauses
+*   **Synesthetic Coupling:** Synth pitch values directly parameterize dot hue and luminescence. In Act VI Acceptance, as the 4-step chord progression ascends, the purple flood lifts from deep ultraviolet (272°) to luminous royal violet (288°), radiating in concentric waves from center `(4, 4)` in exact mathematical lockstep with the synth.
 *   **Act IV Prelude:** A **240ms theatrical breath** precedes the crushing Green Gate invasion.
-*   **Act V Apex:** An **850ms grand silence (fermata)** immediately follows the revenge climax before the euphoric healing of Act VI begins.
+*   **Act V Living Pause:** Following the revenge climax, an intentional living pause unfolds—not an unnatural digital mute, but cavernous acoustic dissipation (`320Hz`), staggered anatomical heartbeats (`lubdub`), and biological exhalation (`breath`).
 
 ---
 
@@ -104,13 +104,16 @@ The project enforces an absolute wire transfer constraint of **15,360 bytes (15 
 
 | Asset | Description | Uncompressed | Gzipped |
 |---|---|---|---|
-| `src/main.js` | Audio synthesis engine, GSAP choreography, stage logic | 48.5 KB | **13.5 KB** |
-| `src/config.js` | Musical score, motif definitions, tuning tables | 7.9 KB | **2.5 KB** |
-| `src/style.css` | Swiss typography, stage velvet ground, light coronas | 4.8 KB | **1.6 KB** |
-| `index.html` | Stage markup, canvas-free DOM container | 1.2 KB | **0.6 KB** |
-| `about.html` | Manifest-style manifesto with dynamic subhead typography | 5.9 KB | **2.2 KB** |
+| `src/main.js` | Audio synthesis engine, GSAP choreography, stage logic | 38.4 KB | **10.4 KB** (10,620 B) |
+| `src/config.js` | Musical score, motif definitions, tuning tables | 3.3 KB | **1.3 KB** (1,316 B) |
+| `src/style.css` | Swiss typography, stage velvet ground, light coronas | 4.6 KB | **1.6 KB** (1,622 B) |
+| `index.html` | Stage markup, canvas-free DOM container | 1.1 KB | **0.6 KB** (596 B) |
+| `about.html` | Manifest-style manifesto with dynamic subhead typography | 5.7 KB | **2.2 KB** (2,254 B) |
 
-*Gzipped wire delivery fits comfortably within the budget with active compression.*
+**Total Opera Delivery (`index.html` + `src/style.css` + `src/config.js` + `src/main.js`):**
+*   **Uncompressed:** 48.6 KB (48,584 bytes)
+*   **Gzipped Wire Transfer:** **13.82 KB (14,154 bytes)**
+*   **Budget Margin:** **1,206 bytes under the strict 15 KB (15,360 byte) ceiling.**
 
 ---
 

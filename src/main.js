@@ -4,11 +4,12 @@ const worldEl = document.getElementById('world');
 const grid = document.getElementById('grid');
 const replayBtn = document.getElementById('replay');
 
-let dots = []; // [row * SIZE + col] → { el, col, row, ring }
+let dots = [];
 let opera;
 let audioCtx, masterGain, roomFilter, delayL, delayR, delayGainL, delayGainR, noiseBuf;
+let isAmbient = true;
 
-// Stage Grid Setup
+// Grid matrix construction
 function buildGrid() {
   grid.innerHTML = '';
   grid.style.gridTemplateColumns = `repeat(${SIZE}, var(--dot-size))`;
@@ -30,64 +31,77 @@ function buildGrid() {
 
 const at = (col, row) => dots[row * SIZE + col];
 const everyDot = (fn) => dots.forEach(fn);
-
-// Spatial panning: maps horizontal grid position (-1.0 left to +1.0 right)
 const panAt = (col) => (CONFIG.sound.spatial ? (col - CENTER) / CENTER : 0);
+const toFreq = (p) => (typeof p === 'number' && p < 60 ? hz(p) : p);
 
-// ============================================================
-// AUDIO ENGINE: OPERA HOUSE & CHIPTUNE DSP
-// ============================================================
+// Web Audio DSP Micro-Helpers
+const env = (p, val, t, att = 0.02, dur = 0.4, endVal = 0.0008) => {
+  p.setValueAtTime(0.0001, t);
+  p.linearRampToValueAtTime(val, t + att);
+  p.exponentialRampToValueAtTime(endVal, t + dur);
+};
+
+const mkOsc = (type, freq, t, dur) => {
+  const o = audioCtx.createOscillator();
+  o.type = type;
+  if (freq) o.frequency.setValueAtTime(freq, t);
+  o.start(t);
+  if (dur) o.stop(t + dur);
+  return o;
+};
+
+const mkGain = (val, t, dest) => {
+  const g = audioCtx.createGain();
+  if (val !== undefined) g.gain.setValueAtTime(val, t);
+  if (dest) g.connect(dest);
+  return g;
+};
+
+const mkFilt = (type, freq, q, dest) => {
+  const f = audioCtx.createBiquadFilter();
+  f.type = type;
+  if (freq) f.frequency.value = freq;
+  if (q) f.Q.value = q;
+  if (dest) f.connect(dest);
+  return f;
+};
+
+// Opera House Acoustics & Feedback Delay
 function initAudio() {
-  if (!CONFIG.sound.enabled) return;
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = CONFIG.sound.volume;
-    masterGain.connect(audioCtx.destination);
-
-    // Warm opera house damping: lowpass in delay feedback loop
-    roomFilter = audioCtx.createBiquadFilter();
-    roomFilter.type = 'lowpass';
-    roomFilter.frequency.value = 1800;
-    roomFilter.Q.value = 0.7;
-
-    // Cross-feedback stereo delay line (0.28s / 0.38s — prime ratio prevents flutter)
-    delayL = audioCtx.createDelay(1.0);
-    delayR = audioCtx.createDelay(1.0);
-    delayL.delayTime.value = 0.28;
-    delayR.delayTime.value = 0.38;
-
-    const merger = audioCtx.createChannelMerger(2);
-    delayL.connect(merger, 0, 0);
-    delayR.connect(merger, 0, 1);
-    merger.connect(roomFilter);
-    roomFilter.connect(masterGain);
-
-    // Cross-feedback network
-    const splitter = audioCtx.createChannelSplitter(2);
-    roomFilter.connect(splitter);
-
-    delayGainL = audioCtx.createGain();
-    delayGainR = audioCtx.createGain();
-    delayGainL.gain.value = 0.34;
-    delayGainR.gain.value = 0.34;
-
-    splitter.connect(delayGainL, 0);
-    delayGainL.connect(delayR);
-
-    splitter.connect(delayGainR, 1);
-    delayGainR.connect(delayL);
-
-    // 1-second procedural white noise buffer
-    noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
-    const data = noiseBuf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  if (!CONFIG.sound.enabled || audioCtx) {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return;
   }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  masterGain = mkGain(CONFIG.sound.volume, audioCtx.currentTime, audioCtx.destination);
+  roomFilter = mkFilt('lowpass', 1800, 0.7, masterGain);
+
+  delayL = audioCtx.createDelay(1.0);
+  delayR = audioCtx.createDelay(1.0);
+  delayL.delayTime.value = 0.28;
+  delayR.delayTime.value = 0.38;
+
+  const merger = audioCtx.createChannelMerger(2);
+  delayL.connect(merger, 0, 0);
+  delayR.connect(merger, 0, 1);
+  merger.connect(roomFilter);
+
+  const splitter = audioCtx.createChannelSplitter(2);
+  roomFilter.connect(splitter);
+
+  delayGainL = mkGain(0.34, audioCtx.currentTime);
+  delayGainR = mkGain(0.34, audioCtx.currentTime);
+  splitter.connect(delayGainL, 0);
+  delayGainL.connect(delayR);
+  splitter.connect(delayGainR, 1);
+  delayGainR.connect(delayL);
+
+  noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+  const data = noiseBuf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
 }
 
-// Dynamic acoustic room morphing (crypt <-> soaring cathedral)
 function setRoom(freq, feedback = 0.34, time = 1.0) {
   if (!audioCtx || !roomFilter) return;
   const t = audioCtx.currentTime;
@@ -98,47 +112,25 @@ function setRoom(freq, feedback = 0.34, time = 1.0) {
   }
 }
 
-let isAmbient = true;
-
-// Helper to resolve pitch (semitone number vs absolute Hz)
-const toFreq = (p) => (typeof p === 'number' && p < 60 ? hz(p) : p);
-
-// 1. OPERATIC VOICE SYNTHESIZER
-// Galway PWM Tenor, Dramatic Operatic Soprano (Singer's Formant + 5.3Hz Coupled LFO), Vocal Formant Sweeps
+// Operatic Voice Synthesizer: Tenor (Galway PWM), Soprano (Singer's Formant + 5.3Hz LFO), Pluck
 function note(pitchOrSemi, { dur = 0.5, vol = 0.12, pan = 0, grit = false, voice = 'tenor', vibrato = false, attack = null, echo = false } = {}) {
   if (isAmbient || !audioCtx) return;
   const t = audioCtx.currentTime;
   const freq = toFreq(pitchOrSemi);
-
   const isSoprano = voice === 'soprano';
   const isPluck = voice === 'pluck';
   const att = attack !== null ? attack : (isSoprano ? 0.04 : isPluck ? 0.005 : 0.02);
 
-  // Amplitude Envelope: Messa di Voce dynamic swell for long soprano notes
-  const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.0001, t);
+  const gain = mkGain(0.0001, t);
   if (isSoprano && dur > 1.2) {
     gain.gain.linearRampToValueAtTime(vol * 0.42, t + 0.08);
     gain.gain.linearRampToValueAtTime(vol, t + dur * 0.38);
     gain.gain.setValueAtTime(vol, t + dur * 0.72);
     gain.gain.exponentialRampToValueAtTime(0.0008, t + dur);
   } else {
-    gain.gain.linearRampToValueAtTime(vol, t + att);
-    gain.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+    env(gain.gain, vol, t, att, dur);
   }
 
-  // Vocal Formant Filter Envelope for Tenor / Pluck
-  const vFilter = audioCtx.createBiquadFilter();
-  vFilter.type = 'lowpass';
-  vFilter.Q.value = isPluck ? 3.2 : 1.1;
-  const fStart = isPluck ? 4200 : 550;
-  const fPeak = isPluck ? 4200 : 2400;
-  const fEnd = isPluck ? 400 : 600;
-  vFilter.frequency.setValueAtTime(fStart, t);
-  vFilter.frequency.exponentialRampToValueAtTime(fPeak, t + (isPluck ? 0.01 : att * 1.5));
-  vFilter.frequency.exponentialRampToValueAtTime(fEnd, t + dur);
-
-  // Stereo Panning
   let out = gain;
   if (audioCtx.createStereoPanner) {
     const panner = audioCtx.createStereoPanner();
@@ -148,228 +140,134 @@ function note(pitchOrSemi, { dur = 0.5, vol = 0.12, pan = 0, grit = false, voice
   }
   out.connect(masterGain);
 
-  // Send to Cathedral Delay
   if (delayL && delayR) {
-    const send = audioCtx.createGain();
-    send.gain.value = isSoprano ? 0.62 : 0.40;
+    const send = mkGain(isSoprano ? 0.62 : 0.40, t, delayL);
     out.connect(send);
-    send.connect(delayL);
     send.connect(delayR);
   }
 
-  // Coupled Tri-LFO: 5.3 Hz Dramatic Soprano Vibrato + Tremolo + Formant Wobble
   let vibGain = null;
   if (vibrato && dur > 0.5) {
-    const lfo = audioCtx.createOscillator();
-    lfo.frequency.value = isSoprano ? 5.3 : 4.8;
-    vibGain = audioCtx.createGain();
-    vibGain.gain.setValueAtTime(0, t);
+    const lfo = mkOsc('sine', isSoprano ? 5.3 : 4.8, t, dur + 0.2);
+    vibGain = mkGain(0, t);
     vibGain.gain.setValueAtTime(0, t + (isSoprano ? 0.15 : 0.18));
     vibGain.gain.linearRampToValueAtTime(isSoprano ? 5.8 : 3.4, t + (isSoprano ? 0.50 : 0.65));
     lfo.connect(vibGain);
 
     if (isSoprano) {
-      const tremoloGain = audioCtx.createGain();
-      tremoloGain.gain.value = vol * 0.20;
-      vibGain.connect(tremoloGain);
-      tremoloGain.connect(gain.gain);
+      const trem = mkGain(vol * 0.20, t, gain.gain);
+      vibGain.connect(trem);
     }
-
-    lfo.start(t);
-    lfo.stop(t + dur + 0.2);
   }
 
-  // Ring Modulation for Menace (Acts IV & V)
-  let ringMod = null;
   if (grit) {
-    const ringOsc = audioCtx.createOscillator();
-    ringOsc.type = 'sawtooth';
-    ringOsc.frequency.setValueAtTime(freq * 0.5, t);
-    const ringGain = audioCtx.createGain();
-    ringGain.gain.value = 0.55;
+    const ringOsc = mkOsc('sawtooth', freq * 0.5, t, dur + 0.15);
+    const ringGain = mkGain(0.55, t);
     ringOsc.connect(ringGain.gain);
-    ringOsc.start(t);
-    ringOsc.stop(t + dur + 0.15);
-    ringMod = ringGain;
   }
 
-  // Voice Waveforms
   if (isSoprano) {
-    // 3-Band Parallel Vocal Tract Formant Filter Bank:
-    // F1: Vowel body [ɑ] ~850 Hz (Q=2.8)
-    // F2: Pharyngeal cavity ~1550 Hz (Q=3.0)
-    // F3: Epilarynx "Singer's Formant" ~2950 Hz (Q=4.5, boosted for piercing acoustic ring)
-    const f1 = audioCtx.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 850; f1.Q.value = 2.8;
-    const f2 = audioCtx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = 1550; f2.Q.value = 3.0;
-    const f3 = audioCtx.createBiquadFilter(); f3.type = 'bandpass'; f3.frequency.value = 2950; f3.Q.value = 4.5;
+    const f1 = mkFilt('bandpass', 850, 2.8, gain);
+    const f2 = mkFilt('bandpass', 1550, 3.0, gain);
+    const f3 = mkFilt('bandpass', 2950, 4.5, gain);
+    const gF1 = mkGain(0.65, t, f1);
+    const gF2 = mkGain(0.55, t, f2);
+    const gF3 = mkGain(1.25, t, f3);
+    const glottis = mkGain(1, t);
+    glottis.connect(gF1);
+    glottis.connect(gF2);
+    glottis.connect(gF3);
 
-    const gF1 = audioCtx.createGain(); gF1.gain.value = 0.65;
-    const gF2 = audioCtx.createGain(); gF2.gain.value = 0.55;
-    const gF3 = audioCtx.createGain(); gF3.gain.value = 1.25;
-
-    f1.connect(gF1); gF1.connect(gain);
-    f2.connect(gF2); gF2.connect(gain);
-    f3.connect(gF3); gF3.connect(gain);
-
-    const glottisBus = audioCtx.createGain();
-    glottisBus.connect(f1);
-    glottisBus.connect(f2);
-    glottisBus.connect(f3);
-
-    // Multi-Harmonic Glottal Fold Source
-    const sVoices = [
-      { mult: 1.0, type: 'sine', level: 0.85, detune: 0 },
-      { mult: 2.0, type: 'triangle', level: 0.38, detune: 2.5 },
-      { mult: 3.0, type: 'sine', level: 0.22, detune: -1.5 },
-      { mult: 4.0, type: 'sine', level: 0.10, detune: 1.0 },
-      { mult: 5.0, type: 'sine', level: 0.05, detune: 0 },
-    ];
-
-    for (const v of sVoices) {
-      const osc = audioCtx.createOscillator();
-      osc.type = v.type;
-      const targetF = freq * v.mult;
-      // Diva portamento scoop: slide into high note from 1.5 semitones below over 75ms
+    [
+      [1.0, 'sine', 0.85, 0],
+      [2.0, 'triangle', 0.38, 2.5],
+      [3.0, 'sine', 0.22, -1.5],
+      [4.0, 'sine', 0.10, 1.0],
+      [5.0, 'sine', 0.05, 0],
+    ].forEach(([mult, type, lvl, det]) => {
+      const targetF = freq * mult;
+      const osc = mkOsc(type, null, t, dur + 0.2);
       osc.frequency.setValueAtTime(targetF * 0.915, t);
       osc.frequency.exponentialRampToValueAtTime(targetF, t + 0.075);
-      osc.detune.setValueAtTime(v.detune, t);
-
+      osc.detune.setValueAtTime(det, t);
       if (vibGain) vibGain.connect(osc.frequency);
-      const g = audioCtx.createGain();
-      g.gain.value = v.level;
+      const g = mkGain(lvl, t, glottis);
       osc.connect(g);
-      g.connect(glottisBus);
-      osc.start(t);
-      osc.stop(t + dur + 0.2);
-    }
+    });
 
-    // Connect LFO to Singer's Formant filter frequency for organic formant wobble
     if (vibGain) {
-      const f3ModGain = audioCtx.createGain();
-      f3ModGain.gain.value = 24;
-      vibGain.connect(f3ModGain);
-      f3ModGain.connect(f3.frequency);
+      const f3Mod = mkGain(24, t, f3.frequency);
+      vibGain.connect(f3Mod);
     }
 
-    // Breath noise burst through vocal folds on note attack
     if (noiseBuf) {
       const nSrc = audioCtx.createBufferSource();
       nSrc.buffer = noiseBuf;
-      const nFilt = audioCtx.createBiquadFilter();
-      nFilt.type = 'bandpass';
-      nFilt.frequency.value = 3600;
-      nFilt.Q.value = 2.0;
-      const nGain = audioCtx.createGain();
-      nGain.gain.setValueAtTime(0.015 * vol, t);
-      nGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+      const nFilt = mkFilt('bandpass', 3600, 2.0);
+      const nG = mkGain(0.0001, t, gain);
+      env(nG.gain, 0.015 * vol, t, 0.01, 0.08, 0.0001);
       nSrc.connect(nFilt);
-      nFilt.connect(nGain);
-      nGain.connect(gain);
+      nFilt.connect(nG);
       nSrc.start(t);
       nSrc.stop(t + 0.09);
     }
   } else {
-    // Tenor: Galway-style PWM (two detuned saws with phase sweep) + cello body
-    const osc1 = audioCtx.createOscillator();
-    const osc2 = audioCtx.createOscillator();
-    const oscSub = audioCtx.createOscillator();
+    const vFilter = mkFilt('lowpass', isPluck ? 4200 : 550, isPluck ? 3.2 : 1.1, gain);
+    vFilter.frequency.exponentialRampToValueAtTime(isPluck ? 4200 : 2400, t + (isPluck ? 0.01 : att * 1.5));
+    vFilter.frequency.exponentialRampToValueAtTime(isPluck ? 400 : 600, t + dur);
 
-    osc1.type = grit ? 'sawtooth' : 'sawtooth';
-    osc2.type = grit ? 'sawtooth' : 'sawtooth';
-    oscSub.type = 'sine';
-
-    osc1.frequency.value = freq;
-    osc2.frequency.value = freq;
-    oscSub.frequency.value = freq * 0.5;
-
-    // Galway micro-PWM detune: slow beating string chorus
-    osc1.detune.setValueAtTime(-4.5, t);
-    osc2.detune.setValueAtTime(4.5, t);
+    const o1 = mkOsc('sawtooth', freq, t, dur + 0.15);
+    const o2 = mkOsc('sawtooth', freq, t, dur + 0.15);
+    const oSub = mkOsc('sine', freq * 0.5, t, dur + 0.15);
+    o1.detune.setValueAtTime(-4.5, t);
+    o2.detune.setValueAtTime(4.5, t);
 
     if (vibGain) {
-      vibGain.connect(osc1.frequency);
-      vibGain.connect(osc2.frequency);
+      vibGain.connect(o1.frequency);
+      vibGain.connect(o2.frequency);
     }
 
-    const g1 = audioCtx.createGain(); g1.gain.value = 0.52;
-    const g2 = audioCtx.createGain(); g2.gain.value = 0.52;
-    const gSub = audioCtx.createGain(); gSub.gain.value = 0.22;
-
-    osc1.connect(g1);
-    osc2.connect(g2);
-    oscSub.connect(gSub);
-
-    if (ringMod) {
-      g1.connect(ringMod);
-      g2.connect(ringMod);
-      ringMod.connect(vFilter);
-    } else {
-      g1.connect(vFilter);
-      g2.connect(vFilter);
-    }
-    gSub.connect(vFilter);
-
-    osc1.start(t);
-    osc2.start(t);
-    oscSub.start(t);
-    osc1.stop(t + dur + 0.15);
-    osc2.stop(t + dur + 0.15);
-    oscSub.stop(t + dur + 0.15);
-
-    vFilter.connect(gain);
+    const g1 = mkGain(0.52, t, vFilter);
+    const g2 = mkGain(0.52, t, vFilter);
+    const gSub = mkGain(0.22, t, vFilter);
+    o1.connect(g1);
+    o2.connect(g2);
+    oSub.connect(gSub);
   }
 
-  // Follin Echo Channel: soft delayed counter-voice (NES echo hack)
   if (echo && dur > 0.4) {
     const echoT = t + 0.14;
-    const echoGain = audioCtx.createGain();
-    echoGain.gain.setValueAtTime(0.0001, echoT);
-    echoGain.gain.linearRampToValueAtTime(vol * 0.45, echoT + 0.02);
-    echoGain.gain.exponentialRampToValueAtTime(0.0008, echoT + dur * 0.8);
-
-    const echoOsc = audioCtx.createOscillator();
-    echoOsc.type = 'triangle';
-    echoOsc.frequency.value = freq;
-
-    const echoPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
-    if (echoPanner) {
+    const echoG = mkGain(0.0001, echoT);
+    env(echoG.gain, vol * 0.45, echoT, 0.02, dur * 0.8);
+    const echoOsc = mkOsc('triangle', freq, echoT, dur + 0.1);
+    if (audioCtx.createStereoPanner) {
+      const echoPanner = audioCtx.createStereoPanner();
       echoPanner.pan.setValueAtTime(-pan * 0.8, echoT);
-      echoGain.connect(echoPanner);
+      echoG.connect(echoPanner);
       echoPanner.connect(masterGain);
     } else {
-      echoGain.connect(masterGain);
+      echoG.connect(masterGain);
     }
-    echoOsc.connect(echoGain);
-    echoOsc.start(echoT);
-    echoOsc.stop(echoT + dur + 0.1);
+    echoOsc.connect(echoG);
   }
 }
 
-// 2. 50Hz / 16Hz TRACKER ARPEGGIO GENERATOR (SID & NES Shimmer)
-// Cycles single oscillator rapidly across chord intervals for instant harmonic layers
+// 50Hz / 16Hz Tracker Arpeggio Shimmer
 function arp(chordSemis, dur = 0.8, rateHz = 50, { vol = 0.08, root = ROOT, pan = 0, type = 'triangle' } = {}) {
   if (isAmbient || !audioCtx) return;
   const t = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  osc.type = type;
+  const osc = mkOsc(type, null, t, dur + 0.05);
+  const gain = mkGain(0.0001, t);
+  env(gain.gain, vol, t, 0.015, dur);
 
-  const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.linearRampToValueAtTime(vol, t + 0.015);
-  gain.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(2600, t);
+  const filter = mkFilt('lowpass', 2600, null, gain);
   filter.frequency.exponentialRampToValueAtTime(800, t + dur);
 
-  // Step-automate pitch across chord notes at rateHz
   const stepDur = 1 / rateHz;
   const totalSteps = Math.floor(dur / stepDur);
   for (let i = 0; i < totalSteps; i++) {
     const semi = chordSemis[i % chordSemis.length];
-    const stepTime = t + i * stepDur;
-    osc.frequency.setValueAtTime(hz(semi, root), stepTime);
+    osc.frequency.setValueAtTime(hz(semi, root), t + i * stepDur);
   }
 
   let out = gain;
@@ -382,106 +280,86 @@ function arp(chordSemis, dur = 0.8, rateHz = 50, { vol = 0.08, root = ROOT, pan 
   out.connect(masterGain);
 
   if (delayL && delayR) {
-    const send = audioCtx.createGain();
-    send.gain.value = 0.35;
+    const send = mkGain(0.35, t, delayL);
     out.connect(send);
-    send.connect(delayL);
     send.connect(delayR);
   }
 
   osc.connect(filter);
-  filter.connect(gain);
-  osc.start(t);
-  osc.stop(t + dur + 0.05);
 }
 
-// 3. SYNTHETIC OPERATIC PERCUSSION & BIOLOGICAL SOUNDS (No Samples)
+// Synthetic Percussion & Biological Sounds (Zero Samples)
 function drum(type = 'kick', vol = 0.32, { dur = 0.16, noise = true, startF = 140, endF = 38 } = {}) {
   if (isAmbient || !audioCtx) return;
   const t = audioCtx.currentTime;
 
   if (type === 'kick' || type === 'heartbeat') {
-    const osc = audioCtx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(startF, t);
+    const osc = mkOsc('sine', startF, t, dur + 0.02);
     osc.frequency.exponentialRampToValueAtTime(endF, t + dur * 0.75);
-
-    const oscGain = audioCtx.createGain();
-    oscGain.gain.setValueAtTime(0.001, t);
-    oscGain.gain.linearRampToValueAtTime(vol, t + 0.008);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-
-    osc.connect(oscGain);
-    oscGain.connect(masterGain);
-    osc.start(t);
-    osc.stop(t + dur + 0.02);
+    const g = mkGain(0.001, t, masterGain);
+    env(g.gain, vol, t, 0.008, dur, 0.001);
+    osc.connect(g);
 
     if (noise && noiseBuf) {
-      const nSource = audioCtx.createBufferSource();
-      nSource.buffer = noiseBuf;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(120, t);
-
-      const nGain = audioCtx.createGain();
-      nGain.gain.setValueAtTime(vol * 0.38, t);
-      nGain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.5);
-
-      nSource.connect(filter);
-      filter.connect(nGain);
-      nGain.connect(masterGain);
-      nSource.start(t);
-      nSource.stop(t + dur * 0.6);
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuf;
+      const f = mkFilt('lowpass', 120, null);
+      const nG = mkGain(vol * 0.38, t, masterGain);
+      nG.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.5);
+      nSrc.connect(f);
+      f.connect(nG);
+      nSrc.start(t);
+      nSrc.stop(t + dur * 0.6);
+    }
+  } else if (type === 'breath') {
+    if (noiseBuf) {
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuf;
+      const bp = mkFilt('bandpass', 750, 1.2);
+      bp.frequency.exponentialRampToValueAtTime(320, t + dur);
+      const nG = mkGain(0.001, t, masterGain);
+      env(nG.gain, vol * 0.45, t, 0.08, dur, 0.0001);
+      nSrc.connect(bp);
+      bp.connect(nG);
+      nSrc.start(t);
+      nSrc.stop(t + dur + 0.05);
     }
   } else if (type === 'lubdub') {
-    // Systole (Lub)
     drum('heartbeat', vol, { dur, startF, endF, noise });
-    // Diastole (Dub) — slightly higher, 35% quieter, 170ms later
     setTimeout(() => {
       drum('heartbeat', vol * 0.65, { dur: dur * 0.85, startF: startF * 1.15, endF: endF * 1.15, noise });
     }, 170);
   } else if (type === 'hat') {
-    // High-pass metallic noise burst
     if (noiseBuf) {
-      const nSource = audioCtx.createBufferSource();
-      nSource.buffer = noiseBuf;
-      const hp = audioCtx.createBiquadFilter();
-      hp.type = 'highpass';
-      hp.frequency.setValueAtTime(6500, t);
-
-      const nGain = audioCtx.createGain();
-      nGain.gain.setValueAtTime(vol * 0.5, t);
-      nGain.gain.exponentialRampToValueAtTime(0.0008, t + 0.04);
-
-      nSource.connect(hp);
-      hp.connect(nGain);
-      nGain.connect(masterGain);
-      nSource.start(t);
-      nSource.stop(t + 0.05);
+      const nSrc = audioCtx.createBufferSource();
+      nSrc.buffer = noiseBuf;
+      const hp = mkFilt('highpass', 6500, null);
+      const nG = mkGain(vol * 0.5, t, masterGain);
+      nG.gain.exponentialRampToValueAtTime(0.0008, t + 0.04);
+      nSrc.connect(hp);
+      hp.connect(nG);
+      nSrc.start(t);
+      nSrc.stop(t + 0.05);
     }
   } else if (type === 'sfz') {
-    // Sforzando Climax: Sub drop + Saw clash + Noise wash
     drum('kick', vol * 1.2, { dur: 0.6, startF: 160, endF: 30, noise: true });
     note(-12, { dur: 1.4, vol: 0.22, grit: true });
   }
 }
 
-// Master timeline score callback
-function score(tl, time, fn) {
-  tl.call(() => fn(), [], time);
-}
+const score = (tl, time, fn) => tl.call(() => fn(), [], time);
 
-// Camera tracking
+// Stage Camera & Movement
 let _cell = 0;
-function cellSize() {
+const cellSize = () => {
   if (!_cell) {
     const d = grid.querySelector('.dot');
     _cell = d.offsetWidth + parseFloat(getComputedStyle(grid).columnGap);
   }
   return _cell;
-}
+};
 
-function camera(tl, time, { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut' } = {}) {
+const camera = (tl, time, { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut' } = {}) => {
   tl.to(
     worldEl,
     {
@@ -493,9 +371,8 @@ function camera(tl, time, { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, eas
     },
     time
   );
-}
+};
 
-// Light hops
 function hop(tl, light, col, row, time, opts = {}) {
   const { leave = null, arriveScale = 1.3, note: pitch = null, vol = 0.11, dur = 0.45, pan = null, grit = false, voice = 'tenor', vibrato = false, echo = false, hat = false } = opts;
   const prev = at(light.col, light.row);
@@ -513,8 +390,7 @@ function hop(tl, light, col, row, time, opts = {}) {
     time
   );
   if (pitch !== null) {
-    const notePan = pan !== null ? pan : panAt(col);
-    score(tl, time, () => note(pitch, { vol, dur, pan: notePan, grit, voice, vibrato, echo }));
+    score(tl, time, () => note(pitch, { vol, dur, pan: pan !== null ? pan : panAt(col), grit, voice, vibrato, echo }));
   }
   if (hat) {
     score(tl, time, () => drum('hat', 0.18));
@@ -524,7 +400,7 @@ function hop(tl, light, col, row, time, opts = {}) {
   light.row = row;
 }
 
-// Organic decay map
+// Organic Entropy Field for Act VII
 const noise01 = (x, y) =>
   (Math.sin(x * 1.7 + 2.1) * Math.cos(y * 1.3 + 0.7) +
     Math.sin((x + y) * 0.9 + 4.2) * 0.6 +
@@ -560,15 +436,6 @@ function makeDeathMap() {
   return (d) => dist[d.row * SIZE + d.col] * spread + noise01(d.col, d.row) * texture;
 }
 
-// ============================================================
-// THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE
-// ============================================================
-
-// ============================================================
-// THE 7 ACTS: THROUGH-COMPOSED OPERATIC SCORE & CHOREOGRAPHY
-// ============================================================
-
-// Theatrical silence utility for breathless operatic fermatas
 function silence(tl, time, duration = 0.25) {
   score(tl, time, () => {
     if (!audioCtx || !masterGain) return;
@@ -578,29 +445,28 @@ function silence(tl, time, duration = 0.25) {
   });
 }
 
-// ACT I — BIRTH: Primordial drone, accelerating mitotic heartbeats, Hero Inception motif
+// ============================================================
+// THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE
+// ============================================================
+
+// ACT I — BIRTH
 function actBirth(tl, hero) {
   const { start } = CONFIG.acts.birth;
   const soul = at(hero.col, hero.row);
 
   camera(tl, start, { zoom: 1.65, dur: 0.1 });
   camera(tl, start + 0.4, { zoom: 1.35, dur: 4.0 });
-
   score(tl, start, () => setRoom(1600, 0.28, 0.1));
 
   tl.call(() => soul.el.style.setProperty('--dot-color', COLORS.soul), [], start);
   tl.to(soul.el, { opacity: 0.95, scale: 1.0, duration: 1.4, ease: 'power2.out' }, start);
 
-  // Primordial C1/C2 drone
   score(tl, start, () => {
-    note(-24, { dur: 4.2, vol: 0.08, type: 'sine' }); // C1 (32.7 Hz)
-    note(-12, { dur: 4.0, vol: 0.10, type: 'triangle' }); // C2 (65.4 Hz)
+    note(-24, { dur: 4.2, vol: 0.08, type: 'sine' });
+    note(-12, { dur: 4.0, vol: 0.10, type: 'triangle' });
   });
 
-  // 3 Accelerating cardiac lub-dubs with mitotic ripples to orthogonal neighbors
-  const beats = [start + 1.2, start + 2.3, start + 3.2];
-  beats.forEach((hb, i) => {
-    // Cardiac systole-diastole swell
+  [start + 1.2, start + 2.3, start + 3.2].forEach((hb, i) => {
     tl.to(soul.el, { scale: 1.25, duration: 0.12, ease: 'power2.out' }, hb)
       .to(soul.el, { scale: 1.10, duration: 0.15, ease: 'power2.inOut' }, hb + 0.12)
       .to(soul.el, { scale: 1.18, duration: 0.10, ease: 'power2.out' }, hb + 0.27)
@@ -608,7 +474,6 @@ function actBirth(tl, hero) {
 
     score(tl, hb, () => drum('lubdub', 0.34 + i * 0.04, { startF: 78 - i * 4, endF: 32 }));
 
-    // Mitotic cellular ripples
     for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const neighbor = at(hero.col + dc, hero.row + dr);
       if (neighbor) {
@@ -618,163 +483,154 @@ function actBirth(tl, hero) {
     }
   });
 
-  // Hero Inception Motif reaching upward from the void: C3 -> G3 -> C4 -> E4
   const inc = start + 3.6;
-  score(tl, inc, () => note(MOTIF.heroBirth[0], { dur: 0.45, vol: 0.13, voice: 'tenor' }));
-  score(tl, inc + 0.25, () => note(MOTIF.heroBirth[1], { dur: 0.45, vol: 0.14, voice: 'tenor' }));
-  score(tl, inc + 0.50, () => note(MOTIF.heroBirth[2], { dur: 0.55, vol: 0.15, voice: 'tenor' }));
-  score(tl, inc + 0.80, () => note(MOTIF.heroBirth[3], { dur: 0.95, vol: 0.16, voice: 'tenor', vibrato: true }));
+  MOTIF.heroBirth.forEach((p, i) => {
+    score(tl, inc + i * 0.26, () => note(p, { dur: i === 3 ? 0.95 : 0.45, vol: 0.13 + i * 0.01, voice: 'tenor', vibrato: i === 3 }));
+  });
 }
 
-// ACT II — DEVELOPMENT: Symmetrical row bloom, expansive diatonic motif, 50Hz SID arpeggios
+// ACT II — DEVELOPMENT: Joyous 6-Step Wide Exploration & Bouncy Galway Bass
 function actDevelopment(tl, hero) {
   const { start, rowGap, wander } = CONFIG.acts.development;
 
-  camera(tl, start, { zoom: 1.20, dur: 2.0 });
-  score(tl, start, () => setRoom(2200, 0.36, 1.0));
+  camera(tl, start, { zoom: 1.18, dur: 2.0 });
+  score(tl, start, () => setRoom(2300, 0.38, 1.0));
 
-  // Diatonic harmonic stratification: C3 (0), E3 (4), G3 (7), C4 (12), E4 (16)
   const diatonicChords = [0, 4, 7, 12, 16];
 
   everyDot((d) => {
     const dist = Math.abs(d.row - CENTER);
-    const time = start + dist * rowGap + d.col * 0.025;
+    const time = start + dist * rowGap + d.col * 0.022;
     tl.call(() => d.el.style.setProperty('--dot-color', COLORS.rowStripe(dist)), [], time);
-    const op = dist === 0 ? 0.92 : 0.78;
-    tl.to(d.el, { opacity: op, scale: 1.0, duration: 0.8, ease: 'elastic.out(1, 0.7)', immediateRender: false }, time);
+    tl.to(d.el, { opacity: dist === 0 ? 0.94 : 0.82, scale: 1.0, duration: 0.75, ease: 'elastic.out(1, 0.7)', immediateRender: false }, time);
   });
 
   for (let dist = 0; dist <= CENTER; dist++) {
     const t = start + dist * rowGap;
-    score(tl, t, () => note(diatonicChords[dist], { dur: 2.0, vol: 0.12, voice: 'pluck' }));
+    score(tl, t, () => {
+      note(diatonicChords[dist], { dur: 2.2, vol: 0.13, voice: 'pluck' });
+      if (dist % 2 === 0) {
+        note(diatonicChords[dist] - 24, { dur: 0.38, vol: 0.16, type: 'triangle' });
+      }
+    });
   }
 
-  // Hero Wander: Expansive Aspiration Motif [12, 16, 19, 21] (C4 -> E4 -> G4 -> A4)
-  let t = start + CENTER * rowGap + 0.8;
+  let t = start + CENTER * rowGap + 0.55;
   wander.forEach(([col, row], i) => {
-    const leaveDot = at(hero.col, hero.row);
-    const leaveDist = Math.abs(leaveDot.row - CENTER);
+    const exploreColor = COLORS.explore[i % COLORS.explore.length];
+    tl.call(() => (hero.color = exploreColor), [], t);
     hop(tl, hero, col, row, t, {
-      leave: {
-        color: COLORS.rowStripe(leaveDist),
-        opacity: leaveDist === 0 ? 0.92 : 0.78,
-        scale: 1.0,
-      },
-      arriveScale: 1.22,
+      leave: { color: exploreColor, opacity: 0.82, scale: 1.05 },
+      arriveScale: 1.25,
       note: MOTIF.heroDev[i],
-      vol: 0.14,
+      vol: 0.15,
       voice: 'tenor',
       echo: true,
     });
-    // 50Hz sparkling SID tracker arpeggio
-    score(tl, t, () => arp(MODES.ARP_MAJ, 0.6, 50, { vol: 0.07, pan: panAt(col) }));
-    camera(tl, t, { col, row, zoom: 1.55, dur: 0.65 });
-    t += 0.7;
+    score(tl, t, () => arp(MODES.ARP_MAJ, 0.52, 50, { vol: 0.08, pan: panAt(col) }));
+    camera(tl, t, { col, row, zoom: 1.62, dur: 0.52 });
+    t += 0.58;
   });
-  camera(tl, t + 0.3, { zoom: 1.35, dur: 1.2 });
+  camera(tl, t + 0.2, { zoom: 1.35, dur: 1.0 });
 }
 
-// ACT III — LOVE: Bel Canto Duet with 4–3 and 7–6 suspensions + orbital counter-rotations
+// ACT III — LOVE: Intimate Magnetic Courting Dance & Optical Fusion
 function actLove(tl, hero, beloved) {
   const { start, hopGap, heroDance, belovedDance } = CONFIG.acts.love;
 
-  camera(tl, start, { zoom: 1.5, dur: 1.5 });
-  score(tl, start, () => setRoom(2600, 0.42, 1.0));
+  camera(tl, start, { zoom: 1.45, dur: 1.5 });
+  score(tl, start, () => setRoom(2600, 0.44, 1.0));
 
   tl.call(() => everyDot((d) => d.el.style.setProperty('--dot-color', COLORS.dusk)), [], start);
   tl.to(dots.map((d) => d.el), { opacity: 0.16, scale: 0.85, duration: 1.2, ease: 'power2.inOut' }, start);
 
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.soul), [], start + 0.2);
-  tl.to(at(hero.col, hero.row).el, { opacity: 0.92, scale: 1.15, duration: 0.8 }, start + 0.2);
+  tl.to(at(hero.col, hero.row).el, { opacity: 0.95, scale: 1.15, duration: 0.8 }, start + 0.2);
 
-  // 1. THE CALL: Lyrical Romance Motif (E4 -> D4 -> C4 -> E4)
   const callAt = start + 0.4;
-  score(tl, callAt, () => note(MOTIF.heroLove[0], { dur: 0.4, vol: 0.13, pan: -0.2, voice: 'tenor', echo: true }));
-  score(tl, callAt + 0.35, () => note(MOTIF.heroLove[1], { dur: 0.4, vol: 0.13, pan: -0.2, voice: 'tenor', echo: true }));
-  score(tl, callAt + 0.70, () => note(MOTIF.heroLove[2], { dur: 0.4, vol: 0.14, pan: -0.2, voice: 'tenor', echo: true }));
-  score(tl, callAt + 1.05, () => note(MOTIF.heroLove[3], { dur: 0.7, vol: 0.15, pan: -0.2, voice: 'tenor', vibrato: true }));
+  MOTIF.heroLove.forEach((p, i) => {
+    score(tl, callAt + i * 0.35, () => note(p, { dur: i === 3 ? 0.75 : 0.4, vol: 0.14 + i * 0.01, pan: -0.2, voice: 'tenor', vibrato: i === 3, echo: i < 3 }));
+  });
 
-  // 2. BELOVED AWAKENS at (6, 4) in vibrant rose light
   const [bc, br] = [6, 4];
   const appearAt = start + 1.8;
   tl.call(() => at(bc, br).el.style.setProperty('--dot-color', COLORS.beloved), [], appearAt);
-  tl.fromTo(
-    at(bc, br).el,
-    { scale: 0 },
-    { opacity: 0.95, scale: 1.25, duration: 0.8, ease: 'back.out(1.5)', immediateRender: false },
-    appearAt
-  );
-  camera(tl, appearAt, { col: bc, row: br, zoom: 1.9, dur: 0.8 });
+  tl.fromTo(at(bc, br).el, { scale: 0 }, { opacity: 0.95, scale: 1.25, duration: 0.8, ease: 'back.out(1.5)', immediateRender: false }, appearAt);
+  camera(tl, appearAt, { col: bc, row: br, zoom: 1.85, dur: 0.8 });
 
-  // 3. THE ANSWER: Contrary descent (A4 -> G4 -> E4 with blooming 5.3Hz vibrato)
-  score(tl, appearAt + 0.1, () => note(MOTIF.belovedAnswer[0], { dur: 0.45, vol: 0.14, pan: 0.3, voice: 'soprano' }));
-  score(tl, appearAt + 0.5, () => note(MOTIF.belovedAnswer[1], { dur: 0.45, vol: 0.15, pan: 0.3, voice: 'soprano' }));
-  score(tl, appearAt + 0.9, () => note(MOTIF.belovedAnswer[2], { dur: 0.90, vol: 0.16, pan: 0.3, voice: 'soprano', vibrato: true }));
+  MOTIF.belovedAnswer.forEach((p, i) => {
+    score(tl, appearAt + 0.1 + i * 0.35, () => note(p, { dur: i === 3 ? 0.95 : 0.45, vol: 0.15 + i * 0.01, pan: 0.3, voice: 'soprano', vibrato: i === 3 }));
+  });
 
   beloved.col = bc;
   beloved.row = br;
   const duskLook = () => ({ color: COLORS.dusk, opacity: 0.16, scale: 0.85 });
 
-  // 4. THE COUNTER-ROTATIONAL DUET with 4–3 and 7–6 suspensions
-  camera(tl, start + 3.0, { col: 4.5, row: 4.5, zoom: 1.75, dur: 1.8 });
-
-  // Classical suspension steps:
-  // Step 1: D4/G4 (4th) -> C4/G4 (5th resolution)
-  // Step 2: F4/A4 -> E4/A4 (7–6 suspension)
-  // Step 3: G4/B4 (sweet parallel 3rd harmony)
-  const suspensions = [
-    { h1: 14, h2: 12, b: 19 },
-    { h1: 17, h2: 16, b: 21 },
-    { h1: 19, h2: 19, b: 23 },
+  const courtingHarmonies = [
+    { h: 16, b: 24, touch: true },
+    { h: 19, b: 21, touch: false },
+    { h: 21, b: 19, touch: true },
+    { h: 24, b: 16, touch: true },
   ];
+
+  camera(tl, start + 3.2, { col: 4.5, row: 4.5, zoom: 1.70, dur: 1.6 });
 
   for (let i = 1; i < heroDance.length; i++) {
     const t = start + 3.4 + (i - 1) * hopGap;
-    const susp = suspensions[(i - 1) % suspensions.length];
+    const harm = courtingHarmonies[(i - 1) % courtingHarmonies.length];
 
     hop(tl, hero, heroDance[i][0], heroDance[i][1], t, {
       leave: duskLook(),
-      arriveScale: 1.22,
-      note: susp.h1,
-      vol: 0.13,
-      pan: -0.25,
+      arriveScale: 1.25,
+      note: harm.h,
+      vol: 0.14,
+      pan: -0.22,
       voice: 'tenor',
       echo: true,
     });
-    // Tenor resolves suspension halfway through step
-    score(tl, t + hopGap * 0.45, () => note(susp.h2, { dur: 0.5, vol: 0.13, pan: -0.25, voice: 'tenor' }));
 
-    hop(tl, beloved, belovedDance[i][0], belovedDance[i][1], t + 0.12, {
+    hop(tl, beloved, belovedDance[i][0], belovedDance[i][1], t + 0.08, {
       leave: duskLook(),
-      arriveScale: 1.22,
-      note: susp.b,
-      vol: 0.15,
-      pan: 0.25,
+      arriveScale: 1.25,
+      note: harm.b,
+      vol: 0.16,
+      pan: 0.22,
       voice: 'soprano',
       vibrato: true,
     });
+
+    if (harm.touch) {
+      const midCol = (heroDance[i][0] + belovedDance[i][0]) / 2;
+      const midRow = (heroDance[i][1] + belovedDance[i][1]) / 2;
+      for (const [dc, dr] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const neighbor = at(Math.round(midCol) + dc, Math.round(midRow) + dr);
+        if (neighbor && !(neighbor.col === heroDance[i][0] && neighbor.row === heroDance[i][1]) && !(neighbor.col === belovedDance[i][0] && neighbor.row === belovedDance[i][1])) {
+          tl.call(() => neighbor.el.style.setProperty('--dot-color', COLORS.fusion), [], t + 0.1);
+          tl.to(neighbor.el, { opacity: 0.45, scale: 0.95, duration: 0.35, yoyo: true, repeat: 1 }, t + 0.1);
+        }
+      }
+      score(tl, t + 0.1, () => arp(MODES.ARP_HARP, 0.75, 50, { vol: 0.07, pan: 0 }));
+    }
   }
 
-  // 5. HELD TOGETHER: Open cathedral chord + 12Hz shimmering harp arpeggio
-  const held = start + 3.4 + (heroDance.length - 1) * hopGap + 0.7;
-  camera(tl, held, { col: 4.5, row: 4.5, zoom: 1.55, dur: 2.2 });
+  const held = start + 3.4 + (heroDance.length - 1) * hopGap + 0.6;
+  camera(tl, held, { col: 4.5, row: 4.5, zoom: 1.60, dur: 2.2 });
+  tl.to([at(4, 4).el, at(5, 4).el], { scale: 1.25, duration: 0.6, yoyo: true, repeat: 3, ease: 'sine.inOut' }, held);
+
   score(tl, held, () => {
-    note(0, { dur: 4.0, vol: 0.11, pan: 0.0, type: 'triangle' }); // C3 deep floor
-    note(12, { dur: 3.8, vol: 0.13, pan: -0.25, voice: 'tenor', attack: 0.04 }); // C4 tenor
-    note(16, { dur: 3.9, vol: 0.15, pan: 0.25, voice: 'soprano', vibrato: true, attack: 0.04 }); // E4 soprano
-    note(19, { dur: 3.6, vol: 0.12, pan: 0.25, voice: 'soprano', vibrato: true, attack: 0.04 }); // G4
-    arp(MODES.ARP_HARP, 3.5, 12, { vol: 0.06, pan: 0.0 });
+    note(0, { dur: 4.2, vol: 0.12, pan: 0, type: 'triangle' });
+    note(12, { dur: 4.0, vol: 0.14, pan: -0.22, voice: 'tenor', attack: 0.04 });
+    note(16, { dur: 4.0, vol: 0.15, pan: 0.22, voice: 'soprano', vibrato: true, attack: 0.04 });
+    note(19, { dur: 3.8, vol: 0.13, pan: 0.22, voice: 'soprano', vibrato: true, attack: 0.04 });
+    arp(MODES.ARP_HARP, 3.8, 14, { vol: 0.07, pan: 0 });
   });
 }
 
-// ACT IV — JEALOUSY: 240ms dramatic gasp, green gate, tritone capture, minor wound motif
+// ACT IV — JEALOUSY: Green Gate Invasion & Tritone Shriek
 function actJealousy(tl, hero, beloved) {
   const { start, belovedCell, heroFlee } = CONFIG.acts.jealousy;
 
-  // THEATRICAL FERMATA: 240ms of dead breathless silence as disaster strikes
   silence(tl, start, 0.24);
-
-  // Crypt room acoustics: muffled 550 Hz lowpass
   score(tl, start + 0.24, () => setRoom(550, 0.45, 0.8));
   camera(tl, start, { zoom: 1.25, dur: 1.2 });
 
@@ -784,7 +640,6 @@ function actJealousy(tl, hero, beloved) {
     start
   );
 
-  // Accelerating gate descent (stretto: 0.42s down to 0.28s)
   let gateT = start + 0.25;
   for (let row = 0; row < SIZE; row++) {
     const stepDur = 0.42 - row * 0.016;
@@ -802,18 +657,16 @@ function actJealousy(tl, hero, beloved) {
     gateT += stepDur;
   }
 
-  // AGONIZING CAPTURE: Beloved consumed at (5, 4), soprano tritone shriek on Gb5
   const taken = start + 2.2;
   tl.call(() => at(belovedCell[0], belovedCell[1]).el.style.setProperty('--dot-color', COLORS.envy), [], taken);
   tl.to(at(belovedCell[0], belovedCell[1]).el, { scale: 0.85, opacity: 0.75, duration: 0.6 }, taken);
   score(tl, taken, () => {
-    note(18, { dur: 1.2, vol: 0.17, pan: 0.3, voice: 'soprano', vibrato: true }); // Piercing Gb5 shriek
-    note(6, { dur: 1.6, vol: 0.15, pan: 0.0, grit: true }); // Tritone F#3 crash
+    note(18, { dur: 1.2, vol: 0.17, pan: 0.3, voice: 'soprano', vibrato: true });
+    note(6, { dur: 1.6, vol: 0.15, pan: 0, grit: true });
     drum('kick', 0.45, { dur: 0.35, startF: 120, endF: 28 });
   });
   beloved.dead = true;
 
-  // Hero flees downward singing the dissonant Horror Motif: [12, 15, 18, 11] (C4 -> Eb4 -> Gb4 -> B3)
   heroFlee.forEach(([col, row], i) => {
     const t = taken + 0.35 + i * 0.52;
     hop(tl, hero, col, row, t, {
@@ -828,7 +681,7 @@ function actJealousy(tl, hero, beloved) {
   });
 }
 
-// ACT V — REVENGE: Stretto accelerando hunt, chromatic war chant, sfz crash, 0.85s grand pause
+// ACT V — REVENGE: Stretto Climax, Living Breath & Cavernous Dissipation
 function actRevenge(tl, hero) {
   const { start, huntPath } = CONFIG.acts.revenge;
 
@@ -837,10 +690,8 @@ function actRevenge(tl, hero) {
   score(tl, start, () => note(MOTIF.heroWar[0], { vol: 0.17, dur: 0.6, type: 'sawtooth', grit: true, voice: 'tenor' }));
   camera(tl, start, { col: hero.col, row: hero.row, zoom: 2.1, dur: 0.7 });
 
-  // Accelerating 10-strike hunt (hop gap drops from 0.40s down to 0.22s)
   let huntT = start + 0.5;
-  const path = huntPath.slice(0, 10);
-  path.forEach(([col, row], i) => {
+  huntPath.slice(0, 10).forEach(([col, row], i) => {
     const stepDur = 0.40 - i * 0.018;
     const t = huntT;
 
@@ -856,7 +707,6 @@ function actRevenge(tl, hero) {
       hat: true,
     });
 
-    // Incineration shockwave to neighbor cells
     for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const nc = col + dc;
       const nr = row + dr;
@@ -873,12 +723,11 @@ function actRevenge(tl, hero) {
     huntT += stepDur;
   });
 
-  // Final strike at (4, 0): SFORZANDO (sfz) IMPACT + vertical stage shake
   const finalHuntT = huntT;
   hop(tl, hero, 4, 0, finalHuntT, {
     leave: { color: COLORS.rage, opacity: 0.75, scale: 0.95 },
     arriveScale: 1.25,
-    note: 18, // High F#4 tritone strike
+    note: 18,
     vol: 0.20,
     dur: 0.5,
     grit: true,
@@ -887,12 +736,17 @@ function actRevenge(tl, hero) {
   score(tl, finalHuntT, () => drum('sfz', 0.50));
   tl.to(worldEl, { y: '+=12', duration: 0.05, yoyo: true, repeat: 3, ease: 'sine.inOut' }, finalHuntT);
 
-  // 0.85s GRAND PAUSE / TOTAL VOID SILENCE: the hollow exhaustion of vengeance
-  const silenceT = finalHuntT + 0.35;
-  silence(tl, silenceT, 0.85);
+  // Living breath pause & subterranean cavernous tail (No hard mute)
+  const pauseT = finalHuntT + 0.35;
+  score(tl, pauseT, () => setRoom(320, 0.65, 2.2));
+  score(tl, pauseT + 0.15, () => drum('lubdub', 0.22, { startF: 50, endF: 22 }));
+  tl.to(at(4, 0).el, { scale: 1.25, duration: 0.14, yoyo: true, repeat: 1 }, pauseT + 0.15);
 
-  // Charred embers and solitary hero at (4, 0)
-  const after = silenceT + 0.85;
+  score(tl, pauseT + 0.45, () => drum('breath', 0.16, { dur: 0.38 }));
+  score(tl, pauseT + 0.72, () => drum('lubdub', 0.18, { startF: 44, endF: 20 }));
+  tl.to(at(4, 0).el, { scale: 1.20, duration: 0.14, yoyo: true, repeat: 1 }, pauseT + 0.72);
+
+  const after = pauseT + 0.95;
   camera(tl, after, { col: 4, row: 0, zoom: 1.65, dur: 1.0 });
   tl.call(() => everyDot((d) => d.el.style.setProperty('--dot-color', COLORS.ember)), [], after);
   tl.to(
@@ -903,16 +757,34 @@ function actRevenge(tl, hero) {
   tl.to(at(hero.col, hero.row).el, { opacity: 1.0, scale: 1.2, duration: 0.8 }, after);
 }
 
-// ACT VI — ACCEPTANCE: Lydian transfiguration along spine, outward violet waves, continuous ascending canopy
+// Concentric ring pulse radiating from center (4, 4) in lockstep with synth ascension
+function pulseCenterRings(tl, time, step = 0) {
+  for (let r = 0; r <= 4; r++) {
+    const ringDots = dots.filter((d) => d.ring === r);
+    const ringColor = COLORS.peace(r, step);
+    tl.call(() => ringDots.forEach((d) => d.el.style.setProperty('--dot-color', ringColor)), [], time + r * 0.075);
+    tl.to(
+      ringDots.map((d) => d.el),
+      {
+        scale: 1.25,
+        opacity: 1.0,
+        duration: 0.22,
+        yoyo: true,
+        repeat: 1,
+        ease: 'sine.out',
+      },
+      time + r * 0.075
+    );
+  }
+}
+
+// ACT VI — ACCEPTANCE: Full Bleed Radiant Purple Flood & Synesthetic Synth Ascension
 function actAcceptance(tl, hero) {
-  const { start, peaceSpread, homePath, memoryCell } = CONFIG.acts.acceptance;
+  const { start, peaceSpread, homePath, memoryCell, ascension } = CONFIG.acts.acceptance;
 
-  // Cathedral opens wide: 2800 Hz lowpass
   score(tl, start, () => setRoom(2800, 0.44, 1.2));
-
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.healing[0]), [], start);
 
-  // Hero steps down spine singing Transfigured Motif: [12, 16, 18, 19] (C4 -> E4 -> F#4 -> G4, resolving tritone)
   homePath.forEach(([col, row], i) => {
     const t = start + 0.35 + i * 0.85;
     const stepColor = COLORS.healing[i + 1];
@@ -930,67 +802,43 @@ function actAcceptance(tl, hero) {
   });
 
   const settleT = start + 3.2;
-  camera(tl, settleT, { col: CENTER, row: CENTER, zoom: 1.20, dur: 2.2 });
-
+  camera(tl, settleT, { col: CENTER, row: CENTER, zoom: 1.15, dur: 2.2 });
   const home = at(CENTER, CENTER);
   tl.to(home.el, { scale: 1.25, duration: 1.6, yoyo: true, repeat: 2, ease: 'sine.inOut' }, settleT);
 
-  // Concentric violet peace rings spreading outward:
-  const floodStart = settleT + 0.4;
+  // Full bleed radiant purple flood across all 81 dots
+  const floodStart = settleT + 0.3;
   everyDot((d) => {
-    if (d.col === CENTER && d.row === CENTER) return;
     const t = floodStart + d.ring * peaceSpread;
-    tl.call(() => d.el.style.setProperty('--dot-color', COLORS.peace(d.ring)), [], t);
-    tl.to(d.el, { opacity: 0.72, scale: 1.0, duration: 1.2, ease: 'sine.inOut' }, t);
+    tl.call(() => d.el.style.setProperty('--dot-color', COLORS.peace(d.ring, 0)), [], t);
+    tl.to(d.el, { opacity: 0.95, scale: 1.15, duration: 0.8, ease: 'sine.out' }, t);
   });
 
-  // CONTINUOUS EUPHORIC HARMONIC ASCENSION (Climbing higher with every step; NO High C here!)
-  // Step 1: Foundation (C Major 9)
-  score(tl, settleT + 0.4, () => {
-    note(0, { dur: 3.2, vol: 0.11, type: 'triangle', attack: 0.06 });
-    note(4, { dur: 3.2, vol: 0.10, voice: 'tenor', attack: 0.05 });
-    note(7, { dur: 3.0, vol: 0.09, voice: 'pluck', attack: 0.04 });
-    note(14, { dur: 2.8, vol: 0.08, voice: 'tenor', vibrato: true });
-    arp([0, 4, 7, 12, 14, 16], 2.2, 13, { vol: 0.06, pan: -0.2 });
+  // Synesthetic Ascending Chords coupled with Center Ring Pulses
+  ascension.forEach(({ chord, cue, room }, step) => {
+    const s = settleT + cue;
+    pulseCenterRings(tl, s, step);
+    score(tl, s, () => {
+      if (room) setRoom(room, 0.44 + step * 0.02, 1.0);
+      chord.slice(0, 4).forEach((pitch, i) => {
+        note(pitch, {
+          dur: 3.4 - i * 0.2,
+          vol: 0.11 - i * 0.01,
+          voice: i === 2 ? 'pluck' : 'tenor',
+          vibrato: i === 3,
+          attack: 0.04,
+        });
+      });
+      arp(chord, 2.4, 14 + step, { vol: 0.07, pan: step % 2 === 0 ? -0.2 : 0.2 });
+    });
   });
 
-  // Step 2: Lydian Hope (F Major 7)
-  score(tl, settleT + 1.8, () => {
-    note(5, { dur: 3.2, vol: 0.11, voice: 'tenor', attack: 0.05 });
-    note(9, { dur: 3.2, vol: 0.10, voice: 'pluck', attack: 0.04 });
-    note(12, { dur: 3.0, vol: 0.09, voice: 'tenor', attack: 0.04 });
-    note(16, { dur: 2.8, vol: 0.10, voice: 'tenor', vibrato: true });
-    arp([5, 9, 12, 16, 19, 21], 2.2, 14, { vol: 0.07, pan: 0.2 });
-  });
-
-  // Step 3: Golden Expansion (G Major 9)
-  score(tl, settleT + 3.2, () => {
-    setRoom(3500, 0.48, 1.0);
-    note(7, { dur: 3.4, vol: 0.11, voice: 'tenor', attack: 0.05 });
-    note(11, { dur: 3.4, vol: 0.10, voice: 'pluck', attack: 0.04 });
-    note(14, { dur: 3.2, vol: 0.10, voice: 'tenor', attack: 0.04 });
-    note(19, { dur: 3.0, vol: 0.12, voice: 'tenor', vibrato: true });
-    arp([7, 11, 14, 19, 21, 24], 2.4, 15, { vol: 0.08, pan: -0.15 });
-  });
-
-  // Step 4: Transcendent Canopy (Tenor & Pluck Canopy - High C reserved for Act VII)
-  score(tl, settleT + 4.6, () => {
-    setRoom(3900, 0.50, 1.0);
-    note(12, { dur: 3.6, vol: 0.12, voice: 'tenor', attack: 0.05 }); // C4
-    note(16, { dur: 3.6, vol: 0.11, voice: 'tenor', attack: 0.04 }); // E4
-    note(19, { dur: 3.4, vol: 0.12, voice: 'tenor', vibrato: true }); // G4
-    note(21, { dur: 3.2, vol: 0.10, voice: 'pluck', attack: 0.03 });   // A4
-    arp([12, 16, 19, 21, 24, 28], 2.6, 15, { vol: 0.08, pan: 0.25 });
-  });
-
-  // Beloved's rose memory light at (5, 4) blossoms at the peak of the violet sea
   const mem = at(memoryCell[0], memoryCell[1]);
   tl.call(() => mem.el.style.setProperty('--dot-color', COLORS.memory), [], settleT + 2.0);
   tl.to(mem.el, { opacity: 0.95, scale: 1.22, duration: 1.8, ease: 'sine.inOut' }, settleT + 2.0);
 }
 
-// ACT VII — DEATH & THE "FAT LADY" LIEBESTOD ARIA:
-// Organic Perlin entropy, dying hero collapse, Beloved ghost aria on High C5, subterranean C1 pedal
+// ACT VII — DEATH & BELOVED'S GHOST ARIA (Liebestod on High C5)
 function actDeath(tl, hero) {
   const { start, noteEvery } = CONFIG.acts.death;
   const deathTime = makeDeathMap();
@@ -1014,89 +862,59 @@ function actDeath(tl, hero) {
     }
   });
 
-  // Hero cools to solitary tungsten amber ember at (4, 4)
   const maxDeath = start + Math.max(...order.map(deathTime));
   const emberAt = maxDeath + 0.5;
-  tl.call(() => {
-    heroCell.el.style.setProperty('--dot-color', COLORS.lastEmber);
-  }, [], emberAt);
+  tl.call(() => heroCell.el.style.setProperty('--dot-color', COLORS.lastEmber), [], emberAt);
   tl.to(heroCell.el, { opacity: 0.9, scale: 0.95, duration: 0.8, ease: 'power2.out' }, emberAt);
 
-  // Slow decelerating 48 BPM anatomical lub-dub heartbeat:
   score(tl, emberAt + 0.5, () => drum('lubdub', 0.28, { startF: 64, endF: 26, noise: false }));
   tl.to(heroCell.el, { scale: 1.1, duration: 0.14 }, emberAt + 0.5)
     .to(heroCell.el, { scale: 0.95, duration: 0.14 }, emberAt + 0.64)
     .to(heroCell.el, { scale: 1.02, duration: 0.10 }, emberAt + 0.78)
     .to(heroCell.el, { scale: 0.90, duration: 0.40 }, emberAt + 0.88);
 
-  // Hero begins motif... and collapses to G3 (heroDying: [12, 16, 7])
-  score(tl, emberAt + 0.5, () => note(MOTIF.heroDying[0], { dur: 0.4, vol: 0.11, voice: 'tenor' }));
-  score(tl, emberAt + 0.85, () => note(MOTIF.heroDying[1], { dur: 0.4, vol: 0.10, voice: 'tenor' }));
-  score(tl, emberAt + 1.25, () => note(MOTIF.heroDying[2], { dur: 0.9, vol: 0.08, voice: 'tenor' }));
+  MOTIF.heroDying.forEach((p, i) => {
+    score(tl, emberAt + 0.5 + i * 0.36, () => note(p, { dur: i === 2 ? 0.9 : 0.4, vol: 0.11 - i * 0.015, voice: 'tenor' }));
+  });
 
-  // THE "FAT LADY" SINGS (Beloved's Ghost Re-ignites at 5, 4):
   const ariaAt = emberAt + 1.6;
   const ghostCell = at(5, 4);
   tl.call(() => {
     ghostCell.el.classList.add('ghost-aria');
     ghostCell.el.style.setProperty('--dot-color', COLORS.beloved);
   }, [], ariaAt);
-  tl.fromTo(
-    ghostCell.el,
-    { scale: 0, opacity: 0 },
-    { scale: 1.20, opacity: 1.0, duration: 1.4, ease: 'power2.out', immediateRender: false },
-    ariaAt
-  );
+  tl.fromTo(ghostCell.el, { scale: 0, opacity: 0 }, { scale: 1.20, opacity: 1.0, duration: 1.4, ease: 'power2.out', immediateRender: false }, ariaAt);
   tl.to(ghostCell.el, { scale: 1.10, opacity: 0.92, duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, ariaAt + 1.4);
 
-  // Maximum Cathedral Acoustics for the grand finale aria:
   score(tl, ariaAt, () => setRoom(4200, 0.55));
 
-  // Climactic Wagnerian Soprano Liebestod:
-  // 1. Pickup: G4 (19) - tender onset
-  score(tl, ariaAt + 0.1, () => note(MOTIF.aria[0], { dur: 0.75, vol: 0.14, pan: 0.35, voice: 'soprano' }));
-  // 2. Rising Step: A4 (21) - swelling chest resonance
-  score(tl, ariaAt + 0.8, () => note(MOTIF.aria[1], { dur: 0.75, vol: 0.16, pan: 0.35, voice: 'soprano' }));
-  // 3. Leading Tone: B4 (23) - soaring tension
-  score(tl, ariaAt + 1.5, () => note(MOTIF.aria[2], { dur: 0.65, vol: 0.17, pan: 0.35, voice: 'soprano' }));
-  // 4. Climactic High C5 (24 = 523.25 Hz) - grand Messa di Voce, blooming 5.3Hz vibrato + tremolo + Singer's Formant ring!
-  score(tl, ariaAt + 2.1, () => note(MOTIF.aria[3], { dur: 3.4, vol: 0.22, pan: 0.35, voice: 'soprano', vibrato: true }));
+  MOTIF.aria.forEach((p, i) => {
+    const t = ariaAt + [0.1, 0.8, 1.5, 2.1][i];
+    score(tl, t, () => note(p, { dur: i === 3 ? 3.4 : 0.75, vol: [0.14, 0.16, 0.17, 0.22][i], pan: 0.35, voice: 'soprano', vibrato: i === 3 }));
+  });
 
-  // Final dying cardiac pulse underneath the sustained high C
   const finalBeatAt = ariaAt + 3.2;
   score(tl, finalBeatAt, () => drum('kick', 0.18, { startF: 50, endF: 22, dur: 0.28, noise: false }));
-  tl.to(heroCell.el, { scale: 0.96, duration: 0.18 }, finalBeatAt).to(
-    heroCell.el,
-    { scale: 0.70, duration: 0.8 },
-    finalBeatAt + 0.18
-  );
+  tl.to(heroCell.el, { scale: 0.96, duration: 0.18 }, finalBeatAt).to(heroCell.el, { scale: 0.70, duration: 0.8 }, finalBeatAt + 0.18);
 
-  // 5. Dying Melisma Cadence: A4 (21) -> G4 (19) -> E4 (16) -> C4 (12)
-  score(tl, finalBeatAt + 1.0, () => note(MOTIF.ariaCadence[0], { dur: 0.55, vol: 0.13, pan: 0.3, voice: 'soprano' }));
-  score(tl, finalBeatAt + 1.5, () => note(MOTIF.ariaCadence[1], { dur: 0.65, vol: 0.12, pan: 0.3, voice: 'soprano' }));
-  score(tl, finalBeatAt + 2.1, () => note(MOTIF.ariaCadence[2], { dur: 0.85, vol: 0.11, pan: 0.3, voice: 'soprano', vibrato: true }));
-  score(tl, finalBeatAt + 2.9, () => note(MOTIF.ariaCadence[3], { dur: 2.2, vol: 0.10, pan: 0.3, voice: 'soprano', vibrato: true }));
-
-  // Dying Tenor whisper underneath her final C4
+  MOTIF.ariaCadence.forEach((p, i) => {
+    const t = finalBeatAt + [1.0, 1.5, 2.1, 2.9][i];
+    score(tl, t, () => note(p, { dur: [0.55, 0.65, 0.85, 2.2][i], vol: [0.13, 0.12, 0.11, 0.10][i], pan: 0.3, voice: 'soprano', vibrato: i >= 2 }));
+  });
   score(tl, finalBeatAt + 2.9, () => note(0, { dur: 2.6, vol: 0.08, voice: 'tenor' }));
 
-  // Silence: celestial star and amber ember dissolve together into eternity
   const fadeAt = finalBeatAt + 4.2;
   tl.to(heroCell.el, { opacity: 0, scale: 0.1, duration: 3.5, ease: 'power2.in' }, fadeAt);
   tl.to(ghostCell.el, { opacity: 0, scale: 0.1, duration: 3.5, ease: 'power2.in' }, fadeAt);
   tl.call(() => ghostCell.el.classList.remove('ghost-aria'), [], fadeAt + 3.5);
 
-  // Subterranean C1 organ pedal fading into eternity
   score(tl, fadeAt, () => {
-    note(-12, { dur: 4.0, vol: 0.11 });               // C2 (65.4 Hz)
-    note(-24, { dur: 5.5, vol: 0.09, type: 'sine' }); // C1 pedal (32.7 Hz)
+    note(-12, { dur: 4.0, vol: 0.11 });
+    note(-24, { dur: 5.5, vol: 0.09, type: 'sine' });
   });
 }
 
-// ============================================================
-// OPERA LIFECYCLE & SLAB TITLE
-// ============================================================
-
+// Master Stage Timeline Orchestrator
 function buildOpera() {
   if (opera) opera.kill();
 
@@ -1106,20 +924,20 @@ function buildOpera() {
   opera = gsap.timeline({
     onComplete: () => {
       if (isAmbient || CONFIG.loop) {
-        gsap.delayedCall(1.5, buildOpera); // rebirth
+        gsap.delayedCall(1.5, buildOpera);
       } else {
         stopOpera();
       }
     },
   });
 
-  // Reset the stage
   opera.set(worldEl, { x: 0, y: 0, scale: 1 }, 0);
   opera.set(dots.map((d) => d.el), { opacity: 0, scale: 0 }, 0);
   opera.call(() => everyDot((d) => {
     d.el.className = 'dot';
     d.el.style.setProperty('--dot-color', COLORS.dusk);
   }), [], 0);
+
   if (isAmbient) {
     const centerDot = at(CENTER, CENTER);
     centerDot.el.style.setProperty('--dot-color', COLORS.soul);
@@ -1135,7 +953,7 @@ function buildOpera() {
   actDeath(opera, hero);
 }
 
-// Slab Title & Navigation
+// Typography & Navigation Controls
 const titleEl = document.querySelector('.t');
 const technoSpan = titleEl ? titleEl.children[1] : null;
 const playBtn = document.getElementById('play-btn');
@@ -1143,21 +961,17 @@ const playBtn = document.getElementById('play-btn');
 function fitTitle() {
   if (!titleEl || !technoSpan) return;
   const subEl = titleEl.querySelector('.sub');
-
   titleEl.style.fontSize = '100px';
   if (subEl) subEl.style.fontSize = '100px';
 
   const tW = technoSpan.offsetWidth || 1;
   const sW = subEl ? (subEl.offsetWidth || 1) : 1;
-
   const byWidth = 100 * (innerWidth * 0.94) / tW;
   const byHeight = (innerHeight - 110) / (3.6 * 0.82);
   const titleSize = Math.min(byWidth, byHeight);
 
   titleEl.style.fontSize = titleSize + 'px';
-  if (subEl) {
-    subEl.style.fontSize = (titleSize * (tW / sW)) + 'px';
-  }
+  if (subEl) subEl.style.fontSize = (titleSize * (tW / sW)) + 'px';
 }
 
 function clearTypeAnim() {
@@ -1219,7 +1033,6 @@ function typeOut(onComplete) {
 }
 
 document.fonts.ready.then(() => fitTitle());
-
 if (titleEl && technoSpan) {
   fitTitle();
   typeIn();
@@ -1249,7 +1062,6 @@ function stopOpera() {
   typeIn();
   if (replayBtn) replayBtn.classList.remove('visible');
 
-  // Mute audio smoothly
   isAmbient = true;
   if (audioCtx && masterGain) {
     const t = audioCtx.currentTime;
@@ -1262,45 +1074,40 @@ function stopOpera() {
     playBtn.textContent = 'Play';
     playBtn.setAttribute('aria-label', 'Play performance');
   }
-
   buildOpera();
 }
 
-// Start playing silently in the background immediately
 buildOpera();
-if (new URLSearchParams(window.location.search).get('play') === '1') {
+
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('play') === '1') {
   startOpera();
+}
+const seekSec = parseFloat(urlParams.get('seek'));
+if (!isNaN(seekSec) && opera) {
+  document.body.classList.add('playing');
+  if (titleEl) titleEl.style.visibility = 'hidden';
+  opera.seek(seekSec, false);
 }
 
 if (playBtn) {
   playBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isAmbient) {
-      startOpera();
-    } else {
-      stopOpera();
-    }
+    if (isAmbient) startOpera();
+    else stopOpera();
   });
 }
 
-// Clicking anywhere on stage starts/pauses
 window.addEventListener('click', (e) => {
   if (e.target.closest('a') || e.target.closest('button')) return;
-  if (isAmbient) {
-    startOpera();
-  }
+  if (isAmbient) startOpera();
 });
 
-function replay() {
-  startOpera();
-}
-
 if (replayBtn) {
-  replayBtn.addEventListener('click', replay);
+  replayBtn.addEventListener('click', startOpera);
 }
 
-// Invalidate cached cell size on resize and fit title
 window.addEventListener('resize', () => {
   _cell = 0;
   fitTitle();
