@@ -3,8 +3,9 @@
 // A short interactive story in seven acts that fits in 15 kilobytes,
 // told with a 9x9 grid of dots, color, motion, and sound.
 //
-// Operatic audio architecture: voices as characters, harmonic
-// tension, Wagnerian leitmotif transformation, and cathedral DSP.
+// Operatic Chiptune Audio Architecture:
+// Galway PWM, SID 50Hz arpeggio shimmers, audio-rate ring mod,
+// biological lub-dub percussion, dynamic vocal formant sweeps.
 // ============================================================
 
 export const SIZE = 9;
@@ -19,6 +20,11 @@ export const MODES = {
   PENTA: [0, 2, 4, 7, 9],
   WOUND: [0, 1, 6], // Minor 2nd / tritone: operatic dread
   OPEN:  [0, 4, 12, 16, 24], // Root + Major 3rd (drop 5th for cathedral clarity)
+  // Tracker Arpeggio Shapes
+  ARP_MAJ: [0, 4, 7, 12],
+  ARP_MIN: [0, 3, 7, 12],
+  ARP_TENSION: [0, 1, 6, 12],
+  ARP_HARP: [0, 4, 7, 11, 12, 16, 19, 24],
 };
 
 // Wagnerian Leitmotif Transformation Kit
@@ -32,9 +38,8 @@ export const MOTIF = {
   hero: [12, 16],          // C4 -> E4 (tenor hope)
   heroCall: [12, 14],      // C4 -> D4 (the question)
   belovedAnswer: [19, 16], // G4 -> E4 (tender contrary descent)
-  beloved: [16, 19],       // E4 -> G4 (soprano harmony in parallel 3rds)
-  heroBroken: [11, 16],    // B3 -> E4 (dissonant tritone/seventh drop in grief)
-  aria: [19, 21, 24],      // G4 -> A4 -> High C5 (climactic soprano ascension)
+  aria: [19, 21, 23, 24],        // G4 -> A4 -> B4 -> High C5 (Wagnerian soprano ascension)
+  ariaCadence: [21, 19, 16, 12], // A4 -> G4 -> E4 -> C4 (dying melisma descent)
 };
 
 // PALETTES — Pure spectral colors of light: ZERO beige, ZERO muddy pigments
@@ -82,15 +87,15 @@ export const CONFIG = {
   acts: {
     birth: { start: 0, heartbeats: 3 },
 
-    // Equator row ignites; row-pairs bloom with stacked open chord tones
+    // Equator row ignites; row-pairs bloom with stacked open chord tones + tracker arpeggios
     development: {
       start: 4.4,
       rowGap: 0.55,
-      rowChord: [0, 4, 12, 16, 24], // Open C Major voicing (dropping 5th)
+      rowChord: [0, 4, 12, 16, 24],
       wander: [[4, 3], [5, 3], [5, 4], [4, 4]],
     },
 
-    // Dusk falls; beloved appears; parallel-thirds duet on 2x2 box
+    // Dusk falls; beloved appears; parallel-thirds duet on 2x2 box + Follin echo
     love: {
       start: 12.0,
       zoom: 1.07,
@@ -99,7 +104,7 @@ export const CONFIG = {
       belovedDance: [[5, 5], [4, 5], [4, 4], [5, 4]],
     },
 
-    // Green gate descends; soprano suspension; rapid downward flight
+    // Green gate descends; ring-mod menace; soprano suspension; downward flight
     jealousy: {
       start: 19.0,
       gateStep: 0.55,
@@ -107,7 +112,7 @@ export const CONFIG = {
       heroFlee: [[4, 6], [4, 7], [4, 8]],
     },
 
-    // Reversal: hero hunts upward in crimson fury with ring-mod saw
+    // Reversal: hero hunts in crimson fury with ring-mod saw & synthesized percussion
     revenge: {
       start: 25.0,
       zoom: 0.94,
@@ -118,7 +123,7 @@ export const CONFIG = {
       ],
     },
 
-    // Hero heals home; outward violet flood; double Amen cadence (IV–I)
+    // Hero heals home; outward violet flood; crystal harp arpeggios; double Amen cadence (IV–I)
     acceptance: {
       start: 31.8,
       zoom: 1.0,
