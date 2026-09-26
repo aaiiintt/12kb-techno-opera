@@ -6,95 +6,150 @@
 <title>Opera House palette</title>
 <style>
   :root { --f: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-  html { background: #000; } body { margin: 0; color: #fff; font-family: var(--f); }
+  html { background: #000; }
+  body { margin: 0; color: #fff; font-family: var(--f); }
   h1 { font-size: clamp(28px, 5vw, 64px); text-transform: uppercase; letter-spacing: -.04em; margin: 6vh 4vw 1vh; line-height: .9; }
-  p { margin: 0 4vw 4vh; opacity: .5; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; max-width: 60ch; }
+  p { margin: 0 4vw 4vh; opacity: .5; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; max-width: 64ch; }
   .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4vw; padding: 0 4vw 4vh; }
   .sw { display: flex; flex-direction: column; gap: 10px; }
   .row { display: flex; gap: 6px; align-items: center; }
   .n { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; display: flex; justify-content: space-between; opacity: .8; }
-  .n span:last-child { opacity: .5; }
+  .n span:last-child { opacity: .5; font-family: ui-monospace, Menlo, monospace; text-transform: none; }
 
-  /* The disc. --c colour, --s size in px, --b brightness 0..1.
-     Glow is two halos: a tight one that scales with the disc, and a wide
-     soft one that only appears as the disc gets big (big = close). */
-  .d { position: relative; width: var(--s, 60px); height: var(--s, 60px); border-radius: 50%; background: var(--c); opacity: var(--b, 1); flex: none; }
-  .d::before, .d::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--c); z-index: -1; }
-  .d::before { filter: blur(calc(var(--s, 60px) * .12)); opacity: .55; transform: scale(1.25); }
-  .d::after  { filter: blur(calc(var(--s, 60px) * .35)); opacity: var(--wide, 0); transform: scale(1.9); }
-  .sw .d.big { --s: 150px; --wide: .35; }
+  /* A light. Defined in OKLCH: --h hue, --c chroma. --l is its lightness,
+     0 to 1, which is the only thing a note or a gesture changes.
+     Face:  oklch(L C H)
+     Halo:  same hue, less chroma, opacity follows L, radius follows size.
+     Wide halo: only for large discs, and faint. */
+  .d { --l: var(--lmax, .8); --c: .17; --s: 60px;
+       position: relative; width: var(--s); height: var(--s); border-radius: 50%; flex: none;
+       background: oklch(calc(var(--l) * 100%) var(--c) var(--h)); }
+  .d::before, .d::after { content: ''; position: absolute; inset: 0; border-radius: 50%; z-index: -1;
+       background: oklch(calc(var(--l) * 100%) calc(var(--c) * .7) var(--h)); }
+  .d::before { filter: blur(calc(var(--s) * .10)); transform: scale(1.18); opacity: calc(var(--l) * .32); }
+  .d::after  { filter: blur(calc(var(--s) * .30)); transform: scale(1.7);  opacity: calc(var(--l) * var(--wide, 0)); }
+  .sw .d.big { --s: 150px; --wide: .12; }
   .row .d { --s: 26px; }
-  .row .d:nth-child(1) { --b: .12; } .row .d:nth-child(2) { --b: .3; } .row .d:nth-child(3) { --b: .55; } .row .d:nth-child(4) { --b: .8; } .row .d:nth-child(5) { --b: 1; }
-  .row .d:not(:nth-child(5))::before, .row .d:not(:nth-child(5))::after { display: none; }
+  .row .d:nth-child(1) { --l: .22; --c: .04; } .row .d:nth-child(2) { --l: .36; --c: .09; } .row .d:nth-child(3) { --l: .5; --c: .13; } .row .d:nth-child(4) { --l: calc(var(--lmax) * .82); } .row .d:nth-child(5) { --l: var(--lmax); }
 
-  .sizes { display: flex; align-items: center; gap: 5vw; padding: 2vh 4vw 8vh; height: 42vh; }
+  .sizes { display: flex; align-items: center; gap: 5vw; padding: 2vh 4vw 6vh; height: 40vh; }
   .strip { display: flex; gap: 2vw; padding: 0 4vw 8vh; align-items: center; }
-  .field { display: grid; grid-template-columns: repeat(9, 44px); gap: 12px; margin: 0 4vw 10vh; }
+  .field { display: grid; grid-template-columns: repeat(9, 44px); gap: 12px; margin: 0 4vw 4vh; }
   .field .d { --s: 44px; }
-  .field .d.off::before, .field .d.off::after { display: none; }
-
-  /* Note bloom: the halo swells and settles when the disc sounds. */
-  @keyframes bloom { 0% { transform: scale(1.25); opacity: .55; } 25% { transform: scale(2.2); opacity: .9; } 100% { transform: scale(1.25); opacity: .55; } }
-  .note::before { animation: bloom 1.4s cubic-bezier(.2,.8,.2,1) infinite; }
-  @keyframes bloomWide { 0% { opacity: var(--wide, 0); } 25% { opacity: .6; } 100% { opacity: var(--wide, 0); } }
-  .note::after { animation: bloomWide 1.4s cubic-bezier(.2,.8,.2,1) infinite; }
+  button { font: inherit; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; background: none; color: #fff; border: 1px solid #333; padding: 10px 16px; margin: 0 4vw 10vh; cursor: pointer; }
+  button:hover { border-color: #fff; }
+  .meter { margin: 0 4vw 2vh; font-size: 13px; opacity: .5; text-transform: uppercase; letter-spacing: .04em; font-family: ui-monospace, Menlo, monospace; }
 </style>
 </head>
 <body>
 <h1>Eight lights</h1>
-<p>Flat discs on black, milky rather than pure. Each at five brightness steps. Bulbs behind a perfect diffuser. Off is not a colour; it is any light at its lowest step in dusk.</p>
+<p>Defined in OKLCH so that lightness is perceptual: half as bright looks half as bright in every hue. The face is oklch(L C H). Brightness is L alone. Chroma falls as a light dims, the way a bulb goes warm and grey before it goes out. Off is L 0.22 at almost no chroma.</p>
 <div class="grid" id="g"></div>
 
 <h1>Bigger is closer</h1>
-<p>The same gold light at six sizes. The tight halo scales with the disc. A second, wide, soft halo appears only as the disc gets big, so a large disc feels near and a small one feels far. The largest one is sounding a note: the halo blooms and settles.</p>
+<p>One gold light at six sizes, all at the same L. The halo radius follows the size; its opacity follows L. A faint wide halo appears only on large discs. Nothing pulses on its own.</p>
 <div class="sizes" id="z"></div>
 
 <h1>As a rainbow</h1>
-<p>Seven hues in wheel order. Enough for a rainbow, few enough to stay a family.</p>
+<p>Seven hues at equal L and C, which is why they sit together as a family.</p>
 <div class="strip" id="s"></div>
 
-<h1>On the grid</h1>
-<p>Nine by nine in dusk. A gold hero, sounding. A sakura beloved beside it.</p>
+<h1>Light is the voice</h1>
+<p>The hero disc's L is driven by the tenor's actual output, sampled from the engine's master bus every frame. Attack, vibrato, release: whatever the oscillator does, the light does. Nothing is animated.</p>
 <div class="field" id="f"></div>
+<div class="meter" id="m">L 0.22</div>
+<button id="play">Play a phrase</button>
 
 <script>
+// Lights: name, hue, chroma, full lightness, meaning. Chroma is where the
+// milkiness lives. White and yellow sit higher in L because that is where
+// they read as white and yellow; the same L that makes gold rich makes
+// yellow olive.
 const P = [
-  ['bulb',   '#fff4e0', 'warm white, the resting light'],
-  ['gold',   '#ffc23d', 'the hero'],
-  ['sakura', '#ff8fc8', 'the beloved'],
-  ['coral',  '#ff5c4d', 'passion, danger'],
-  ['lemon',  '#f2ff5c', 'joy, alarm'],
-  ['mint',   '#6cf0b8', 'innocence, the world'],
-  ['sky',    '#4fb0ff', 'calm, night, distance'],
-  ['violet', '#8a5cff', 'peace, memory, the sacred'],
+  ['bulb',   85,  .03, .94, 'warm white, the resting light'],
+  ['gold',   80,  .16, .80, 'the hero'],
+  ['sakura', 350, .14, .80, 'the beloved'],
+  ['coral',  30,  .18, .74, 'passion, danger'],
+  ['lemon',  105, .17, .92, 'joy, alarm'],
+  ['mint',   160, .13, .84, 'innocence, the world'],
+  ['sky',    245, .15, .74, 'calm, night, distance'],
+  ['violet', 295, .17, .72, 'peace, memory, the sacred'],
 ];
-const DUSK = '#3a3540';
+const light = (el, [n, h, c, l]) => { el.style.setProperty('--h', h); el.style.setProperty('--c', c); el.style.setProperty('--lmax', l); };
 const g = document.getElementById('g');
-P.forEach(([n, c, m]) => {
-  const sw = document.createElement('div'); sw.className = 'sw'; sw.style.setProperty('--c', c);
-  sw.innerHTML = `<div class="d big"></div><div class="row">${'<div class="d"></div>'.repeat(5)}</div><div class="n"><span>${n}</span><span>${c}</span></div><div class="n"><span style="opacity:.5;text-transform:none;letter-spacing:0">${m}</span></div>`;
+P.forEach((L) => {
+  const sw = document.createElement('div'); sw.className = 'sw'; light(sw, L);
+  sw.innerHTML = `<div class="d big"></div><div class="row">${'<div class="d"></div>'.repeat(5)}</div><div class="n"><span>${L[0]}</span><span>oklch(${Math.round(L[3]*100)}% ${L[2]} ${L[1]})</span></div><div class="n"><span style="opacity:.5;text-transform:none;letter-spacing:0">${L[4]}</span></div>`;
   g.appendChild(sw);
 });
 const z = document.getElementById('z');
-[18, 32, 56, 96, 160, 260].forEach((px, i) => {
-  const d = document.createElement('div'); d.className = 'd' + (i === 5 ? ' note' : '');
-  d.style.setProperty('--c', '#ffc23d'); d.style.setProperty('--s', px + 'px');
-  d.style.setProperty('--wide', Math.min(.5, Math.max(0, (px - 40) / 400)));
+[18, 32, 56, 96, 160, 260].forEach((px) => {
+  const d = document.createElement('div'); d.className = 'd'; light(d, P[1]);
+  d.style.setProperty('--s', px + 'px'); d.style.setProperty('--wide', Math.min(.12, Math.max(0, (px - 60) / 1600)));
   z.appendChild(d);
 });
 const s = document.getElementById('s');
 ['coral','gold','lemon','mint','sky','violet','sakura'].forEach((n) => {
-  const c = P.find((p) => p[0] === n)[1]; const d = document.createElement('div'); d.className = 'd';
-  d.style.setProperty('--c', c); d.style.setProperty('--s', '72px'); d.style.setProperty('--wide', '.2'); s.appendChild(d);
+  const d = document.createElement('div'); d.className = 'd'; light(d, P.find((p) => p[0] === n)); d.style.setProperty('--s', '72px'); s.appendChild(d);
 });
 const f = document.getElementById('f');
+let hero;
 for (let i = 0; i < 81; i++) {
-  const d = document.createElement('div'); d.className = 'd off';
-  d.style.setProperty('--c', DUSK); d.style.setProperty('--b', 0.5 + 0.4 * Math.random());
-  if (i === 40) { d.className = 'd note'; d.style.setProperty('--c', '#ffc23d'); d.style.setProperty('--b', 1); d.style.setProperty('--wide', '.15'); }
-  if (i === 41) { d.className = 'd'; d.style.setProperty('--c', '#ff8fc8'); d.style.setProperty('--b', 1); }
+  const d = document.createElement('div'); d.className = 'd';
+  light(d, P[6]); d.style.setProperty('--l', .22); d.style.setProperty('--c', .02);
+  if (i === 40) { hero = d; light(d, P[1]); d.style.setProperty('--wide', .06); }
+  if (i === 41) { light(d, P[2]); d.style.setProperty('--l', .65); }
   f.appendChild(d);
 }
+
+// Light is the voice: tap the engine's master bus with an analyser and map
+// RMS to L. This is the wiring the engine itself will use.
+const meter = document.getElementById('m');
+let an, buf;
+function tick() {
+  if (an) {
+    an.getFloatTimeDomainData(buf);
+    let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+    const rms = Math.sqrt(sum / buf.length);
+    const l = Math.min(.86, .22 + rms * 5.5);          // floor is "off", ceiling is bright, never white
+    hero.style.setProperty('--l', l.toFixed(3));
+    hero.style.setProperty('--c', (.02 + (l - .22) * .21).toFixed(3));
+    meter.textContent = 'L ' + l.toFixed(2);
+  }
+  requestAnimationFrame(tick);
+}
+tick();
+// A tenor, built the music guide's way: two saws a few cents apart and a
+// sine sub-octave through a low-pass that opens on the attack, with vibrato
+// arriving late. Same recipe as the engine; here so the page stands alone.
+let ctx, master;
+function tenor(hz, t, dur) {
+  const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.16, t + 0.05);
+  g.gain.setValueAtTime(0.16, t + dur * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.35);
+  const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 1.1;
+  f.frequency.setValueAtTime(550, t); f.frequency.exponentialRampToValueAtTime(2400, t + 0.08); f.frequency.exponentialRampToValueAtTime(600, t + dur);
+  f.connect(g); g.connect(master);
+  const lfo = ctx.createOscillator(); lfo.frequency.value = 4.8;
+  const dep = ctx.createGain(); dep.gain.setValueAtTime(0, t); dep.gain.setValueAtTime(0, t + 0.18); dep.gain.linearRampToValueAtTime(3.4, t + 0.65);
+  lfo.connect(dep); lfo.start(t); lfo.stop(t + dur + 0.4);
+  [['sawtooth', hz, -4.5, 0.5], ['sawtooth', hz, 4.5, 0.5], ['sine', hz / 2, 0, 0.35]].forEach(([w, fr, det, lvl]) => {
+    const o = ctx.createOscillator(); o.type = w; o.frequency.value = fr; o.detune.value = det;
+    const og = ctx.createGain(); og.gain.value = lvl; o.connect(og); og.connect(f); dep.connect(o.frequency);
+    o.start(t); o.stop(t + dur + 0.4);
+  });
+}
+document.getElementById('play').onclick = () => {
+  if (!ctx) {
+    ctx = new AudioContext(); master = ctx.createGain(); master.gain.value = 0.8; master.connect(ctx.destination);
+    an = ctx.createAnalyser(); an.fftSize = 1024; buf = new Float32Array(an.fftSize); master.connect(an);
+  }
+  ctx.resume();
+  const t = ctx.currentTime + 0.05, b = 60 / 90, hz = (s) => 130.81 * Math.pow(2, s / 12);
+  [[0, 0], [4, 1], [7, 2], [12, 3], [7, 4.5], [4, 5.5], [0, 6.5]].forEach(([semi, beat]) => tenor(hz(semi), t + beat * b, b * 0.9));
+  tenor(hz(0), t + 8 * b, b * 4);
+};
 </script>
 </body>
 </html>
