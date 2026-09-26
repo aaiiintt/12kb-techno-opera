@@ -837,12 +837,12 @@ function actRevenge(tl, hero) {
   score(tl, after + 0.2, () => note(0, { dur: 1.8, vol: 0.09, type: 'triangle' }));
 }
 
-// ACT VI — ACCEPTANCE: Soaring cathedral, healing walk, crystal harp arpeggios, double Amen cadence
+// ACT VI — ACCEPTANCE: Soaring cathedral, healing walk, continuous euphoric harmonic ascension & crystal harp cascades
 function actAcceptance(tl, hero) {
-  const { start, peaceSpread, homePath, memoryCell, chordGap } = CONFIG.acts.acceptance;
+  const { start, peaceSpread, homePath, memoryCell } = CONFIG.acts.acceptance;
 
-  // Cathedral opens wide: 2600 Hz lowpass + enhanced delay feedback
-  score(tl, start, () => setRoom(2600, 0.42, 1.2));
+  // Cathedral opens wide: 2800 Hz lowpass + warm delay feedback
+  score(tl, start, () => setRoom(2800, 0.44, 1.2));
 
   tl.call(() => at(hero.col, hero.row).el.style.setProperty('--dot-color', COLORS.healing[0]), [], start);
 
@@ -868,7 +868,7 @@ function actAcceptance(tl, hero) {
   const home = at(CENTER, CENTER);
   tl.to(home.el, { scale: 1.3, duration: 1.6, yoyo: true, repeat: 2, ease: 'sine.inOut' }, settleT);
 
-  // Concentric violet peace rings + 14Hz harp cascades
+  // Concentric violet peace rings spreading outward:
   const floodStart = settleT + 0.4;
   everyDot((d) => {
     if (d.col === CENTER && d.row === CENTER) return;
@@ -876,27 +876,52 @@ function actAcceptance(tl, hero) {
     tl.call(() => d.el.style.setProperty('--dot-color', COLORS.peace(d.ring)), [], t);
     tl.to(d.el, { opacity: 0.72, scale: 1, duration: 1.2, ease: 'sine.inOut' }, t);
   });
-  score(tl, floodStart, () => arp(MODES.ARP_HARP, 3.2, 14, { vol: 0.07, pan: 0.0 }));
 
-  // Plagal "Amen" Cadence (IV -> I) in pure two-voice harmony:
-  // IV: F3 (5) + A3 (9)  -->  I: C3 (0) + E3 (4)
-  [0, chordGap].forEach((offset) => {
-    // IV (F - A)
-    score(tl, settleT + 0.6 + offset, () => {
-      note(5, { dur: 2.2, vol: 0.10, voice: 'pluck', attack: 0.04 });
-      note(9, { dur: 2.2, vol: 0.09, voice: 'pluck', attack: 0.04 });
-    });
-    // I (C - E resolution)
-    score(tl, settleT + 0.6 + offset + chordGap / 2, () => {
-      note(0, { dur: 2.8, vol: 0.12, type: 'triangle', attack: 0.04 });
-      note(4, { dur: 2.8, vol: 0.10, voice: 'tenor', attack: 0.04 });
-    });
+  // CONTINUOUS EUPHORIC HARMONIC ASCENSION (Building upwards layer by layer, NEVER dropping):
+
+  // Step 1: Foundation (C Major 9) — warm grounded peace
+  score(tl, settleT + 0.4, () => {
+    note(0, { dur: 3.2, vol: 0.11, type: 'triangle', attack: 0.06 });
+    note(4, { dur: 3.2, vol: 0.10, voice: 'tenor', attack: 0.05 });
+    note(7, { dur: 3.0, vol: 0.09, voice: 'pluck', attack: 0.04 });
+    note(14, { dur: 2.8, vol: 0.08, voice: 'tenor', vibrato: true });
+    arp([0, 4, 7, 12, 14, 16], 2.2, 13, { vol: 0.06, pan: -0.2 });
   });
 
-  // Tender rose memory light at (5, 4)
+  // Step 2: Rising 4th (F Major 7 / Lydian Lift) — soaring hope
+  score(tl, settleT + 1.8, () => {
+    note(5, { dur: 3.2, vol: 0.11, voice: 'tenor', attack: 0.05 });
+    note(9, { dur: 3.2, vol: 0.10, voice: 'pluck', attack: 0.04 });
+    note(12, { dur: 3.0, vol: 0.09, voice: 'tenor', attack: 0.04 });
+    note(16, { dur: 2.8, vol: 0.10, voice: 'tenor', vibrato: true });
+    arp([5, 9, 12, 16, 19, 21], 2.2, 14, { vol: 0.07, pan: 0.2 });
+  });
+
+  // Step 3: Rising 5th (G Major 9 / Golden Expansion) — swelling radiance
+  score(tl, settleT + 3.2, () => {
+    setRoom(3500, 0.48, 1.0);
+    note(7, { dur: 3.4, vol: 0.11, voice: 'tenor', attack: 0.05 });
+    note(11, { dur: 3.4, vol: 0.10, voice: 'pluck', attack: 0.04 });
+    note(14, { dur: 3.2, vol: 0.10, voice: 'tenor', attack: 0.04 });
+    note(19, { dur: 3.0, vol: 0.12, voice: 'tenor', vibrato: true });
+    arp([7, 11, 14, 19, 21, 24], 2.4, 15, { vol: 0.08, pan: -0.15 });
+  });
+
+  // Step 4: Peak Celestial Canopy (High C Major / Transcendent Ascension)
+  score(tl, settleT + 4.6, () => {
+    setRoom(4000, 0.52, 1.0);
+    note(12, { dur: 3.6, vol: 0.12, voice: 'tenor', attack: 0.05 });
+    note(16, { dur: 3.6, vol: 0.11, voice: 'tenor', attack: 0.04 });
+    note(19, { dur: 3.4, vol: 0.12, voice: 'tenor', vibrato: true });
+    note(24, { dur: 3.6, vol: 0.14, voice: 'soprano', vibrato: true });
+    note(28, { dur: 3.2, vol: 0.09, voice: 'pluck', attack: 0.02 });
+    arp([12, 16, 19, 24, 28, 31], 2.6, 16, { vol: 0.08, pan: 0.25 });
+  });
+
+  // Tender rose memory light at (5, 4) ignites during the ascension
   const mem = at(memoryCell[0], memoryCell[1]);
-  tl.call(() => mem.el.style.setProperty('--dot-color', COLORS.memory), [], settleT + 1.2);
-  tl.to(mem.el, { opacity: 0.85, scale: 1.15, duration: 1.0, ease: 'sine.inOut' }, settleT + 1.2);
+  tl.call(() => mem.el.style.setProperty('--dot-color', COLORS.memory), [], settleT + 2.0);
+  tl.to(mem.el, { opacity: 0.95, scale: 1.25, duration: 1.8, ease: 'sine.inOut' }, settleT + 2.0);
 }
 
 // ACT VII — DEATH & THE "FAT LADY" ARIA:
