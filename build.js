@@ -5,8 +5,21 @@ const { minify } = require('terser');
 const CleanCSS = require('clean-css');
 
 const ROOT_LIMIT = 12288;
-const LIMITS = { engine: 12288, opera: 2048, standalone: 14336 };
+const LIMITS = { engine: 12288, opera: 2048, standalone: 14336, index: 2048 };
 const ENGINE_FILES = ['tween', 'synth', 'stage', 'gestures', 'score', 'index'].map((f) => `src/engine/${f}.js`);
+
+// Site order for the index: the eight shipped operas, in programme order.
+// Anything with an id starting "scratch" is a dev demo and never appears here.
+const SITE_ORDER = [
+  { id: 'carmen', title: 'CARMEN', lang: 'French', short: 'Carmen' },
+  { id: 'pagliacci', title: 'PAGLIACCI', lang: 'Italian', short: 'Pagliacci' },
+  { id: 'rigoletto', title: 'RIGOLETTO', lang: 'Italian', short: 'Rigoletto' },
+  { id: 'dido', title: 'DIDO AND AENEAS', lang: 'English', short: 'Dido' },
+  { id: 'flute', title: 'DIE ZAUBERFLÖTE', lang: 'German', short: 'Flute' },
+  { id: 'giovanni', title: 'DON GIOVANNI', lang: 'Italian', short: 'Giovanni' },
+  { id: 'barber', title: 'IL BARBIERE DI SIVIGLIA', lang: 'Italian', short: 'Barber' },
+  { id: 'turandot', title: 'TURANDOT', lang: 'Italian', short: 'Turandot' },
+];
 
 // --only <operaId>: fast path for the review panel. Skips the original-site
 // build, reuses dist/engine.js when it already exists, skips meta/sizes/
@@ -146,6 +159,31 @@ async function buildMetaAndSizes() {
   console.log(`sizes.json: ${entries.length} gestures measured individually`);
 }
 
+async function buildIndexPage(operaList, siteTotalGz) {
+  let html = fs.readFileSync('src/site.html', 'utf8');
+
+  const strapKB = Math.ceil(siteTotalGz / 1024);
+  html = html.replace('%%STRAP%%', `EIGHT OPERAS. ONE GRID. UNDER ${strapKB} KB.`);
+
+  const rows = operaList
+    .map(
+      (o, i) =>
+        `<li><a class="op" href="${o.id}.html"><span class="no">${i + 1}</span><span class="ti">${o.title}</span><span class="la">${o.lang}</span><span class="sz">${o.gz} B</span></a></li>`
+    )
+    .join('');
+  html = html.replace('%%LIST%%', rows);
+
+  const dl =
+    'Standalone: ' +
+    operaList.map((o) => `<a href="${o.id}.standalone.html">${o.short}</a>`).join(', ') +
+    ' · <a href="about.html">About</a>';
+  html = html.replace('%%DL%%', dl);
+
+  html = html.replace(/<style>([\s\S]*?)<\/style>/, (m, code) => '<style>' + css(code) + '</style>');
+  html = html.replace(/\n\s+/g, '\n').replace(/\n+/g, '\n');
+  return html;
+}
+
 async function buildPlaygroundPage() {
   let html = fs.readFileSync('src/playground.html', 'utf8');
   html = html.replace(/<style>([\s\S]*?)<\/style>/, (m, code) => '<style>' + css(code) + '</style>');
@@ -177,9 +215,9 @@ async function buildNewSite() {
   let fail = false;
   if (engineGz > LIMITS.engine) fail = true;
 
-  let siteTotal = engineGz + shellGz;
   const operaDir = 'operas';
   const operaFiles = fs.existsSync(operaDir) ? fs.readdirSync(operaDir).filter((f) => f.endsWith('.js')) : [];
+  const operaGzById = {};
 
   for (const file of operaFiles) {
     const name = path.basename(file, '.js');
@@ -187,7 +225,7 @@ async function buildNewSite() {
     const operaMin = await js(raw);
     fs.writeFileSync(`dist/${name}.js`, operaMin);
     const operaGz = gzip(operaMin);
-    siteTotal += operaGz;
+    operaGzById[name] = operaGz;
     console.log(`${name}.js: ${operaMin.length} bytes, ${operaGz} bytes gzipped, limit ${LIMITS.opera}, ${LIMITS.opera - operaGz} spare`);
     if (operaGz > LIMITS.opera) fail = true;
 
@@ -207,7 +245,18 @@ async function buildNewSite() {
     if (standaloneGz > LIMITS.standalone) fail = true;
   }
 
+  // Site total excludes scratch* dev demos, matching the eight in the index.
+  const siteTotal = engineGz + shellGz + SITE_ORDER.reduce((sum, o) => sum + (operaGzById[o.id] || 0), 0);
   console.log(`site total (engine + shell + all operas): ${siteTotal} bytes gzipped`);
+
+  const operaList = SITE_ORDER.map((o) => ({ ...o, gz: operaGzById[o.id] }));
+  const indexHtml = await buildIndexPage(operaList, siteTotal);
+  fs.writeFileSync('dist/index.html', indexHtml);
+  const indexGz = gzip(indexHtml);
+  console.log(`index.html: ${indexHtml.length} bytes, ${indexGz} bytes gzipped, limit ${LIMITS.index}, ${LIMITS.index - indexGz} spare`);
+  if (indexGz > LIMITS.index) fail = true;
+
+  console.log(`series total (engine + shell + index + eight operas): ${siteTotal + indexGz} bytes gzipped`);
 
   await buildMetaAndSizes();
   if (fs.existsSync('src/playground.html')) await buildPlaygroundPage();
