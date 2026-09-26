@@ -1,7 +1,7 @@
-/* Tiny tween engine: the slice of GSAP 3 that the opera uses.
-   gsap.timeline({onComplete}).to/fromTo/set/call/seek/kill, gsap.fromTo, gsap.delayedCall.
-   Props: opacity, scale, x, y. Options: duration, ease, yoyo, repeat, immediateRender (ignored).
-   Eases: power1/power2 in|out|inOut, sine in|out|inOut, back.in|out(overshoot), elastic.out(amp, period). */
+/* Minimal timeline and easing engine for the 15KB Techno Opera.
+   timeline({onComplete}).to/fromTo/set/call/seek/kill, plus fromTo and delayedCall.
+   Props: opacity, scale, x, y. Options: duration, ease, yoyo, repeat.
+   Eases are Robert Penner's equations: power1, power2, sine, back, elastic. */
 const PI2 = Math.PI * 2;
 const EASES = {
   'power1.out': (p) => 1 - (1 - p) * (1 - p),
@@ -14,7 +14,7 @@ const EASES = {
   'sine.inOut': (p) => -(Math.cos(Math.PI * p) - 1) / 2,
 };
 function ease(name) {
-  if (!name) return EASES['power1.out']; // GSAP default
+  if (!name) return EASES['power1.out'];
   if (EASES[name]) return EASES[name];
   const m = /^(elastic|back)\.(in|out)(?:\(([^)]*)\))?/.exec(name);
   if (!m) return EASES['power1.out'];
