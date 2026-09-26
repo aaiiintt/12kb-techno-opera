@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opera House palette</title>
+<style>
+  :root { --f: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  html { background: #000; } body { margin: 0; color: #fff; font-family: var(--f); }
+  h1 { font-size: clamp(28px, 5vw, 64px); text-transform: uppercase; letter-spacing: -.04em; margin: 6vh 4vw 1vh; line-height: .9; }
+  p { margin: 0 4vw 4vh; opacity: .5; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; max-width: 60ch; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4vw; padding: 0 4vw 4vh; }
+  .sw { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; gap: 6px; align-items: center; }
+  .n { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; display: flex; justify-content: space-between; opacity: .8; }
+  .n span:last-child { opacity: .5; }
+
+  /* The disc. --c colour, --s size in px, --b brightness 0..1.
+     Glow is two halos: a tight one that scales with the disc, and a wide
+     soft one that only appears as the disc gets big (big = close). */
+  .d { position: relative; width: var(--s, 60px); height: var(--s, 60px); border-radius: 50%; background: var(--c); opacity: var(--b, 1); flex: none; }
+  .d::before, .d::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--c); z-index: -1; }
+  .d::before { filter: blur(calc(var(--s, 60px) * .12)); opacity: .55; transform: scale(1.25); }
+  .d::after  { filter: blur(calc(var(--s, 60px) * .35)); opacity: var(--wide, 0); transform: scale(1.9); }
+  .sw .d.big { --s: 150px; --wide: .35; }
+  .row .d { --s: 26px; }
+  .row .d:nth-child(1) { --b: .12; } .row .d:nth-child(2) { --b: .3; } .row .d:nth-child(3) { --b: .55; } .row .d:nth-child(4) { --b: .8; } .row .d:nth-child(5) { --b: 1; }
+  .row .d:not(:nth-child(5))::before, .row .d:not(:nth-child(5))::after { display: none; }
+
+  .sizes { display: flex; align-items: center; gap: 5vw; padding: 2vh 4vw 8vh; height: 42vh; }
+  .strip { display: flex; gap: 2vw; padding: 0 4vw 8vh; align-items: center; }
+  .field { display: grid; grid-template-columns: repeat(9, 44px); gap: 12px; margin: 0 4vw 10vh; }
+  .field .d { --s: 44px; }
+  .field .d.off::before, .field .d.off::after { display: none; }
+
+  /* Note bloom: the halo swells and settles when the disc sounds. */
+  @keyframes bloom { 0% { transform: scale(1.25); opacity: .55; } 25% { transform: scale(2.2); opacity: .9; } 100% { transform: scale(1.25); opacity: .55; } }
+  .note::before { animation: bloom 1.4s cubic-bezier(.2,.8,.2,1) infinite; }
+  @keyframes bloomWide { 0% { opacity: var(--wide, 0); } 25% { opacity: .6; } 100% { opacity: var(--wide, 0); } }
+  .note::after { animation: bloomWide 1.4s cubic-bezier(.2,.8,.2,1) infinite; }
+</style>
+</head>
+<body>
+<h1>Eight lights</h1>
+<p>Flat discs on black, milky rather than pure. Each at five brightness steps. Bulbs behind a perfect diffuser. Off is not a colour; it is any light at its lowest step in dusk.</p>
+<div class="grid" id="g"></div>
+
+<h1>Bigger is closer</h1>
+<p>The same gold light at six sizes. The tight halo scales with the disc. A second, wide, soft halo appears only as the disc gets big, so a large disc feels near and a small one feels far. The largest one is sounding a note: the halo blooms and settles.</p>
+<div class="sizes" id="z"></div>
+
+<h1>As a rainbow</h1>
+<p>Seven hues in wheel order. Enough for a rainbow, few enough to stay a family.</p>
+<div class="strip" id="s"></div>
+
+<h1>On the grid</h1>
+<p>Nine by nine in dusk. A gold hero, sounding. A sakura beloved beside it.</p>
+<div class="field" id="f"></div>
+
+<script>
+const P = [
+  ['bulb',   '#fff4e0', 'warm white, the resting light'],
+  ['gold',   '#ffc23d', 'the hero'],
+  ['sakura', '#ff8fc8', 'the beloved'],
+  ['coral',  '#ff5c4d', 'passion, danger'],
+  ['lemon',  '#f2ff5c', 'joy, alarm'],
+  ['mint',   '#6cf0b8', 'innocence, the world'],
+  ['sky',    '#4fb0ff', 'calm, night, distance'],
+  ['violet', '#8a5cff', 'peace, memory, the sacred'],
+];
+const DUSK = '#3a3540';
+const g = document.getElementById('g');
+P.forEach(([n, c, m]) => {
+  const sw = document.createElement('div'); sw.className = 'sw'; sw.style.setProperty('--c', c);
+  sw.innerHTML = `<div class="d big"></div><div class="row">${'<div class="d"></div>'.repeat(5)}</div><div class="n"><span>${n}</span><span>${c}</span></div><div class="n"><span style="opacity:.5;text-transform:none;letter-spacing:0">${m}</span></div>`;
+  g.appendChild(sw);
+});
+const z = document.getElementById('z');
+[18, 32, 56, 96, 160, 260].forEach((px, i) => {
+  const d = document.createElement('div'); d.className = 'd' + (i === 5 ? ' note' : '');
+  d.style.setProperty('--c', '#ffc23d'); d.style.setProperty('--s', px + 'px');
+  d.style.setProperty('--wide', Math.min(.5, Math.max(0, (px - 40) / 400)));
+  z.appendChild(d);
+});
+const s = document.getElementById('s');
+['coral','gold','lemon','mint','sky','violet','sakura'].forEach((n) => {
+  const c = P.find((p) => p[0] === n)[1]; const d = document.createElement('div'); d.className = 'd';
+  d.style.setProperty('--c', c); d.style.setProperty('--s', '72px'); d.style.setProperty('--wide', '.2'); s.appendChild(d);
+});
+const f = document.getElementById('f');
+for (let i = 0; i < 81; i++) {
+  const d = document.createElement('div'); d.className = 'd off';
+  d.style.setProperty('--c', DUSK); d.style.setProperty('--b', 0.5 + 0.4 * Math.random());
+  if (i === 40) { d.className = 'd note'; d.style.setProperty('--c', '#ffc23d'); d.style.setProperty('--b', 1); d.style.setProperty('--wide', '.15'); }
+  if (i === 41) { d.className = 'd'; d.style.setProperty('--c', '#ff8fc8'); d.style.setProperty('--b', 1); }
+  f.appendChild(d);
+}
+</script>
+</body>
+</html>
