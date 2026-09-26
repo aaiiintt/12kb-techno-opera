@@ -144,6 +144,28 @@ body {
   transform: scale(0.92);
 }
 
+/* SUBTITLES */
+.cue {
+  position: fixed;
+  left: 50%;
+  bottom: 14vh;
+  transform: translateX(-50%);
+  z-index: 22;
+  max-width: 92vw;
+  padding: 0.06em 0.3em;
+  font-family: var(--font-swiss);
+  font-size: var(--cue-size, clamp(16px, 3.8vw, 56px));
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #ffffff;
+  background: #000000;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* STAGE & GRID */
 .stage {
   position: relative;
@@ -264,6 +286,7 @@ body {
         <div id="grid" class="grid"></div>
       </div>
     </main>
+    <div id="cue" class="cue" aria-live="polite"></div>
 
     <button id="replay" class="replay" type="button" aria-label="Replay animation">Replay</button>
 
@@ -325,6 +348,20 @@ const COLORS = {
     'hsl(46, 100%, 54%)',
   ],
 };
+
+const CUES = [
+  [0.5, 'VITA.', 1.4],
+  [8.5, 'AVANTI!', 1.2],
+  [13.8, 'AMORE.', 1.6],
+  [19.3, 'HELP!', 1.2],
+  [21.2, 'GELOSIA.', 1.4],
+  [25.0, 'VENDETTA!', 1.2],
+  [28.7, 'BASTA.', 1.6],
+  [32.0, 'PACE.', 1.6],
+  [46.5, 'SOLO.', 1.6],
+  [48.2, 'ADDIO.', 2.4],
+  [55.5, 'FINE.', 3.0],
+];
 
 const CONFIG = {
   grid: { size: SIZE, center: CENTER },
@@ -847,6 +884,27 @@ function silence(tl, time, duration = 0.25) {
   });
 }
 
+function cue(tl, time, text, hold = 1.6) {
+  const el = document.getElementById('cue');
+  const len = Math.max(4, text.length);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  tl.call(() => {
+    if (isAmbient) return;
+    el.textContent = text;
+    el.style.visibility = 'visible';
+    el.getAnimations().forEach((a) => a.cancel());
+    if (reduced) return;
+    el.animate(
+      { clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] },
+      { duration: len * 55, easing: `steps(${len})`, fill: 'forwards' }
+    );
+  }, [], time);
+  tl.call(() => {
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.visibility = 'hidden';
+  }, [], time + len * 0.055 + hold);
+}
+
 // --- THE 7 ACTS: CHOREOGRAPHY & OPERATIC SCORE ---
 
 // ACT 1
@@ -1340,6 +1398,12 @@ function buildOpera() {
 
   opera.set(worldEl, { x: 0, y: 0, scale: 1 }, 0);
   opera.set(dots.map((d) => d.el), { opacity: 0, scale: 0 }, 0);
+  opera.call(() => {
+    const el = document.getElementById('cue');
+    el.getAnimations().forEach((a) => a.cancel());
+    el.style.visibility = 'hidden';
+  }, [], 0);
+  CUES.forEach(([t, text, hold]) => cue(opera, t, text, hold));
   opera.call(() => everyDot((d) => {
     d.el.className = 'dot';
     d.el.style.setProperty('--dot-color', COLORS.dusk);
@@ -1386,6 +1450,7 @@ function fitTitle() {
   titleEl.style.fontSize = titleSize + 'px';
   if (subEl) {
     subEl.style.fontSize = (titleSize * (maxMainW / sW)) + 'px';
+    document.documentElement.style.setProperty('--cue-size', subEl.style.fontSize);
   }
 }
 
@@ -1488,6 +1553,7 @@ function stopOpera() {
     playBtn.textContent = 'Play';
     playBtn.setAttribute('aria-label', 'Play performance');
   }
+  document.getElementById('cue').style.visibility = 'hidden';
   buildOpera();
 }
 
@@ -1499,6 +1565,7 @@ if (urlParams.get('play') === '1') {
 }
 const seekSec = parseFloat(urlParams.get('seek'));
 if (!isNaN(seekSec) && opera) {
+  isAmbient = false;
   document.body.classList.add('playing');
   if (titleEl) titleEl.style.visibility = 'hidden';
   opera.seek(seekSec, false);
