@@ -51,6 +51,9 @@ O.noise = null;
 // ones drop out of the list they came from. ----
 let lightEnvs = [];
 const lit = new Set();
+// Cells currently claimed by an actor (see stage.js): they rest at a pilot
+// light instead of true dusk, so the hero never vanishes between notes.
+const pilotEls = new Set();
 let lightLoopStarted = false;
 O.registerLight = (els, start, end, ampFn) => {
   if (!els) return;
@@ -68,13 +71,13 @@ function tickLights() {
       for (const el of e.els) if (amp > (peak.get(el) || 0)) peak.set(el, amp);
     }
     // Every element ever lit is written every frame, so it settles back to
-    // its rest level when its envelopes end. Named actors rest at a pilot
-    // light (their colour, dim) so the hero never vanishes between notes.
-    // Brightness is perceptual: amp^0.5, so a sustain reads as lit.
+    // its rest level when its envelopes end. A cell an actor occupies rests
+    // at a pilot light (its colour, dim) so the hero never vanishes between
+    // notes. Brightness is perceptual: amp^0.5, so a sustain reads as lit.
     for (const [el] of peak) lit.add(el);
-    document.querySelectorAll('.actor').forEach((el) => lit.add(el));
+    for (const el of pilotEls) lit.add(el);
     for (const el of lit) {
-      const rest = el.classList.contains('actor') ? 0.3 : 0;
+      const rest = pilotEls.has(el) ? 0.3 : 0;
       // Brightness follows the envelope on a gentle curve, so a sustain
       // reads as the light itself. Colour falls slower than brightness
       // (sqrt), so a mid-bright gold is still gold, not ochre.

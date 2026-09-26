@@ -8,17 +8,38 @@
 
 const A = (actors) => (typeof actors === 'string' && actors !== 'grid' ? O.actors[actors] : actors);
 const RAINBOW = ['coral', 'gold', 'lemon', 'mint', 'sky', 'violet', 'sakura'];
+// An actor has no element of its own - it's whichever cell it currently
+// occupies. Resolved lazily wherever it feeds a tween (see tween.js).
+// Re-asserts the actor's pilot claim on the way out: another actor passing
+// through the same cell (two actors both start at centre stage, say) can
+// have overwritten it, and the pilot light rule applies to whichever cell
+// an actor currently occupies, not just the ones it moved to.
+const cellEl = (actor) => {
+  const c = O.at(actor.col, actor.row);
+  if (!c) return undefined;
+  if (c.el._occ !== actor.id) { pilotEls.add(c.el); c.el._occ = actor.id; O.light(c.el, actor.light); }
+  return c.el;
+};
 
-// ---- cell-shape helpers: every one returns a list of dot elements ----
+// ---- cell-shape helpers: every one returns a list of dot elements. Default
+// scope is the stage; `full` reaches every cell the outer grid has built,
+// edge to edge. Stage-space coordinates in, extended coordinates for the
+// actual distance maths (the two only differ by the fixed centring offset). ----
+const ext = (c, r) => [c + offCol, r + offRow];
+const pool = (full) => (full ? dots : O.stageCells());
 const chebyshev = (d, c) => Math.max(Math.abs(d.col - c[0]), Math.abs(d.row - c[1]));
-const ringAt = (center, r) => dots.filter((d) => chebyshev(d, center) === r).map((d) => d.el);
+const ringAt = (center, r, full) => { const c = ext(...center); return pool(full).filter((d) => chebyshev(d, c) === r).map((d) => d.el); };
 // Nearest first, so anything filled from a disc grows outward from its centre.
-const diskAt = (center, r) => dots.filter((d) => chebyshev(d, center) <= r).sort((a, b) => Math.hypot(a.col - center[0], a.row - center[1]) - Math.hypot(b.col - center[0], b.row - center[1])).map((d) => d.el);
-const rowEls = (row) => dots.filter((d) => d.row === row).map((d) => d.el);
-const colEls = (col) => dots.filter((d) => d.col === col).map((d) => d.el);
+// Round rings, for light that spreads: a cell is on ring r if its distance rounds to r.
+const circleAt = (center, r, full) => { const c = ext(...center); return pool(full).filter((d) => Math.round(Math.hypot(d.col - c[0], d.row - c[1])) === r).map((d) => d.el); };
+const diskAt = (center, r, full) => { const c = ext(...center); return pool(full).filter((d) => chebyshev(d, c) <= r).sort((a, b) => Math.hypot(a.col - c[0], a.row - c[1]) - Math.hypot(b.col - c[0], b.row - c[1])).map((d) => d.el); };
+const rowEls = (row, full) => pool(full).filter((d) => d.row === row + offRow).map((d) => d.el);
+const colEls = (col, full) => pool(full).filter((d) => d.col === col + offCol).map((d) => d.el);
+const maxRing = (center, full) => { const c = ext(...center); return pool(full).reduce((m, d) => Math.max(m, chebyshev(d, c)), 0); };
 const cellsFrom = (list) => list.map(([c, r]) => O.at(c, r).el);
-const tint = (els, light) => { els.forEach((el) => O.light(el, light)); return els; };
-const rndCells = (n) => { const pool = dots.slice(); const out = []; for (let i = 0; i < n && pool.length; i++) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0].el); return out; };
+// A cell a character stands on keeps the character's light; the mass never repaints the hero.
+const tint = (els, light) => { els.forEach((el) => el._occ || O.light(el, light)); return els; };
+const rndCells = (n) => { const p = O.stageCells().slice(); const out = []; for (let i = 0; i < n && p.length; i++) out.push(p.splice(Math.floor(Math.random() * p.length), 1)[0].el); return out; };
 
 O.G = {
 
@@ -27,26 +48,25 @@ O.G = {
   hop: (tl, t, a, p = {}) => {
     const { to, dur = 0.35, semi } = p;
     const actor = A(a);
-    O.move(actor, to[0], to[1], tl, t, dur, 'elastic.out(1,0.5)');
+    O.move(actor, to[0], to[1], tl, t, dur);
     const s = semi ?? actor.lastSemi;
-    if (s != null) { snd(tl, t, () => O.voice(actor.voice, s, ctx.currentTime, dur * 0.6, { vol: 0.14, pan: O.pan(actor), light: actor.el })); actor.lastSemi = s; }
+    if (s != null) { snd(tl, t, () => O.voice(actor.voice, s, ctx.currentTime, dur * 0.6, { vol: 0.14, pan: O.pan(actor), light: cellEl(actor) })); actor.lastSemi = s; }
     return t + dur;
   },
 
   bounce: (tl, t, a, p = {}) => {
     const { dur = 0.3, amount = 1.3 } = p;
     const actor = A(a);
-    tl.to(actor.el, { scale: amount, duration: dur / 2, yoyo: true, repeat: 1 }, t);
-    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur * 0.6, { vol: 0.12, pan: O.pan(actor), light: actor.el }));
+    tl.to(() => cellEl(actor), { scale: amount, duration: dur / 2, yoyo: true, repeat: 1 }, t);
+    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur * 0.6, { vol: 0.12, pan: O.pan(actor), light: cellEl(actor) }));
     return t + dur;
   },
 
   flee: (tl, t, a, p = {}) => {
     const { to, dur = 0.3 } = p;
     const actor = A(a);
-    O.move(actor, to[0], to[1], tl, t, dur, 'power1.in');
-    tl.to(actor.el, { scale: 0.8, duration: dur }, t);
-    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi + 3, ctx.currentTime, dur * 0.5, { vol: 0.08, pan: O.pan(actor), light: actor.el }));
+    O.move(actor, to[0], to[1], tl, t, dur, 'power1.in', 0.8, false);
+    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi + 3, ctx.currentTime, dur * 0.5, { vol: 0.08, pan: O.pan(actor), light: cellEl(actor) }));
     return t + dur;
   },
 
@@ -56,8 +76,8 @@ O.G = {
     const beat = 60 / O.opera.tempo;
     for (let i = 0; i < beats; i++) {
       const bt = t + i * beat;
-      tl.to(actor.el, { scale: 1.15, duration: beat * 0.18, yoyo: true, repeat: 1 }, bt);
-      snd(tl, bt, () => O.drum('heartbeat', ctx.currentTime, 0.16, actor.el));
+      tl.to(() => cellEl(actor), { scale: 1.15, duration: beat * 0.18, yoyo: true, repeat: 1 }, bt);
+      snd(tl, bt, () => O.drum('heartbeat', ctx.currentTime, 0.16, cellEl(actor)));
     }
     return t + beats * beat;
   },
@@ -65,27 +85,27 @@ O.G = {
   grow: (tl, t, a, p = {}) => {
     const { to = 1.6, dur = 1 } = p;
     const actor = A(a);
-    tl.to(actor.el, { scale: to, duration: dur, ease: 'power2.out' }, t);
-    tl.call(() => actor.el.style.setProperty('--wide', to > 2 ? 0.12 : 0), [], t);
-    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.2, pan: O.pan(actor), light: actor.el }));
+    tl.to(() => cellEl(actor), { scale: to, duration: dur, ease: 'power2.out' }, t);
+    tl.call(() => { const el = cellEl(actor); if (el) el.style.setProperty('--wide', to > 2 ? 0.12 : 0); }, [], t);
+    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.2, pan: O.pan(actor), light: cellEl(actor) }));
     return t + dur;
   },
 
   shrink: (tl, t, a, p = {}) => {
     const { to = 0.4, dur = 1 } = p;
     const actor = A(a);
-    tl.to(actor.el, { scale: to, duration: dur, ease: 'power2.in' }, t);
-    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.06, pan: O.pan(actor), light: actor.el }));
+    tl.to(() => cellEl(actor), { scale: to, duration: dur, ease: 'power2.in' }, t);
+    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.06, pan: O.pan(actor), light: cellEl(actor) }));
     return t + dur;
   },
 
   pop: (tl, t, a, p = {}) => {
     const { dur = 0.3, scale = 1 } = p;
     const actor = A(a);
-    tl.set(actor.el, { scale: 0, opacity: 0 }, t);
-    tl.to(actor.el, { scale, opacity: 1, duration: dur, ease: 'back.out(2)' }, t);
+    tl.set(() => cellEl(actor), { scale: 0, opacity: 0 }, t);
+    tl.to(() => cellEl(actor), { scale, opacity: 1, duration: dur, ease: 'back.out(2)' }, t);
     const semi = actor.lastSemi ?? O.deg('1');
-    snd(tl, t, () => O.voice(actor.voice, semi, ctx.currentTime, dur * 0.8, { vol: 0.14, pan: O.pan(actor), light: actor.el }));
+    snd(tl, t, () => O.voice(actor.voice, semi, ctx.currentTime, dur * 0.8, { vol: 0.14, pan: O.pan(actor), light: cellEl(actor) }));
     actor.lastSemi = semi;
     return t + dur;
   },
@@ -93,8 +113,8 @@ O.G = {
   fade: (tl, t, a, p = {}) => {
     const { dur = 2 } = p;
     const actor = A(a);
-    tl.to(actor.el, { opacity: 0.3, duration: dur, ease: 'power1.in' }, t);
-    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.05, pan: O.pan(actor), light: actor.el }));
+    tl.to(() => cellEl(actor), { opacity: 0.3, duration: dur, ease: 'power1.in' }, t);
+    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.05, pan: O.pan(actor), light: cellEl(actor) }));
     return t + dur;
   },
 
@@ -117,8 +137,8 @@ O.G = {
   },
 
   scan: (tl, t, a, p = {}) => {
-    const { row = null, col = null, numeral = 'i', dur = 1.5, rate = SIZE * 2, light = 'bulb' } = p;
-    const els = row != null ? rowEls(row) : colEls(col ?? CENTER);
+    const { row = null, col = null, numeral = 'i', dur = 1.5, rate = SIZE * 2, light = 'bulb', full = false } = p;
+    const els = row != null ? rowEls(row, full) : colEls(col ?? CENTER, full);
     tl.call(() => tint(els, light), [], t);
     snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els }));
     return t + dur;
@@ -148,8 +168,9 @@ O.G = {
     let time = t;
     for (let i = 1; i <= steps; i++) {
       const ang = (i / 8) * Math.PI * 2;
-      O.move(actor, center[0] + Math.cos(ang) * radius, center[1] + Math.sin(ang) * radius, tl, time, stepDur, 'sine.inOut');
-      if (actor.lastSemi != null) snd(tl, time, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, stepDur * 0.8, { vol: 0.08, pan: O.pan(actor), light: actor.el }));
+      // Actors live on cells, so a circle is approximated to the nearest one.
+      O.move(actor, Math.round(center[0] + Math.cos(ang) * radius), Math.round(center[1] + Math.sin(ang) * radius), tl, time, stepDur, 'sine.inOut');
+      if (actor.lastSemi != null) snd(tl, time, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, stepDur * 0.8, { vol: 0.08, pan: O.pan(actor), light: cellEl(actor) }));
       time += stepDur;
     }
     return time;
@@ -158,32 +179,34 @@ O.G = {
   // ================= FILL: a shape, lit as one field move =================
 
   fillTop: (tl, t, a, p = {}) => {
-    const { rows = 2, numeral = 'i', dur = 1.5, rate = 18, light = 'sky' } = p;
-    const els = dots.filter((d) => d.row < rows).map((d) => d.el);
+    const { rows = 2, numeral = 'i', dur = 1.5, rate = 18, light = 'sky', full = false } = p;
+    const base = full ? 0 : offRow;
+    const els = pool(full).filter((d) => d.row < base + rows).map((d) => d.el);
     tl.call(() => tint(els, light), [], t);
     snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els, fill: 1 }));
     return t + dur;
   },
 
   fillCentre: (tl, t, a, p = {}) => {
-    const { radius = 1, numeral = 'i', dur = 1.2, rate = 20, light = 'mint' } = p;
-    const els = diskAt([CENTER, CENTER], radius);
+    const { radius = 1, numeral = 'i', dur = 1.2, rate = 20, light = 'mint', full = false } = p;
+    const els = diskAt([CENTER, CENTER], radius, full);
     tl.call(() => tint(els, light), [], t);
     snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.08, cells: els, fill: 1 }));
     return t + dur;
   },
 
   fillEdge: (tl, t, a, p = {}) => {
-    const { numeral = 'i', dur = 1.5, rate = 16, light = 'violet' } = p;
-    const els = ringAt([CENTER, CENTER], CENTER);
+    const { numeral = 'i', dur = 1.5, rate = 16, light = 'violet', full = false } = p;
+    const r = full ? maxRing([CENTER, CENTER], true) : CENTER;
+    const els = ringAt([CENTER, CENTER], r, full);
     tl.call(() => tint(els, light), [], t);
     snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els, fill: 1 }));
     return t + dur;
   },
 
   stripe: (tl, t, a, p = {}) => {
-    const { row = null, col = null, numeral = 'i', dur = 1, rate = SIZE * 3, light = 'lemon' } = p;
-    const els = row != null ? rowEls(row) : colEls(col ?? CENTER);
+    const { row = null, col = null, numeral = 'i', dur = 1, rate = SIZE * 3, light = 'lemon', full = false } = p;
+    const els = row != null ? rowEls(row, full) : colEls(col ?? CENTER, full);
     tl.call(() => tint(els, light), [], t);
     snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els, fill: 1 }));
     return t + dur;
@@ -208,9 +231,10 @@ O.G = {
   },
 
   explode: (tl, t, a, p = {}) => {
-    const { center = [CENTER, CENTER], rings = 3, gap = 0.08, light = 'coral' } = p;
+    // A burst spills past the stage onto the outer grid unless told not to.
+    const { center = [CENTER, CENTER], rings = 3, gap = 0.08, light = 'coral', full = true } = p;
     for (let r = 0; r <= rings; r++) {
-      const els = ringAt(center, r);
+      const els = circleAt(center, r, full);
       tl.call(() => tint(els, light), [], t + r * gap);
       snd(tl, t + r * gap, () => O.drum(r === 0 ? 'kick' : 'hat', ctx.currentTime, 0.16 - r * 0.02, els));
     }
@@ -218,9 +242,10 @@ O.G = {
   },
 
   ripple: (tl, t, a, p = {}) => {
-    const { center = [CENTER, CENTER], rings = CENTER, gap = 0.09, light = 'sky' } = p;
+    const { center = [CENTER, CENTER], gap = 0.09, light = 'sky', full = false } = p;
+    const rings = p.rings ?? (full ? maxRing(center, true) : CENTER);
     for (let r = 0; r <= rings; r++) {
-      const els = ringAt(center, r);
+      const els = circleAt(center, r, full);
       tl.call(() => tint(els, light), [], t + r * gap);
       snd(tl, t + r * gap, () => O.drum('hat', ctx.currentTime, 0.1, els));
     }
@@ -257,9 +282,10 @@ O.G = {
   // ================= COLOUR: the seven-hue exception =================
 
   rainbowCentre: (tl, t, a, p = {}) => {
-    const { rings = CENTER, gap = 0.12, dur = 1 } = p;
+    const { gap = 0.12, dur = 1, full = false } = p;
+    const rings = p.rings ?? (full ? maxRing([CENTER, CENTER], true) : CENTER);
     for (let r = 0; r <= rings; r++) {
-      const els = ringAt([CENTER, CENTER], r);
+      const els = ringAt([CENTER, CENTER], r, full);
       tl.call(() => tint(els, RAINBOW[r % RAINBOW.length]), [], t + r * gap);
       snd(tl, t + r * gap, () => O.arp('i', dur, 30, ctx.currentTime, { vol: 0.08, cells: els }));
     }
@@ -267,11 +293,12 @@ O.G = {
   },
 
   rainbowCycle: (tl, t, a, p = {}) => {
-    const { dur = 3.5 } = p;
+    const { dur = 3.5, full = false } = p;
+    const els = pool(full).map((d) => d.el);
     const step = dur / RAINBOW.length;
     RAINBOW.forEach((light, i) => {
-      tl.call(() => tint(dots.map((d) => d.el), light), [], t + i * step);
-      snd(tl, t + i * step, () => O.arp('i', step, 24, ctx.currentTime, { vol: 0.06, cells: dots.map((d) => d.el) }));
+      tl.call(() => tint(els, light), [], t + i * step);
+      snd(tl, t + i * step, () => O.arp('i', step, 24, ctx.currentTime, { vol: 0.06, cells: els }));
     });
     return t + dur;
   },
@@ -288,17 +315,17 @@ O.G = {
   decay: (tl, t, a, p = {}) => {
     const { dur = 3 } = p;
     const actor = A(a);
-    if (actor && actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur * 0.4, { vol: 0.14, pan: O.pan(actor), light: actor.el }));
+    if (actor && actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur * 0.4, { vol: 0.14, pan: O.pan(actor), light: cellEl(actor) }));
     return t + dur;
   },
 
   burn: (tl, t, a, p = {}) => {
     const { dur = 2.5 } = p;
     const actor = A(a);
-    tl.to(actor.el, { opacity: 0.5, duration: dur, ease: 'power1.in' }, t);
+    tl.to(() => cellEl(actor), { opacity: 0.5, duration: dur, ease: 'power1.in' }, t);
     snd(tl, t, () => {
       const start = ctx.currentTime;
-      O.registerLight(actor.el, start, start + dur, (el) => Math.max(0, 1 - el / dur));
+      O.registerLight(cellEl(actor), start, start + dur, (el) => Math.max(0, 1 - el / dur));
       const n = ctx.createBufferSource(); n.buffer = O.noise;
       const bp = ctx.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 500;
       const g = ctx.createGain();
@@ -324,8 +351,8 @@ O.G = {
   soloFade: (tl, t, a, p = {}) => {
     const { dur = 4 } = p;
     const actor = A(a);
-    if (actor && actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur * 0.3, { vol: 0.1, pan: O.pan(actor), light: actor.el }));
-    tl.to(actor.el, { opacity: 0.5, duration: dur }, t);
+    if (actor && actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur * 0.3, { vol: 0.1, pan: O.pan(actor), light: cellEl(actor) }));
+    tl.to(() => cellEl(actor), { opacity: 0.5, duration: dur }, t);
     return t + dur;
   },
 
@@ -339,8 +366,8 @@ O.G = {
     const beat = 60 / O.opera.tempo;
     let tm = t;
     for (const c of rhythm) tm += beat / 2;
-    const vol = p.vol ?? 0.15, pan = O.pan(actor);
-    snd(tl, t, () => O.play(voice, pair, ctx.currentTime, { vol, pan, beat, light: actor.el }));
+    const vol = p.vol ?? 0.15;
+    snd(tl, t, () => O.play(voice, pair, ctx.currentTime, { vol, pan: O.pan(actor), beat, light: cellEl(actor) }));
     actor.lastSemi = semis.find((x) => x != null) ?? actor.lastSemi;
     return tm;
   },
@@ -349,7 +376,7 @@ O.G = {
     const actor = A(a);
     const { dur = 3, vol = 0.15 } = p;
     const semi = p.semi ?? actor.lastSemi ?? 0;
-    snd(tl, t, () => O.voice(p.voice || actor.voice, semi, ctx.currentTime, dur, { vol, pan: O.pan(actor), light: actor.el }));
+    snd(tl, t, () => O.voice(p.voice || actor.voice, semi, ctx.currentTime, dur, { vol, pan: O.pan(actor), light: cellEl(actor) }));
     return t + dur;
   },
 
@@ -359,7 +386,7 @@ O.G = {
     const [bass, colour] = O.chord(numeral);
     snd(tl, t, () => {
       O.voice(voice, bass, ctx.currentTime, dur, { vol: 0.18, pan: 0 });
-      O.voice(actor ? actor.voice : 'tenor', colour, ctx.currentTime, dur, { vol: 0.14, pan: actor ? O.pan(actor) : 0, light: actor ? actor.el : null });
+      O.voice(actor ? actor.voice : 'tenor', colour, ctx.currentTime, dur, { vol: 0.14, pan: actor ? O.pan(actor) : 0, light: actor ? cellEl(actor) : null });
     });
     return t + dur;
   },

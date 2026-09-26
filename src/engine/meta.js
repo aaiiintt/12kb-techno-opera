@@ -26,7 +26,7 @@ module.exports = {
   comet: { family: 'travel', doc: 'a lit path with a fading tail', actors: 0,
     params: { cells: [[], 'text'], numeral: ['i', 'numeral'], dur: [2, 0.5, 5], rate: [10, 4, 30], light: ['sky', 'text'] } },
   scan: { family: 'travel', doc: 'a row or column lit in sequence', actors: 0,
-    params: { row: [null, [0, 8]], col: [null, [0, 8]], numeral: ['i', 'numeral'], dur: [1.5, 0.5, 4], light: ['bulb', 'text'] } },
+    params: { row: [null, [0, 8]], col: [null, [0, 8]], numeral: ['i', 'numeral'], dur: [1.5, 0.5, 4], light: ['bulb', 'text'], full: [false, ['false', 'true']] } },
   draw: { family: 'travel', doc: 'an arbitrary list of cells lit in order', actors: 0,
     params: { cells: [[], 'text'], numeral: ['i', 'numeral'], dur: [2, 0.5, 5], light: ['violet', 'text'] } },
   spiral: { family: 'travel', doc: 'rings lit outward or inward from a centre', actors: 0,
@@ -36,13 +36,13 @@ module.exports = {
 
   // ---- Fill ----
   fillTop: { family: 'fill', doc: 'the top rows lit together, one arp', actors: 0,
-    params: { rows: [2, 1, 4], numeral: ['i', 'numeral'], light: ['sky', 'text'] } },
+    params: { rows: [2, 1, 4], numeral: ['i', 'numeral'], light: ['sky', 'text'], full: [false, ['false', 'true']] } },
   fillCentre: { family: 'fill', doc: 'a disk around the centre lit together', actors: 0,
-    params: { radius: [1, 0, 4], numeral: ['i', 'numeral'], light: ['mint', 'text'] } },
+    params: { radius: [1, 0, 4], numeral: ['i', 'numeral'], light: ['mint', 'text'], full: [false, ['false', 'true']] } },
   fillEdge: { family: 'fill', doc: 'the outer ring lit together', actors: 0,
-    params: { numeral: ['i', 'numeral'], light: ['violet', 'text'] } },
+    params: { numeral: ['i', 'numeral'], light: ['violet', 'text'], full: [false, ['false', 'true']] } },
   stripe: { family: 'fill', doc: 'a single row or column lit together', actors: 0,
-    params: { row: [null, [0, 8]], col: [null, [0, 8]], light: ['lemon', 'text'] } },
+    params: { row: [null, [0, 8]], col: [null, [0, 8]], light: ['lemon', 'text'], full: [false, ['false', 'true']] } },
   map: { family: 'fill', doc: 'an arbitrary shape lit together', actors: 0,
     params: { cells: [[], 'text'], light: ['coral', 'text'] } },
 
@@ -52,7 +52,7 @@ module.exports = {
   explode: { family: 'burst', doc: 'successive rings flash outward from a centre', actors: 0,
     params: { center: [[4, 4], 'cell'], rings: [3, 1, 6], light: ['coral', 'text'] } },
   ripple: { family: 'burst', doc: 'softer concentric rings, staggered outward', actors: 0,
-    params: { center: [[4, 4], 'cell'], rings: [4, 1, 6], light: ['sky', 'text'] } },
+    params: { center: [[4, 4], 'cell'], rings: [4, 1, 6], light: ['sky', 'text'], full: [false, ['false', 'true']] } },
   sparkle: { family: 'burst', doc: 'a few random cells flash over a duration', actors: 0,
     params: { count: [6, 1, 20], dur: [1.2, 0.3, 3], light: ['bulb', 'text'] } },
   glitter: { family: 'burst', doc: 'many random cells shimmer as one arp', actors: 0,
@@ -62,9 +62,9 @@ module.exports = {
 
   // ---- Colour: the seven-hue exception ----
   rainbowCentre: { family: 'colour', doc: 'rings outward, each its own hue of the rainbow', actors: 0,
-    params: { rings: [4, 1, 6], gap: [0.12, 0.02, 0.4] } },
+    params: { rings: [4, 1, 6], gap: [0.12, 0.02, 0.4], full: [false, ['false', 'true']] } },
   rainbowCycle: { family: 'colour', doc: 'the whole grid steps through the seven hues', actors: 0,
-    params: { dur: [3.5, 1, 8] } },
+    params: { dur: [3.5, 1, 8], full: [false, ['false', 'true']] } },
   jumpCut: { family: 'colour', doc: 'the background cuts to a light, no transition', actors: 0,
     params: { light: [null, 'text'] } },
 

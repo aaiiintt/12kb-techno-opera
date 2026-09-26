@@ -59,8 +59,12 @@ class Timeline {
   }
   add(el, from, to, o, time) {
     const rep = o.repeat || 0, d = o.duration || 0, n = d * (rep + 1);
-    const items = (Array.isArray(el) ? el : [el]).map((e) => ({
-      el: e, from, to, s: time, d, n, rep, yoyo: !!o.yoyo, f: ease(o.ease), on: false, done: false,
+    // el may be a function returning the real element, resolved once when
+    // the tween activates - not when it's added - so a tween on "whichever
+    // cell an actor occupies" reads that cell as of playback, not build time.
+    const isFn = typeof el === 'function';
+    const items = (isFn ? [null] : Array.isArray(el) ? el : [el]).map((e) => ({
+      el: e, getEl: isFn ? el : null, from, to, s: time, d, n, rep, yoyo: !!o.yoyo, f: ease(o.ease), on: false, done: false,
     }));
     this.items.push(...items);
     this.end = Math.max(this.end, time + n);
@@ -93,6 +97,8 @@ class Timeline {
       if (i.done) continue;
       if (this.t < i.s) { live = true; continue; }
       if (i.fn) { i.done = true; i.fn(); continue; }
+      if (i.getEl && !i.on) i.el = i.getEl();
+      if (!i.el) { i.done = true; continue; }
       const st = state(i.el);
       if (!i.on) {
         i.on = true;

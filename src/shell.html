@@ -12,7 +12,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .b { position: fixed; top: 1.2vmin; right: 2vw; font-size: 12px; opacity: .5; z-index: 20; }
 .n { left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 0 2vw 1.2vh; font-size: clamp(24px, 4vw, 36px); font-weight: 900; z-index: 25; }
 .n a { color: #fff; text-decoration: none; }
-.stage { position: relative; z-index: 1; display: grid; place-items: center; min-height: 100vh; padding: var(--gap); }
+.stage { position: fixed; inset: 0; z-index: 1; display: grid; justify-content: center; align-content: center; overflow: hidden; }
 .world { transform-origin: center; }
 .grid { position: relative; display: grid; gap: calc(var(--gap) * var(--gap-ratio)); justify-content: center; align-content: center; }
 /* the disc: flat oklch face, no gradient. --l is set per frame by the light
@@ -25,7 +25,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
   background: oklch(calc(var(--l) * 100%) calc(var(--c) * .7) var(--h,85)); }
 .dot::before { filter: blur(calc(var(--dot-size) * .10)); transform: scale(1.18); opacity: calc(var(--l) * .32); }
 .dot::after { filter: blur(calc(var(--dot-size) * .30)); transform: scale(1.7); opacity: calc(var(--l) * var(--wide,0)); }
-.actor { position: absolute; left: 0; top: 0; width: var(--dot-size); height: var(--dot-size); }
 .cue { position: fixed; z-index: 22; color: #fff; text-transform: uppercase; font-weight: 800; background: #000;
   left: 50%; bottom: 14vh; transform: translateX(-50%); max-width: 92vw; padding: .06em .3em; font-size: clamp(16px, 3.8vw, 48px); letter-spacing: -.03em; white-space: nowrap; visibility: hidden; }
     </style>
