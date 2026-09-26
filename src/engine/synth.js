@@ -298,6 +298,7 @@ O.motif = () => {
 O.T = {
   tr: (n) => ([s, r]) => [s.map((x) => (x == null ? x : x + n)), r],
   mi: () => ([s, r]) => [s.map((x) => { if (x == null) return x; const d = ((x - O.opera.root) % 12 + 12) % 12; return d === 4 || d === 9 ? x - 1 : x; }), r],
+  ma: () => ([s, r]) => [s.map((x) => { if (x == null) return x; const d = ((x - O.opera.root) % 12 + 12) % 12; return d === 3 || d === 8 ? x + 1 : x; }), r],
   inv: () => ([s, r]) => { const b = s.find((x) => x != null) ?? 0; return [s.map((x) => (x == null ? x : 2 * b - x)), r]; },
   aug: () => ([s, r]) => [s, r.split('').map((c) => c + (c === 'x' ? '-' : c)).join('')],
   dim: () => ([s, r]) => [s, (r.match(/.{1,2}/g) || []).map((p) => p[0]).join('')],

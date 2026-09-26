@@ -370,7 +370,7 @@ O.G = {
   },
 
   split: (tl, t, a, p = {}) => {
-    const { to = [[3, 4], [5, 4]], dur = 0.8 } = p;
+    const { to = [[3, 4], [5, 4]], dur = 0.8, hold = 4 } = p;
     const actor = A(a);
     const ghost = actor.el.cloneNode();
     gridEl.appendChild(ghost);
@@ -378,7 +378,7 @@ O.G = {
     tl.to(actor.el, { x: p1.x, y: p1.y, duration: dur }, t);
     tl.to(ghost, { x: p2.x, y: p2.y, duration: dur }, t);
     tl.call(() => { actor.col = to[0][0]; actor.row = to[0][1]; }, [], t + dur);
-    tl.call(() => ghost.remove(), [], t + dur + 0.5);
+    tl.call(() => ghost.remove(), [], t + dur + hold);
     if (actor.lastSemi != null) snd(tl, t, () => {
       O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.1, pan: -0.6 });
       O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.1, pan: 0.6 });
@@ -419,9 +419,10 @@ O.G = {
   },
 
   fillColumn: (tl, t, a, p = {}) => {
-    const { col = CENTER, stepDur = 0.3 } = p;
+    const { col = CENTER, stepDur = 0.3, dir = 'down' } = p;
     let time = t;
-    for (let row = 0; row < SIZE; row++) {
+    for (let i = 0; i < SIZE; i++) {
+      const row = dir === 'up' ? SIZE - 1 - i : i;
       const d = O.at(col, row);
       tl.to(d.el, { opacity: 1, scale: 1.2, duration: stepDur * 0.6, yoyo: true, repeat: 1 }, time);
       snd(tl, time, () => O.voice('arp', O.opera.root - row, ctx.currentTime, stepDur * 0.5, { vol: 0.08 }));
