@@ -12,7 +12,8 @@ const RAINBOW = ['coral', 'gold', 'lemon', 'mint', 'sky', 'violet', 'sakura'];
 // ---- cell-shape helpers: every one returns a list of dot elements ----
 const chebyshev = (d, c) => Math.max(Math.abs(d.col - c[0]), Math.abs(d.row - c[1]));
 const ringAt = (center, r) => dots.filter((d) => chebyshev(d, center) === r).map((d) => d.el);
-const diskAt = (center, r) => dots.filter((d) => chebyshev(d, center) <= r).map((d) => d.el);
+// Nearest first, so anything filled from a disc grows outward from its centre.
+const diskAt = (center, r) => dots.filter((d) => chebyshev(d, center) <= r).sort((a, b) => Math.hypot(a.col - center[0], a.row - center[1]) - Math.hypot(b.col - center[0], b.row - center[1])).map((d) => d.el);
 const rowEls = (row) => dots.filter((d) => d.row === row).map((d) => d.el);
 const colEls = (col) => dots.filter((d) => d.col === col).map((d) => d.el);
 const cellsFrom = (list) => list.map(([c, r]) => O.at(c, r).el);
@@ -160,7 +161,7 @@ O.G = {
     const { rows = 2, numeral = 'i', dur = 1.5, rate = 18, light = 'sky' } = p;
     const els = dots.filter((d) => d.row < rows).map((d) => d.el);
     tl.call(() => tint(els, light), [], t);
-    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els }));
+    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els, fill: 1 }));
     return t + dur;
   },
 
@@ -168,7 +169,7 @@ O.G = {
     const { radius = 1, numeral = 'i', dur = 1.2, rate = 20, light = 'mint' } = p;
     const els = diskAt([CENTER, CENTER], radius);
     tl.call(() => tint(els, light), [], t);
-    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.08, cells: els }));
+    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.08, cells: els, fill: 1 }));
     return t + dur;
   },
 
@@ -176,7 +177,7 @@ O.G = {
     const { numeral = 'i', dur = 1.5, rate = 16, light = 'violet' } = p;
     const els = ringAt([CENTER, CENTER], CENTER);
     tl.call(() => tint(els, light), [], t);
-    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els }));
+    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els, fill: 1 }));
     return t + dur;
   },
 
@@ -184,7 +185,7 @@ O.G = {
     const { row = null, col = null, numeral = 'i', dur = 1, rate = SIZE * 3, light = 'lemon' } = p;
     const els = row != null ? rowEls(row) : colEls(col ?? CENTER);
     tl.call(() => tint(els, light), [], t);
-    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els }));
+    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.07, cells: els, fill: 1 }));
     return t + dur;
   },
 
@@ -192,7 +193,7 @@ O.G = {
     const { cells = [], numeral = 'i', dur = 2, rate = 10, light = 'coral' } = p;
     const els = cellsFrom(cells);
     tl.call(() => tint(els, light), [], t);
-    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.08, cells: els }));
+    snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, { vol: 0.08, cells: els, fill: 1 }));
     return t + dur;
   },
 

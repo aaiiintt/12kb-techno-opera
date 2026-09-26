@@ -481,12 +481,25 @@ O.arp = (numeral, dur, rateHz, t, o = {}) => {
   pn.pan.setValueAtTime(pan, t);
   osc.connect(g); g.connect(pn); pn.connect(O.master); pn.connect(O.roomSend);
   osc.start(t); osc.stop(t + dur + 0.05);
+  // The chord sounds for the whole arpeggio, so every cell it has reached
+  // glows at the chord's level until the chord releases; the playhead
+  // flares each cell as it passes. Cells are spread across the steps in
+  // order, so a fill reaches every cell however many there are.
   if (o.cells && o.cells.length) {
-    const peak = Math.min(1, vol / 0.08);
+    const peak = Math.min(1, vol / 0.08), n = o.cells.length, end = t + dur, rel = 0.35;
+    const glow = (st) => (el) => {
+      const now = st + el;
+      const g = now < end * 0.999 - dur * 0.2 ? 1 : Math.max(0, (end - now) / (dur * 0.2));
+      return peak * 0.55 * (now > end ? Math.max(0, 1 - (now - end) / rel) : g);
+    };
+    if (o.fill) o.cells.forEach((cell, i) => {
+      const st = t + Math.floor((i * steps) / n) * step;
+      O.registerLight(cell, st, end + rel, glow(st));
+    });
     for (let s = 0; s < steps; s++) {
-      const cell = o.cells[s % o.cells.length];
-      const st = t + s * step, en = st + step * 1.6;
-      O.registerLight(cell, st, en, (el) => peak * Math.max(0, 1 - el / (step * 1.6)));
+      const cell = o.cells[Math.floor((s * n) / steps) % n];
+      const st = t + s * step;
+      O.registerLight(cell, st, st + step * 3, (el) => peak * Math.max(0, 1 - el / (step * 3)));
     }
   }
 };

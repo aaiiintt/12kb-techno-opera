@@ -105,6 +105,9 @@ function buildActors() {
     O.light(el, c.color);
     gridEl.appendChild(el);
     O.actors[id] = { id, el, col: CENTER, row: CENTER, light: c.color, size: c.size || 1, voice: c.voice, lastSemi: null };
+    // Draw it where it logically is: the centre cell, not cell zero.
+    const p0 = O.cell(CENTER, CENTER);
+    gsap.timeline().set(el, { x: p0.x, y: p0.y }, 0);
   }
 }
 
