@@ -85,6 +85,8 @@ module.exports = {
     params: { center: [[4, 4], 'cell'], ring: [1, 0, 4], color: ['#fff', 'text'] } },
   fillColumn: { family: 'crowd', doc: 'light a column top to bottom in sequence, or bottom to top', actors: 0,
     params: { col: [4, 0, 8], stepDur: [0.3, 0.05, 1], dir: ['down', ['down', 'up']] } },
+  paint: { family: 'crowd', doc: 'light an arbitrary set of chorus cells in a colour, to draw a shape', actors: 0,
+    params: { cells: [[], 'text'], color: ['#fff', 'text'], lit: [1, 0, 3], dur: [0.3, 0.05, 1], stagger: [0.03, 0, 0.2], hold: [0, 0, 6] } },
   closeIn: { family: 'crowd', doc: 'a ring or crowd contracts toward its centre', actors: 0,
     params: { center: [[4, 4], 'cell'], dur: [1.5, 0.2, 4] } },
   curtainParts: { family: 'crowd', doc: 'two chorus blocks slide apart to reveal the centre', actors: 0,

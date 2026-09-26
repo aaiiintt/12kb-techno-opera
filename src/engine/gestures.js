@@ -443,6 +443,22 @@ O.G = {
     return t + 0.8;
   },
 
+  // light an arbitrary set of chorus cells, in list order, so a score can
+  // draw a shape on the grid (a smile, an eye, a letter, a wall segment).
+  paint: (tl, t, a, p = {}) => {
+    const { cells = [], color = '#fff', lit = 1, dur = 0.3, stagger = 0.03, hold = 0, silent = false } = p;
+    let end = t;
+    cells.forEach((c, i) => {
+      const d = O.at(c[0], c[1]), dt = t + i * stagger, fin = dt + dur;
+      tl.call(() => { tint([d.el], color); d.el.style.setProperty('--lit', lit); }, [], dt);
+      tl.to(d.el, { opacity: 1, scale: 1, duration: dur }, dt);
+      if (!silent) snd(tl, dt, () => O.voice('arp', O.opera.root, ctx.currentTime, dur, { vol: 0.06, pan: (c[0] - CENTER) / CENTER }));
+      if (hold) tl.call(() => d.el.style.setProperty('--lit', 1), [], fin + hold);
+      end = Math.max(end, fin);
+    });
+    return end + hold;
+  },
+
   fillColumn: (tl, t, a, p = {}) => {
     const { col = CENTER, stepDur = 0.3, dir = 'down' } = p;
     let time = t;

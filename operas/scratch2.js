@@ -44,6 +44,7 @@ O.opera = {
     [10.4, 'swapSize', 'a', { other: 'c', dur: 0.4 }],
     [11.0, 'keepDistance', 'b', { target: 'a', gap: 3 }],
 
+    [11.6, 'paint', null, { cells: [[2, 3], [6, 3], [2, 6], [3, 7], [4, 7], [5, 7], [6, 6]], color: '#fff', hold: 0.8 }],
     [11.6, 'fillRing', null, { center: [4, 4], ring: 2, color: '#4fd1c5' }],
     [12.4, 'fillColumn', null, { col: 4, stepDur: 0.2 }],
     [13.4, 'closeIn', null, { center: [4, 4], dur: 1.2 }],
