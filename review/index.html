@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Opera House · Review</title>
+    <style>
+      html, body { margin: 0; background: #080706; color: #fff; font-family: Helvetica, Arial, sans-serif; }
+      * { box-sizing: border-box; }
+      header { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: baseline;
+        padding: 14px 20px; background: #080706; border-bottom: 1px solid #2a2622; text-transform: uppercase; letter-spacing: -0.02em; }
+      header h1 { margin: 0; font-size: 20px; font-weight: 800; }
+      header .sizes { font-size: 12px; opacity: .6; letter-spacing: 0; }
+      .row { display: grid; grid-template-columns: 260px 1fr; gap: 20px; padding: 18px 20px; border-bottom: 1px solid #1c1a17; align-items: start; }
+      .row .frame-col { position: relative; }
+      .row .meta { display: flex; justify-content: space-between; font-size: 12px; opacity: .6; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+      .row h2 { margin: 0 0 6px; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: -.01em; }
+      iframe.stage { width: 260px; height: 200px; border: 1px solid #2a2622; background: #000; display: block; }
+      .controls { display: flex; gap: 6px; margin-top: 6px; }
+      .controls button { background: none; border: 1px solid #444; color: #fff; font-size: 13px; padding: 3px 9px; cursor: pointer; border-radius: 3px; }
+      .controls button:hover { border-color: #fff; box-shadow: 0 0 6px rgba(255,255,255,.4); }
+      .thread { display: flex; flex-direction: column; gap: 10px; }
+      .thread .note-line { font-size: 13px; opacity: .85; }
+      .status { font-size: 12px; opacity: .7; }
+      .alts { display: flex; gap: 10px; flex-wrap: wrap; }
+      .alt { border: 1px solid #333; border-radius: 4px; padding: 8px; width: 180px; cursor: pointer; background: #100e0c; }
+      .alt:hover { border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,.25); }
+      .alt.chosen { border-color: #4fd1c5; box-shadow: 0 0 10px rgba(79,209,197,.5); }
+      .alt iframe { width: 100%; height: 120px; border: 0; background: #000; pointer-events: none; }
+      .alt .label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin: 4px 0 2px; }
+      .alt .desc { font-size: 11px; opacity: .8; line-height: 1.3; }
+      .alt .bytes { font-size: 10px; opacity: .5; margin-top: 4px; }
+      .desc-list { font-size: 11px; opacity: .8; line-height: 1.4; }
+      .desc-list b { text-transform: uppercase; }
+      .input-row { display: flex; gap: 6px; }
+      .input-row input { flex: 1; background: #100e0c; border: 1px solid #333; color: #fff; padding: 6px 8px; font-size: 13px; }
+      .input-row input:focus { outline: none; border-color: #fff; }
+      .input-row button, .cancel { background: none; border: 1px solid #444; color: #fff; padding: 6px 10px; font-size: 12px; cursor: pointer; text-transform: uppercase; }
+      .input-row button:hover, .cancel:hover { border-color: #fff; }
+      .glow { text-shadow: 0 0 12px currentColor; }
+      #loading { padding: 20px; opacity: .6; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 class="glow">Opera House · Review</h1>
+      <span class="sizes" id="sizes"></span>
+    </header>
+    <div id="rows"></div>
+    <div id="loading">loading operas…</div>
+
+    <script>
+(function () {
+  var rowsEl = document.getElementById('rows');
+  var loadingEl = document.getElementById('loading');
+
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+
+  function frameControls(row, iframe) {
+    var wrap = el('div', 'controls');
+    var play = el('button', null, '&#9658;');
+    var stop = el('button', null, '&#9632;');
+    var loop = el('button', null, '&#8635;');
+    var looping = false, loopTimer = null;
+    function clickShellPlay() {
+      try {
+        var doc = iframe.contentDocument;
+        var pb = doc && doc.getElementById('pb');
+        if (pb) pb.click();
+      } catch (e) {}
+    }
+    play.onclick = clickShellPlay;
+    stop.onclick = function () {
+      looping = false;
+      loop.style.opacity = .6;
+      if (loopTimer) clearTimeout(loopTimer);
+      iframe.src = iframe.src; // reload back to the start, paused
+    };
+    loop.onclick = function () {
+      looping = !looping;
+      loop.style.opacity = looping ? 1 : .6;
+      if (looping) {
+        // the engine has no "ended" event to hook; free-run on a generous
+        // fixed timer (most operas aim for about a minute) and replay.
+        var again = function () {
+          if (!looping) return;
+          iframe.src = iframe.src;
+          setTimeout(clickShellPlay, 200);
+          loopTimer = setTimeout(again, 75000);
+        };
+        again();
+      } else if (loopTimer) clearTimeout(loopTimer);
+    };
+    loop.style.opacity = .6;
+    wrap.appendChild(play); wrap.appendChild(stop); wrap.appendChild(loop);
+    return wrap;
+  }
+
+  function threadUI(opera) {
+    var thread = el('div', 'thread');
+    var status = el('div', 'status', '');
+    var altsEl = el('div', 'alts');
+    var descList = el('div', 'desc-list');
+    var inputRow = el('div', 'input-row');
+    var input = document.createElement('input');
+    input.placeholder = 'type a note about ' + opera + '…';
+    var send = el('button', null, 'send');
+    var cancelBtn = el('button', 'cancel', 'cancel');
+    cancelBtn.style.display = 'none';
+    inputRow.appendChild(input); inputRow.appendChild(send); inputRow.appendChild(cancelBtn);
+
+    function setBusy(b) {
+      input.disabled = b; send.disabled = b;
+      status.textContent = b ? 'thinking…' : '';
+    }
+
+    function renderAlternatives(alts) {
+      altsEl.innerHTML = '';
+      descList.innerHTML = '';
+      alts.forEach(function (alt) {
+        var card = el('div', 'alt');
+        var frame = document.createElement('iframe');
+        if (alt.url) frame.src = alt.url;
+        card.appendChild(frame);
+        card.appendChild(el('div', 'label', '[' + alt.id.toUpperCase() + ']'));
+        card.appendChild(el('div', 'bytes', alt.bytes != null ? (alt.bytes + ' B') : '—'));
+        card.onclick = function () { choose(opera, alt.id, card); };
+        altsEl.appendChild(card);
+        var line = el('div', null, '<b>' + alt.id.toUpperCase() + '</b> &nbsp;' + alt.description + (alt.rationale ? ' <span style="opacity:.6">— ' + alt.rationale + '</span>' : ''));
+        descList.appendChild(line);
+      });
+      cancelBtn.style.display = alts.length ? '' : 'none';
+      status.textContent = alts.length ? ('> ' + alts.length + ' alternatives ready') : '';
+    }
+
+    function choose(opera, id, card) {
+      Array.prototype.forEach.call(altsEl.children, function (c) { c.classList.remove('chosen'); });
+      card.classList.add('chosen');
+      fetch('/choose', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opera: opera, id: id }) })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          status.textContent = data.bytes != null ? ('chosen ' + id.toUpperCase() + ' — ' + data.bytes + ' B, saved to operas/' + opera + '.js') : ('error: ' + (data.error || 'unknown'));
+          altsEl.innerHTML = ''; descList.innerHTML = ''; cancelBtn.style.display = 'none';
+          reloadFrames(opera);
+        });
+    }
+
+    cancelBtn.onclick = function () {
+      fetch('/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opera: opera }) })
+        .then(function () {
+          altsEl.innerHTML = ''; descList.innerHTML = ''; cancelBtn.style.display = 'none'; status.textContent = 'cancelled';
+        });
+    };
+
+    function submit() {
+      var text = input.value.trim();
+      if (!text) return;
+      setBusy(true);
+      thread.appendChild(el('div', 'note-line', '&gt; ' + text));
+      fetch('/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opera: opera, text: text }) })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          setBusy(false);
+          if (data.error) { status.textContent = 'error: ' + data.error; return; }
+          renderAlternatives(data.alternatives || []);
+        })
+        .catch(function (e) { setBusy(false); status.textContent = 'error: ' + e.message; });
+      input.value = '';
+    }
+    send.onclick = submit;
+    input.onkeydown = function (e) { if (e.key === 'Enter') submit(); };
+
+    thread.appendChild(status);
+    thread.appendChild(altsEl);
+    thread.appendChild(descList);
+    thread.appendChild(inputRow);
+    return thread;
+  }
+
+  var frameRegistry = {};
+  function reloadFrames(opera) {
+    var f = frameRegistry[opera];
+    if (f) f.src = f.src;
+  }
+
+  function buildRow(index, id, title, bytes, frameSrc) {
+    var row = el('div', 'row');
+    var col = el('div', 'frame-col');
+    var meta = el('div', 'meta', '<span>' + (index != null ? index + ' ' : '') + title + '</span><span>' + (bytes != null ? bytes + ' B' : '') + '</span>');
+    var frame = document.createElement('iframe');
+    frame.className = 'stage';
+    frame.src = frameSrc;
+    frameRegistry[id] = frame;
+    col.appendChild(meta);
+    col.appendChild(frame);
+    col.appendChild(frameControls(row, frame));
+    row.appendChild(col);
+    var right = el('div');
+    right.appendChild(threadUI(id));
+    row.appendChild(right);
+    return row;
+  }
+
+  fetch('/operas').then(function (r) { return r.json(); }).then(function (operas) {
+    loadingEl.style.display = 'none';
+    // house row first, always
+    rowsEl.appendChild(buildRow(null, 'house', 'HOUSE', null, '/dist/scratch.html?scale'));
+    operas.forEach(function (o, i) {
+      rowsEl.appendChild(buildRow(i + 1, o.id, o.title, o.bytes, '/dist/' + o.id + '.html'));
+    });
+  }).catch(function (e) {
+    loadingEl.textContent = 'could not load /operas: ' + e.message;
+  });
+})();
+    </script>
+  </body>
+</html>
