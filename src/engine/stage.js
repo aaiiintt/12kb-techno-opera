@@ -1,13 +1,12 @@
-/* Stage: the 9x9 chorus grid, actor dots, camera, cue, label, speech. */
-const SIZE = 9, CENTER = 4;
-let dots = [], gridEl, worldEl, _cell = 0;
+/* Stage: the chorus grid (5-13 dots/side), actor dots, camera, cue, label,
+   speech, titleCard, plus the stage properties and energy curve. */
+let SIZE = 9, CENTER = 4;
+let dots = [], gridEl, worldEl, driftEl, breatheEl, _cell = 0;
 
 O.at = (col, row) => dots[row * SIZE + col];
 O.every = (fn) => dots.forEach(fn);
 
-function buildGrid() {
-  gridEl = document.getElementById('grid');
-  worldEl = document.getElementById('world');
+function fillGrid() {
   gridEl.style.gridTemplateColumns = `repeat(${SIZE},var(--dot-size))`;
   gridEl.style.gridTemplateRows = `repeat(${SIZE},var(--dot-size))`;
   for (let row = 0; row < SIZE; row++) {
@@ -20,7 +19,53 @@ function buildGrid() {
       dots.push({ el, col, row });
     }
   }
+  _cell = 0;
 }
+
+function buildGrid() {
+  gridEl = document.getElementById('grid');
+  worldEl = document.getElementById('world');
+  driftEl = document.getElementById('drift');
+  breatheEl = document.getElementById('breathe');
+  fillGrid();
+}
+
+// ---- stage properties: bg, grid (density), dot (base scale), gap ----
+O.applyStage = (o = {}) => {
+  const { bg, grid, dot, gap } = o;
+  if (bg != null) document.body.style.background = bg;
+  if (grid != null && grid !== SIZE) {
+    dots.forEach((d) => d.el.remove());
+    dots = [];
+    SIZE = grid; CENTER = (SIZE - 1) / 2;
+    fillGrid();
+  }
+  if (dot != null) document.documentElement.style.setProperty('--dot-scale', dot);
+  if (gap != null) document.documentElement.style.setProperty('--gap-ratio', gap);
+};
+O.transitionBg = (bg, dur) => {
+  document.body.style.transition = `background ${dur}s`;
+  document.body.style.background = bg;
+};
+
+// ---- energy curve: derived every frame from a target level 0-10 ----
+let eLevel = 3, eFrom = 3, eTo = 3, eStart = 0, eDur = 0;
+O.energy = (level, dur = 1, t = 0) => { eFrom = eLevel; eTo = level; eStart = t; eDur = dur; };
+O.onFrame = (t) => {
+  if (!breatheEl) return;
+  const p = eDur > 0 ? Math.min(1, (t - eStart) / eDur) : 1;
+  eLevel = eFrom + (eTo - eFrom) * p;
+  const lv = eLevel / 10;
+  let scale = 1 + Math.sin(t * (0.3 + lv * 1.2) * PI2) * lv * 0.12;
+  if (eLevel >= 6 && O.opera) {
+    const ph = (t % (60 / O.opera.tempo)) / (60 / O.opera.tempo);
+    scale *= 1 + Math.pow(1 - ph, 8) * 0.18;
+  }
+  breatheEl.style.transform = `scale(${scale})`;
+  breatheEl.style.opacity = 0.12 + lv * 0.88;
+  const w = innerWidth * 0.008 * lv;
+  driftEl.style.transform = `translate(${Math.sin(t * 0.06) * w}px,${Math.cos(t * 0.045) * w * 0.6}px) scale(${1 + Math.sin(t * 0.04) * lv * 0.06})`;
+};
 
 function cellSize() {
   if (!_cell) {
@@ -101,3 +146,16 @@ const _label = textDiv('label', 0.75);
 const _speech = textDiv('speech', 0.5);
 O.label = (tl, time, actor, text, dur = 0.4) => _label(tl, time, actor, text, dur + 1);
 O.speech = (tl, time, actor, text, hold = 1) => _speech(tl, time, actor, text, hold);
+
+// full-screen cue for titleCard: one reused div, centred, sized in vh.
+let titleEl;
+O.titleCard = (tl, time, text, size, hold, color) => {
+  if (!titleEl) { titleEl = document.createElement('div'); titleEl.className = 'titlecard'; document.body.appendChild(titleEl); }
+  tl.call(() => {
+    titleEl.textContent = text;
+    titleEl.style.color = color;
+    titleEl.style.fontSize = size + 'vh';
+    titleEl.style.opacity = 1;
+  }, [], time);
+  tl.call(() => { titleEl.style.opacity = 0; }, [], time + hold);
+};

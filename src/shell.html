@@ -6,23 +6,25 @@
     <title>OPERA</title>
     <style>
 @property --dot-color { syntax: '<color>'; inherits: false; initial-value: #fff; }
-:root { --dot-size: clamp(22px, 6.8vmin, 58px); --gap: clamp(4px, 1.2vmin, 12px); }
-html, body { margin: 0; height: 100%; overflow: hidden; background: #080706; color: #fff; font-family: Helvetica, Arial, sans-serif; }
+:root { --dot-size: clamp(22px, 6.8vmin, 58px); --gap: clamp(4px, 1.2vmin, 12px); --dot-scale: 1; --gap-ratio: 1; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #fff; font-family: Helvetica, Arial, sans-serif; }
 .t, .n { position: fixed; text-transform: uppercase; z-index: 20; }
 .t { top: 0; left: 0; margin: 0; padding: 3vmin 3vw 0; font-size: clamp(28px, 9vw, 90px); line-height: .9; letter-spacing: -.03em; }
 .b { position: fixed; top: 1.2vmin; right: 2vw; font-size: 12px; opacity: .5; z-index: 20; }
 .n { left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 0 2vw 1.2vh; font-size: clamp(24px, 4vw, 36px); font-weight: 900; z-index: 25; }
 .n a { color: #fff; text-decoration: none; }
 .stage { position: relative; z-index: 1; display: grid; place-items: center; min-height: 100vh; padding: var(--gap); }
-.world { transform-origin: center; }
-.grid { position: relative; display: grid; gap: var(--gap); justify-content: center; align-content: center; }
-.dot { position: relative; width: 100%; height: 100%; border-radius: 50%; background: var(--dot-color); opacity: 0; transform: scale(0); box-shadow: 0 0 16px var(--dot-color); }
+.world, #drift, #breathe { transform-origin: center; }
+.grid { position: relative; display: grid; gap: calc(var(--gap) * var(--gap-ratio)); justify-content: center; align-content: center; }
+.dot { position: relative; width: calc(100% * var(--dot-scale)); height: calc(100% * var(--dot-scale)); border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55), transparent 55%), var(--dot-color); opacity: 0; transform: scale(0); box-shadow: 0 0 calc(16px * var(--lit,1)) var(--dot-color); }
+@keyframes shimmer { 50% { opacity: calc(1 - var(--sh-amt,.3)); filter: hue-rotate(var(--sh-hue,10deg)) brightness(calc(1 - var(--sh-amt,.3) * .5)); } }
 .actor { position: absolute; left: 0; top: 0; width: var(--dot-size); height: var(--dot-size); }
 .cue, .label, .speech { position: fixed; z-index: 22; color: #fff; text-transform: uppercase; font-weight: 800; }
 .cue, .speech { background: #000; }
 .cue { left: 50%; bottom: 14vh; transform: translateX(-50%); max-width: 92vw; padding: .06em .3em; font-size: clamp(16px, 3.8vw, 48px); letter-spacing: -.03em; white-space: nowrap; visibility: hidden; }
 .label, .speech { position: absolute; left: 0; top: 0; opacity: 0; font-size: 14px; }
 .speech { padding: .2em .4em; transform: translate(-50%, -140%); }
+.titlecard { position: fixed; inset: 0; z-index: 23; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 900; text-transform: uppercase; letter-spacing: -.03em; opacity: 0; pointer-events: none; transition: opacity .15s; }
     </style>
   </head>
   <body>
@@ -30,7 +32,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #080706; col
     <span class="b" id="bd">%%BYTES%% B</span>
     <nav class="n"><a href="#" id="pb">Play</a><a href="about.html">Info</a></nav>
     <main class="stage">
-      <div id="world" class="world"><div id="grid" class="grid"></div></div>
+      <div id="drift"><div id="world" class="world"><div id="breathe"><div id="grid" class="grid"></div></div></div></div>
     </main>
     <div id="cue" class="cue"></div>
     <script src="engine.js"></script>

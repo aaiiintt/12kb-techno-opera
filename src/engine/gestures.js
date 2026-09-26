@@ -4,6 +4,30 @@
 
 const A = (actors) => (typeof actors === 'string' && actors !== 'grid' ? O.actors[actors] : actors);
 
+// ---- spectacle helpers: shared by wipe, flood, tide, swarm, shatter,
+// collapse and the existing fillRing/closeIn ----
+
+// per-dot delay (seconds), proportional to its distance from a cell
+const distStagger = (c, rate) => (d) => Math.hypot(d.col - c[0], d.row - c[1]) * rate;
+
+// tint a list of dot elements to a colour
+const tint = (els, color) => els.forEach((el) => el.style.setProperty('--dot-color', color));
+
+// a filtered noise swell through a band-pass, panned - the spectacle
+// family's one bit of new low-level sound (wipe's "noise in the wipe
+// direction"); everything else reuses O.voice/O.arp/O.drum/O.setRoom.
+function noiseSwell(dur, pan = 0, freq = 1200) {
+  const n = ctx.createBufferSource(); n.buffer = O.noise;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, ctx.currentTime);
+  g.gain.linearRampToValueAtTime(0.12, ctx.currentTime + dur * 0.5);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+  const pn = ctx.createStereoPanner(); pn.pan.value = pan;
+  n.connect(bp); bp.connect(g); g.connect(pn); pn.connect(O.master); pn.connect(O.roomSend);
+  n.start(); n.stop(ctx.currentTime + dur + 0.05);
+}
+
 function applyT(pair, spec) {
   if (!spec) return pair;
   if (typeof spec === 'string') return O.T[spec]()(pair);
@@ -411,9 +435,10 @@ O.G = {
 
   fillRing: (tl, t, a, p = {}) => {
     const { center = [CENTER, CENTER], ring = 1, color = '#fff' } = p;
-    const ringDots = dots.filter((d) => Math.max(Math.abs(d.col - center[0]), Math.abs(d.row - center[1])) === ring);
-    tl.call(() => ringDots.forEach((d) => d.el.style.setProperty('--dot-color', color)), [], t);
-    tl.to(ringDots.map((d) => d.el), { scale: 1.3, opacity: 1, duration: 0.4, yoyo: true, repeat: 1 }, t);
+    const ringDots = dots.filter((d) => Math.max(Math.abs(d.col - center[0]), Math.abs(d.row - center[1])) === ring).map((d) => d.el);
+    tl.call(() => { tint(ringDots, color); ringDots.forEach((el) => el.style.setProperty('--lit', 1.8)); }, [], t);
+    tl.to(ringDots, { scale: 1.3, opacity: 1, duration: 0.4, yoyo: true, repeat: 1 }, t);
+    tl.call(() => ringDots.forEach((el) => el.style.setProperty('--lit', 1)), [], t + 0.8);
     snd(tl, t, () => O.arp('i', 0.8, 45, ctx.currentTime, { vol: 0.07 }));
     return t + 0.8;
   },
@@ -434,12 +459,13 @@ O.G = {
   closeIn: (tl, t, a, p = {}) => {
     const { center = [CENTER, CENTER], dur = 1.5 } = p;
     const cp = O.cell(center[0], center[1]);
+    const st = distStagger(center, 0.03);
     dots.forEach((d) => {
       const dp = O.cell(d.col, d.row);
-      tl.to(d.el, { x: (cp.x - dp.x) * 0.4, y: (cp.y - dp.y) * 0.4, duration: dur, ease: 'power2.in' }, t);
+      tl.to(d.el, { x: (cp.x - dp.x) * 0.4, y: (cp.y - dp.y) * 0.4, duration: dur, ease: 'power2.in' }, t + st(d));
     });
     snd(tl, t, () => O.auto(O.master.gain, O.master.gain.value, 0.95, dur, ctx.currentTime, 'linear'));
-    tl.call(() => dots.forEach((d) => { d.el.style.transform = ''; }), [], t + dur + 0.3);
+    tl.call(() => dots.forEach((d) => { d.el.style.transform = ''; }), [], t + dur + SIZE * 0.03 + 0.3);
     return t + dur;
   },
 
@@ -557,5 +583,183 @@ O.G = {
     const v = voice || (actor.voice === 'tenor' ? 'soprano' : 'tenor');
     if (actor.lastSemi != null) snd(tl, t + delay, () => O.voice(v, actor.lastSemi, ctx.currentTime, 0.6, { vol: 0.06, pan: -O.pan(actor) }));
     return t + delay + 0.6;
+  },
+
+  // ---- the spectacle family: moves of the whole mass, the bg or the camera ----
+
+  stage: (tl, t, a, p = {}) => {
+    const { bg, grid, dot, gap, dur = 0 } = p;
+    if (!dur) { O.applyStage({ bg, grid, dot, gap }); return t; }
+    if (bg != null) tl.call(() => O.transitionBg(bg, dur), [], t);
+    if (grid != null) {
+      tl.to(gridEl, { opacity: 0, duration: dur / 2 }, t);
+      tl.call(() => O.applyStage({ grid, dot, gap }), [], t + dur / 2);
+      tl.to(gridEl, { opacity: 1, duration: dur / 2 }, t + dur / 2);
+    } else if (dot != null || gap != null) {
+      tl.call(() => O.applyStage({ dot, gap }), [], t);
+    }
+    return t + dur;
+  },
+
+  energy: (tl, t, a, p = {}) => {
+    const { level = 5, dur = 1 } = p;
+    tl.call(() => O.energy(level, dur, t), [], t);
+    return t + dur;
+  },
+
+  wipe: (tl, t, a, p = {}) => {
+    const { color = '#fff', from = 'left', dur = 0.8, bg = false } = p;
+    const horiz = from === 'left' || from === 'right';
+    const rev = from === 'right' || from === 'bottom';
+    const span = SIZE - 1 || 1;
+    dots.forEach((d) => {
+      const idx = horiz ? d.col : d.row;
+      const dt = t + (rev ? span - idx : idx) / span * dur;
+      tl.call(() => d.el.style.setProperty('--dot-color', color), [], dt);
+      tl.to(d.el, { opacity: 1, scale: 1, duration: dur / SIZE + 0.05 }, dt);
+    });
+    if (bg) tl.call(() => O.transitionBg(color, dur), [], t);
+    snd(tl, t, () => noiseSwell(dur, horiz ? (rev ? 1 : -1) : 0));
+    return t + dur;
+  },
+
+  flood: (tl, t, a, p = {}) => {
+    const { color = '#fff', center = [CENTER, CENTER], dur = 1, bg = false } = p;
+    const st = distStagger(center, dur / SIZE);
+    dots.forEach((d) => {
+      const dt = t + st(d);
+      tl.call(() => d.el.style.setProperty('--dot-color', color), [], dt);
+      tl.to(d.el, { opacity: 1, scale: 1, duration: dur / SIZE + 0.05 }, dt);
+    });
+    if (bg) tl.call(() => O.transitionBg(color, dur), [], t);
+    snd(tl, t, () => { O.setRoom(2400, 0.5, dur, ctx.currentTime); O.voice('tenor', O.opera.root, ctx.currentTime, dur, { vol: 0.14, pan: 0 }); });
+    return t + dur;
+  },
+
+  blackout: (tl, t, a, p = {}) => {
+    const { dur = 0, hold = 0.5 } = p;
+    const d = Math.max(dur, 0.05);
+    tl.to(dots.map((dd) => dd.el), { opacity: 0, duration: d }, t);
+    tl.call(() => O.transitionBg('#000', d), [], t);
+    snd(tl, t, () => { O.master.gain.setValueAtTime(0.0001, ctx.currentTime + d); O.setRoom(600, 0.15, hold, ctx.currentTime + d); });
+    return t + dur + hold;
+  },
+
+  strobe: (tl, t, a, p = {}) => {
+    const { a: colA = '#fff', b: colB = '#000', rate = 12, dur = 0.5 } = p;
+    const step = 1 / rate, n = Math.floor(dur / step), els = dots.map((d) => d.el);
+    for (let i = 0; i < n; i++) {
+      const c = i % 2 ? colB : colA, dt = t + i * step;
+      tl.call(() => { document.body.style.background = c; tint(els, c); els.forEach((el) => { el.style.opacity = 1; el.style.transform = 'scale(1)'; }); }, [], dt);
+      snd(tl, dt, () => O.drum('hat', ctx.currentTime, 0.12));
+    }
+    return t + dur;
+  },
+
+  tide: (tl, t, a, p = {}) => {
+    const { dir = 'down', period = 1.2, repeat = 3, color = '#fff' } = p;
+    const rows = dir === 'up' || dir === 'down';
+    const rev = dir === 'up' || dir === 'left';
+    const span = SIZE - 1 || 1;
+    for (let rep = 0; rep < repeat; rep++) {
+      const base = t + rep * period;
+      dots.forEach((d) => {
+        const idx = rows ? d.row : d.col;
+        const dt = base + (rev ? span - idx : idx) / span * period;
+        tl.call(() => d.el.style.setProperty('--dot-color', color), [], dt);
+        tl.to(d.el, { opacity: 1, scale: 1.15, duration: period / SIZE + 0.05, yoyo: true, repeat: 1 }, dt);
+      });
+      snd(tl, base, () => O.arp('i', period, 20, ctx.currentTime, { vol: 0.07 }));
+    }
+    return t + repeat * period;
+  },
+
+  swarm: (tl, t, a, p = {}) => {
+    const { target, dur = 1.5, spread = 0.5 } = p;
+    const tc = typeof target === 'string' ? [O.actors[target].col, O.actors[target].row] : target || [CENTER, CENTER];
+    const cp = O.cell(tc[0], tc[1]);
+    const st = distStagger(tc, (dur * 0.6) / SIZE);
+    dots.forEach((d) => {
+      const dp = O.cell(d.col, d.row), dt = t + st(d), jig = (Math.random() - 0.5) * spread * cellSize();
+      tl.to(d.el, { x: cp.x - dp.x + jig, y: cp.y - dp.y + jig, opacity: 1, scale: 0.6, duration: Math.max(dur - st(d), 0.2) }, dt);
+    });
+    snd(tl, t, () => { O.auto(O.master.gain, O.master.gain.value, 0.95, dur, ctx.currentTime, 'linear'); O.setRoom(700, 0.55, dur, ctx.currentTime); });
+    return t + dur;
+  },
+
+  shatter: (tl, t, a, p = {}) => {
+    const { center = [CENTER, CENTER], dur = 0.6 } = p;
+    const cp = O.cell(center[0], center[1]), far = cellSize() * SIZE;
+    dots.forEach((d) => {
+      const dp = O.cell(d.col, d.row);
+      const ang = Math.atan2(dp.y - cp.y, dp.x - cp.x) || Math.random() * PI2;
+      tl.to(d.el, { x: dp.x + Math.cos(ang) * far, y: dp.y + Math.sin(ang) * far, opacity: 0, duration: dur, ease: 'power2.in' }, t);
+    });
+    snd(tl, t, () => { const [b, c] = O.chord('v'); O.voice('bass', b, ctx.currentTime, 0.4, { vol: 0.2 }); O.voice('tenor', c, ctx.currentTime, 0.4, { vol: 0.18 }); O.master.gain.setValueAtTime(O.master.gain.value, ctx.currentTime + dur); O.master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + dur + 0.3); });
+    tl.call(() => dots.forEach((d) => { d.el.style.transform = ''; d.el.style.opacity = 0; }), [], t + dur + 0.5);
+    return t + dur;
+  },
+
+  collapse: (tl, t, a, p = {}) => {
+    const { dur = 1.5, stagger: stg = 0.06 } = p;
+    for (let row = 0; row < SIZE; row++) {
+      const dt = t + row * stg, rowDots = dots.filter((d) => d.row === row).map((d) => d.el);
+      tl.to(rowDots, { y: '+=' + cellSize() * (SIZE - row + 2), opacity: 0, duration: Math.max(dur - row * stg, 0.2), ease: 'power2.in' }, dt);
+    }
+    snd(tl, t, () => { O.voice('bass', O.opera.root - 12, ctx.currentTime, dur, { vol: 0.22 }); O.setRoom(500, 0.2, dur, ctx.currentTime); });
+    return t + dur;
+  },
+
+  bloom: (tl, t, a, p = {}) => {
+    const { actor, dur = 2, hold = 1 } = p;
+    const act = A(actor ?? a);
+    const scale = (Math.hypot(innerWidth, innerHeight) / cellSize()) * 1.5;
+    tl.to(act.el, { scale, duration: dur, ease: 'power2.in' }, t);
+    tl.call(() => O.transitionBg(act.color, 0.3), [], t + dur * 0.6);
+    if (act.lastSemi != null) snd(tl, t, () => O.voice(act.voice, act.lastSemi, ctx.currentTime, dur + hold, { vol: 0.22, pan: 0 }));
+    snd(tl, t, () => O.auto(O.master.gain, O.master.gain.value, 0.95, dur, ctx.currentTime, 'linear'));
+    return t + dur + hold;
+  },
+
+  quake: (tl, t, a, p = {}) => {
+    const { amount = 8, dur = 0.6 } = p;
+    tl.to(worldEl, { x: '+=' + amount, duration: dur / 8, yoyo: true, repeat: 7 }, t);
+    dots.forEach((d) => {
+      const jx = (Math.random() - 0.5) * amount, jy = (Math.random() - 0.5) * amount;
+      tl.to(d.el, { x: '+=' + jx, y: '+=' + jy, duration: dur / 4, yoyo: true, repeat: 3 }, t);
+    });
+    snd(tl, t, () => O.voice('bass', O.opera.root - 12, ctx.currentTime, dur, { vol: 0.2, grit: true }));
+    return t + dur;
+  },
+
+  zoomCrash: (tl, t, a, p = {}) => {
+    const { target, zoom = 3, dur = 0.25 } = p;
+    const tgt = target ? O.actors[target] : A(a);
+    O.camera(tl, t, { col: tgt.col, row: tgt.row, zoom, dur, ease: 'power2.in' });
+    snd(tl, t + dur, () => O.drum('kick', ctx.currentTime, 0.3));
+    return t + dur;
+  },
+
+  titleCard: (tl, t, a, p = {}) => {
+    const { text = '', size = 40, hold = 1.5, color = '#fff' } = p;
+    O.titleCard(tl, t, text, size, hold, color);
+    return t + hold;
+  },
+
+  // light on water: a CSS animation per dot (opacity + hue only, no
+  // transform/box-shadow in the loop, so it costs nothing after the one
+  // style write that starts it - see the 60fps rule).
+  shimmer: (tl, t, a, p = {}) => {
+    const { amount = 0.3, rate = 2, hue = 10, dur = 4 } = p;
+    const period = 1 / rate;
+    tl.call(() => dots.forEach((d) => {
+      d.el.style.setProperty('--sh-amt', amount);
+      d.el.style.setProperty('--sh-hue', hue + 'deg');
+      d.el.style.animation = `shimmer ${period}s ease-in-out infinite`;
+      d.el.style.animationDelay = -(Math.random() * period) + 's';
+    }), [], t);
+    tl.call(() => dots.forEach((d) => { d.el.style.animation = ''; }), [], t + dur);
+    snd(tl, t, () => O.arp('i', dur, 14, ctx.currentTime, { vol: 0.05 }));
+    return t + dur;
   },
 };

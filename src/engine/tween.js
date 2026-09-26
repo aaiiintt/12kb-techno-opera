@@ -81,7 +81,9 @@ class Timeline {
     if (this.dead) return;
     if (this.last) this.t += (now - this.last) / 1000;
     this.last = now;
-    if (this.render()) this.raf = requestAnimationFrame(this.tick);
+    const live = this.render();
+    if (O.onFrame) O.onFrame(this.t);
+    if (live) this.raf = requestAnimationFrame(this.tick);
     else if (this.onComplete) this.onComplete();
   };
   render() {

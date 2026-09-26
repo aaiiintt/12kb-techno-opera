@@ -57,6 +57,8 @@ function buildTimeline(opera) {
 
 O.load = (opera) => {
   O.opera = opera;
+  const s = opera.stage || {};
+  O.applyStage({ bg: s.bg ?? '#000', grid: s.grid ?? 9, dot: s.dot ?? 1, gap: s.gap ?? 1 });
   buildActors();
   buildTimeline(opera);
 };
