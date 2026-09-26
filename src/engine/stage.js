@@ -1,10 +1,36 @@
-/* Stage: the chorus grid (5-13 dots/side), actor dots, camera, cue, label,
-   speech, titleCard, plus the stage properties and energy curve. */
+/* Stage: the chorus grid (5-13 dots/side), actor dots, camera, cue, and the
+   eight-light palette. The grid is fixed once at load; it never resizes,
+   drifts or breathes after that. The camera cuts; it never pans on its own. */
 let SIZE = 9, CENTER = 4;
-let dots = [], gridEl, worldEl, driftEl, breatheEl, _cell = 0;
+let dots = [], gridEl, worldEl, _cell = 0;
 
 O.at = (col, row) => dots[row * SIZE + col];
 O.every = (fn) => dots.forEach(fn);
+
+// ---- the eight lights: H, Cmax, Lmax. Named, never hex. ----
+O.P = {
+  bulb: [85, 0.03, 0.94],
+  gold: [80, 0.16, 0.80],
+  sakura: [350, 0.14, 0.80],
+  coral: [30, 0.18, 0.74],
+  lemon: [105, 0.17, 0.92],
+  mint: [160, 0.13, 0.84],
+  sky: [245, 0.15, 0.74],
+  violet: [295, 0.17, 0.72],
+};
+O.light = (el, name) => {
+  const L = O.P[name];
+  el.style.setProperty('--h', L[0]);
+  el.style.setProperty('--cmax', L[1]);
+  el.style.setProperty('--lmax', L[2]);
+};
+
+// the stage background: black, or one light at low L, cut with no transition.
+O.bg = (name) => {
+  if (!name) { document.body.style.background = '#000'; return; }
+  const L = O.P[name];
+  document.body.style.background = `oklch(18% ${(L[1] * 0.25).toFixed(3)} ${L[0]})`;
+};
 
 function fillGrid() {
   gridEl.style.gridTemplateColumns = `repeat(${SIZE},var(--dot-size))`;
@@ -15,6 +41,7 @@ function fillGrid() {
       el.className = 'dot';
       el.style.gridColumn = col + 1;
       el.style.gridRow = row + 1;
+      O.light(el, 'bulb');
       gridEl.appendChild(el);
       dots.push({ el, col, row });
     }
@@ -25,15 +52,13 @@ function fillGrid() {
 function buildGrid() {
   gridEl = document.getElementById('grid');
   worldEl = document.getElementById('world');
-  driftEl = document.getElementById('drift');
-  breatheEl = document.getElementById('breathe');
   fillGrid();
 }
 
-// ---- stage properties: bg, grid (density), dot (base scale), gap ----
+// grid size/dot-scale/gap are set once, at load, from O.opera.stage. Never
+// called again mid-piece.
 O.applyStage = (o = {}) => {
-  const { bg, grid, dot, gap } = o;
-  if (bg != null) document.body.style.background = bg;
+  const { grid, dot, gap } = o;
   if (grid != null && grid !== SIZE) {
     dots.forEach((d) => d.el.remove());
     dots = [];
@@ -43,34 +68,13 @@ O.applyStage = (o = {}) => {
   if (dot != null) document.documentElement.style.setProperty('--dot-scale', dot);
   if (gap != null) document.documentElement.style.setProperty('--gap-ratio', gap);
 };
-O.transitionBg = (bg, dur) => {
-  document.body.style.transition = `background ${dur}s`;
-  document.body.style.background = bg;
-};
-
-// ---- energy curve: derived every frame from a target level 0-10 ----
-let eLevel = 3, eFrom = 3, eTo = 3, eStart = 0, eDur = 0;
-O.energy = (level, dur = 1, t = 0) => { eFrom = eLevel; eTo = level; eStart = t; eDur = dur; };
-O.onFrame = (t) => {
-  if (!breatheEl) return;
-  const p = eDur > 0 ? Math.min(1, (t - eStart) / eDur) : 1;
-  eLevel = eFrom + (eTo - eFrom) * p;
-  const lv = eLevel / 10;
-  let scale = 1 + Math.sin(t * (0.3 + lv * 1.2) * PI2) * lv * 0.12;
-  if (eLevel >= 6 && O.opera) {
-    const ph = (t % (60 / O.opera.tempo)) / (60 / O.opera.tempo);
-    scale *= 1 + Math.pow(1 - ph, 8) * 0.18;
-  }
-  breatheEl.style.transform = `scale(${scale})`;
-  breatheEl.style.opacity = 0.12 + lv * 0.88;
-  const w = innerWidth * 0.008 * lv;
-  driftEl.style.transform = `translate(${Math.sin(t * 0.06) * w}px,${Math.cos(t * 0.045) * w * 0.6}px) scale(${1 + Math.sin(t * 0.04) * lv * 0.06})`;
-};
 
 function cellSize() {
   if (!_cell) {
+    // Exact, unrounded and untransformed: computed width plus gap. Rounded
+    // offsetWidth drifted actors off their cells by a pixel or two per column.
     const d = gridEl.querySelector('.dot');
-    _cell = d.offsetWidth + parseFloat(getComputedStyle(gridEl).columnGap);
+    _cell = parseFloat(getComputedStyle(d).width) + parseFloat(getComputedStyle(gridEl).columnGap);
   }
   return _cell;
 }
@@ -78,11 +82,14 @@ function cellSize() {
 O.cell = (col, row) => ({ x: col * cellSize(), y: row * cellSize() });
 O.pan = (actor) => (actor.col - CENTER) / CENTER;
 
+// the camera cuts almost always; when it moves it moves once, deliberately.
 O.camera = (tl, time, o = {}) => {
-  const { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut' } = o;
+  const { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut', actor } = o;
+  // An actor target is read when the move plays, not when the score is
+  // built, so the camera finds the actor wherever its hops have taken it.
   tl.to(worldEl, {
-    x: () => (CENTER - col) * cellSize() * zoom,
-    y: () => (CENTER - row) * cellSize() * zoom,
+    x: () => (CENTER - (actor ? actor.col : col)) * cellSize() * zoom,
+    y: () => (CENTER - (actor ? actor.row : row)) * cellSize() * zoom,
     scale: zoom,
     duration: dur,
     ease,
@@ -95,20 +102,19 @@ function buildActors() {
     const c = O.opera.cast[id];
     const el = document.createElement('div');
     el.className = 'dot actor';
-    el.style.setProperty('--dot-color', c.color);
-    el.style.opacity = 0;
-    el.style.transform = 'scale(0)';
+    O.light(el, c.color);
     gridEl.appendChild(el);
-    O.actors[id] = { id, el, col: CENTER, row: CENTER, color: c.color, size: c.size || 1, voice: c.voice, lastSemi: null };
+    O.actors[id] = { id, el, col: CENTER, row: CENTER, light: c.color, size: c.size || 1, voice: c.voice, lastSemi: null };
   }
 }
 
 O.move = (actor, col, row, tl, time, dur = 0.6, ease = 'power2.inOut') => {
-  const p = O.cell(col, row);
-  tl.to(actor.el, { x: p.x, y: p.y, duration: dur, ease }, time);
+  tl.to(actor.el, { x: () => O.cell(col, row).x, y: () => O.cell(col, row).y, duration: dur, ease }, time);
   tl.call(() => { actor.col = col; actor.row = row; }, [], time + dur);
 };
 
+// the original cue: a typed lower third, letterboxed in, held, cleared. The
+// only type this stage shows.
 let cueEl;
 O.cue = (tl, time, text, hold = 1.6) => {
   cueEl = cueEl || document.getElementById('cue');
@@ -126,36 +132,11 @@ O.cue = (tl, time, text, hold = 1.6) => {
   }, [], time + len * 0.055 + hold);
 };
 
-// shared positioned-div factory for the two text-on-actor gestures: each
-// keeps one reused div, positions it off the actor's cell by dx cells, and
-// shows it for `hold` seconds.
-function textDiv(cls, dx) {
-  let el;
-  return (tl, time, actor, text, hold) => {
-    if (!el) { el = document.createElement('div'); el.className = cls; gridEl.appendChild(el); }
-    tl.call(() => {
-      el.textContent = text;
-      const p = O.cell(actor.col, actor.row);
-      el.style.transform = `translate(${p.x + cellSize() * dx}px,${p.y}px)`;
-      el.style.opacity = 1;
-    }, [], time);
-    tl.call(() => { el.style.opacity = 0; }, [], time + hold);
-  };
-}
-const _label = textDiv('label', 0.75);
-const _speech = textDiv('speech', 0.5);
-O.label = (tl, time, actor, text, dur = 0.4) => _label(tl, time, actor, text, dur + 1);
-O.speech = (tl, time, actor, text, hold = 1) => _speech(tl, time, actor, text, hold);
-
-// full-screen cue for titleCard: one reused div, centred, sized in vh.
-let titleEl;
-O.titleCard = (tl, time, text, size, hold, color) => {
-  if (!titleEl) { titleEl = document.createElement('div'); titleEl.className = 'titlecard'; document.body.appendChild(titleEl); }
-  tl.call(() => {
-    titleEl.textContent = text;
-    titleEl.style.color = color;
-    titleEl.style.fontSize = size + 'vh';
-    titleEl.style.opacity = 1;
-  }, [], time);
-  tl.call(() => { titleEl.style.opacity = 0; }, [], time + hold);
-};
+// On resize or full screen, re-measure and put every actor back on its cell.
+addEventListener('resize', () => {
+  _cell = 0;
+  for (const id in O.actors || {}) {
+    const a = O.actors[id], p = O.cell(a.col, a.row);
+    gsap.timeline().set(a.el, { x: p.x, y: p.y }, 0);
+  }
+});

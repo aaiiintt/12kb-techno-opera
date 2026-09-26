@@ -245,18 +245,21 @@ async function buildNewSite() {
     if (standaloneGz > LIMITS.standalone) fail = true;
   }
 
-  // Site total excludes scratch* dev demos, matching the eight in the index.
-  const siteTotal = engineGz + shellGz + SITE_ORDER.reduce((sum, o) => sum + (operaGzById[o.id] || 0), 0);
-  console.log(`site total (engine + shell + all operas): ${siteTotal} bytes gzipped`);
+  // The index lists only operas whose file actually exists; a SITE_ORDER id
+  // with no operas/<id>.js (kept in archive for a redraft) is skipped, not
+  // a build failure.
+  const shipped = SITE_ORDER.filter((o) => o.id in operaGzById);
+  const siteTotal = engineGz + shellGz + shipped.reduce((sum, o) => sum + operaGzById[o.id], 0);
+  console.log(`site total (engine + shell + ${shipped.length} opera${shipped.length === 1 ? '' : 's'}): ${siteTotal} bytes gzipped`);
 
-  const operaList = SITE_ORDER.map((o) => ({ ...o, gz: operaGzById[o.id] }));
+  const operaList = shipped.map((o) => ({ ...o, gz: operaGzById[o.id] }));
   const indexHtml = await buildIndexPage(operaList, siteTotal);
   fs.writeFileSync('dist/index.html', indexHtml);
   const indexGz = gzip(indexHtml);
   console.log(`index.html: ${indexHtml.length} bytes, ${indexGz} bytes gzipped, limit ${LIMITS.index}, ${LIMITS.index - indexGz} spare`);
   if (indexGz > LIMITS.index) fail = true;
 
-  console.log(`series total (engine + shell + index + eight operas): ${siteTotal + indexGz} bytes gzipped`);
+  console.log(`series total (engine + shell + index + ${shipped.length} opera${shipped.length === 1 ? '' : 's'}): ${siteTotal + indexGz} bytes gzipped`);
 
   await buildMetaAndSizes();
   if (fs.existsSync('src/playground.html')) await buildPlaygroundPage();

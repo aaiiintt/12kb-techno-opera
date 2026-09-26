@@ -44,9 +44,87 @@ O.room = null;
 O.roomSend = null;
 O.noise = null;
 
+// ---- light is the voice: every disc's brightness is a scheduled envelope,
+// never a free-running animation. One rAF loop, started with the audio
+// context, evaluates every active envelope against the audio clock and
+// writes --l. Overlapping envelopes on one element take the max; finished
+// ones drop out of the list they came from. ----
+let lightEnvs = [];
+const lit = new Set();
+let lightLoopStarted = false;
+O.registerLight = (els, start, end, ampFn) => {
+  if (!els) return;
+  const list = Array.isArray(els) ? els : [els];
+  lightEnvs.push({ els: list, start, end, ampFn });
+};
+function tickLights() {
+  if (ctx) {
+    const now = ctx.currentTime;
+    lightEnvs = lightEnvs.filter((e) => now <= e.end);
+    const peak = new Map();
+    for (const e of lightEnvs) {
+      if (now < e.start) continue;
+      const amp = Math.max(0, Math.min(1.4, e.ampFn(now - e.start)));
+      for (const el of e.els) if (amp > (peak.get(el) || 0)) peak.set(el, amp);
+    }
+    // Every element ever lit is written every frame, so it settles back to
+    // its rest level when its envelopes end. Named actors rest at a pilot
+    // light (their colour, dim) so the hero never vanishes between notes.
+    // Brightness is perceptual: amp^0.5, so a sustain reads as lit.
+    for (const [el] of peak) lit.add(el);
+    document.querySelectorAll('.actor').forEach((el) => lit.add(el));
+    for (const el of lit) {
+      const rest = el.classList.contains('actor') ? 0.3 : 0;
+      // Brightness follows the envelope on a gentle curve, so a sustain
+      // reads as the light itself. Colour falls slower than brightness
+      // (sqrt), so a mid-bright gold is still gold, not ochre.
+      const amp = Math.max(rest, Math.pow(Math.min(1, peak.get(el) || 0), 0.3));
+      const st = el.style, lmax = parseFloat(st.getPropertyValue('--lmax')) || 0.8;
+      st.setProperty('--l', (0.22 + amp * (lmax - 0.22)).toFixed(3));
+      st.setProperty('--c', ((parseFloat(st.getPropertyValue('--cmax')) || 0.03) * Math.sqrt(amp)).toFixed(3));
+    }
+  }
+  requestAnimationFrame(tickLights);
+}
+function startLightLoop() {
+  if (lightLoopStarted) return;
+  lightLoopStarted = true;
+  requestAnimationFrame(tickLights);
+}
+
+// the normalised 0-1 amplitude of a voice's own gain envelope at `el`
+// seconds after note-on, plus its late-blooming vibrato/tremolo wobble -
+// exactly the fields that shape the sound, read back as light.
+function envAmp(inst, dur, el) {
+  let base;
+  if (inst.formant && dur > 1.2) {
+    if (el < 0.08) base = (el / 0.08) * 0.42;
+    else if (el < dur * 0.38) base = 0.42 + ((el - 0.08) / (dur * 0.38 - 0.08)) * 0.58;
+    else if (el < dur * 0.72) base = 1;
+    else if (el < dur) base = Math.exp((-(el - dur * 0.72) / (dur * 0.28)) * 5);
+    else base = 0;
+  } else {
+    const sus = 0.35;
+    if (el < inst.attack) base = el / inst.attack;
+    else if (el < inst.attack + inst.decay) base = 1 + (sus - 1) * ((el - inst.attack) / inst.decay);
+    else if (el < Math.max(inst.attack + inst.decay, dur)) base = sus;
+    else base = sus * Math.exp((-(el - Math.max(inst.attack + inst.decay, dur)) / inst.release) * 5);
+  }
+  const rate = inst.lfoRate || 5.2;
+  const d0 = inst.lfoDelay ? inst.lfoDelay[0] : inst.vibratoDelay;
+  const d1 = inst.lfoDelay ? inst.lfoDelay[1] : (inst.vibratoDelay || 0) + 0.2;
+  const depth = inst.tremolo ?? (inst.vibratoDepth ? inst.vibratoDepth / 60 : 0);
+  if (depth > 0 && el > d0) {
+    const ramp = Math.max(0, Math.min(1, (el - d0) / Math.max(d1 - d0, 0.001)));
+    base *= 1 + depth * ramp * Math.sin(PI2 * rate * el);
+  }
+  return base;
+}
+
 O.initAudio = () => {
   if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
   ctx = new (window.AudioContext || window.webkitAudioContext)();
+  startLightLoop();
   O.master = ctx.createGain();
   O.master.gain.value = 0.85;
   O.master.connect(ctx.destination);
@@ -260,6 +338,11 @@ O.voice = (name, semi, t, dur, o = {}) => {
   send.gain.value = inst.roomSend ?? 1;
   pn.connect(send);
   send.connect(O.roomSend);
+
+  if (o.light) {
+    const ratio = Math.min(1.4, vol / inst.gain);
+    O.registerLight(o.light, t, stop, (el) => envAmp(inst, dur, el) * ratio);
+  }
 };
 
 // ---- pitch: scale degree -> semitone, roman numeral -> chord ----
@@ -334,8 +417,10 @@ O.play = (voice, pair, t, o = {}) => {
   return time;
 };
 
-// ---- percussion: one noise buffer, a handful of recipes ----
-O.drum = (kind, t, vol = 0.15) => {
+// ---- percussion: one noise buffer, a handful of recipes. A kick is a
+// flash, a hat is a sparkle: pass `light` (an element or list) and the hit
+// lights it, decaying with the hit. ----
+O.drum = (kind, t, vol = 0.15, light) => {
   if (!ctx) return;
   if (kind === 'kick') {
     const o = ctx.createOscillator();
@@ -348,11 +433,12 @@ O.drum = (kind, t, vol = 0.15) => {
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
     o.connect(g); g.connect(O.master); g.connect(O.roomSend);
     o.start(t); o.stop(t + 0.2);
+    if (light) O.registerLight(light, t, t + 0.18, (el) => Math.max(0, 1 - el / 0.18));
   } else if (kind === 'heartbeat') {
-    O.drum('kick', t, vol);
-    O.drum('kick', t + 0.17, vol * 0.65);
+    O.drum('kick', t, vol, light);
+    O.drum('kick', t + 0.17, vol * 0.65, light);
   } else if (kind === 'snare') {
-    O.drum('kick', t, vol * 0.7);
+    O.drum('kick', t, vol * 0.7, light);
     const n = ctx.createBufferSource(); n.buffer = O.noise;
     const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1500;
     const ng = ctx.createGain();
@@ -368,9 +454,13 @@ O.drum = (kind, t, vol = 0.15) => {
     ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
     n.connect(hp); hp.connect(ng); ng.connect(O.master);
     n.start(t); n.stop(t + 0.05);
+    if (light) O.registerLight(light, t, t + 0.05, (el) => Math.max(0, 1 - el / 0.05));
   }
 };
 
+// a chord arpeggio: one oscillator cycling the triad. Given `cells` (a list
+// of elements, one per grid cell in the field), it lights them one per
+// note, in the order and at the rate the arp runs.
 O.arp = (numeral, dur, rateHz, t, o = {}) => {
   if (!ctx) return;
   const [bass, colour] = O.chord(numeral);
@@ -391,6 +481,14 @@ O.arp = (numeral, dur, rateHz, t, o = {}) => {
   pn.pan.setValueAtTime(pan, t);
   osc.connect(g); g.connect(pn); pn.connect(O.master); pn.connect(O.roomSend);
   osc.start(t); osc.stop(t + dur + 0.05);
+  if (o.cells && o.cells.length) {
+    const peak = Math.min(1, vol / 0.08);
+    for (let s = 0; s < steps; s++) {
+      const cell = o.cells[s % o.cells.length];
+      const st = t + s * step, en = st + step * 1.6;
+      O.registerLight(cell, st, en, (el) => peak * Math.max(0, 1 - el / (step * 1.6)));
+    }
+  }
 };
 
 // schedule a small audio-graph callback at a timeline time, reading the
