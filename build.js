@@ -8,6 +8,14 @@ const ROOT_LIMIT = 12288;
 const LIMITS = { engine: 10240, opera: 2048, standalone: 12288 };
 const ENGINE_FILES = ['tween', 'synth', 'stage', 'gestures', 'score', 'index'].map((f) => `src/engine/${f}.js`);
 
+// --only <operaId>: fast path for the review panel. Skips the original-site
+// build, reuses dist/engine.js when it already exists, skips meta/sizes/
+// playground, and builds just that one opera's three dist files, printing
+// and gating only on those. No flag: behaviour is unchanged.
+const argv = process.argv.slice(2);
+const onlyIdx = argv.indexOf('--only');
+const ONLY = onlyIdx !== -1 ? argv[onlyIdx + 1] : null;
+
 const gzip = (s) => zlib.gzipSync(s, { level: 9 }).length;
 const js = async (code) => (await minify(code, { compress: { passes: 3 }, mangle: true })).code;
 const css = (code) => new CleanCSS({ level: 2 }).minify(code).styles.replace(/,\s+/g, ',');
@@ -207,7 +215,55 @@ async function buildNewSite() {
   return !fail;
 }
 
+async function buildOnly(id) {
+  fs.mkdirSync('dist', { recursive: true });
+
+  const operaPath = path.join('operas', `${id}.js`);
+  if (!fs.existsSync(operaPath)) {
+    console.error(`--only ${id}: operas/${id}.js not found`);
+    return false;
+  }
+
+  const enginePath = 'dist/engine.js';
+  const engineMin = fs.existsSync(enginePath) ? fs.readFileSync(enginePath, 'utf8') : await buildEngine();
+  if (!fs.existsSync(enginePath)) fs.writeFileSync(enginePath, engineMin);
+  const engineGz = gzip(engineMin);
+
+  const shellTpl = await buildShellTemplate();
+  const shellGz = gzip(shellTpl.replace('%%BYTES%%', '0'));
+
+  let fail = false;
+
+  const raw = fs.readFileSync(operaPath, 'utf8');
+  const operaMin = await js(raw);
+  fs.writeFileSync(`dist/${id}.js`, operaMin);
+  const operaGz = gzip(operaMin);
+  console.log(`${id}.js: ${operaMin.length} bytes, ${operaGz} bytes gzipped, limit ${LIMITS.opera}, ${LIMITS.opera - operaGz} spare`);
+  if (operaGz > LIMITS.opera) fail = true;
+
+  const siteBytes = engineGz + shellGz + operaGz;
+  const sitePage = shellTpl.replace('OPERA.js', `${id}.js`).replace('%%BYTES%%', String(siteBytes));
+  fs.writeFileSync(`dist/${id}.html`, sitePage);
+
+  const standaloneTpl = shellTpl
+    .replace('<script src="engine.js"></script>', `<script>${engineMin}</script>`)
+    .replace('<script src="OPERA.js"></script>', `<script>${operaMin}</script>`);
+  const draftGz = gzip(standaloneTpl.replace('%%BYTES%%', '0'));
+  const standalone = standaloneTpl.replace('%%BYTES%%', String(draftGz));
+  fs.writeFileSync(`dist/${id}.standalone.html`, standalone);
+  const standaloneGz = gzip(standalone);
+  console.log(`${id}.standalone.html: ${standalone.length} bytes, ${standaloneGz} bytes gzipped, limit ${LIMITS.standalone}, ${LIMITS.standalone - standaloneGz} spare`);
+  if (standaloneGz > LIMITS.standalone) fail = true;
+
+  return !fail;
+}
+
 (async () => {
+  if (ONLY) {
+    const ok = await buildOnly(ONLY);
+    if (!ok) process.exit(1);
+    return;
+  }
   const originalOk = await buildOriginalSite();
   const newOk = await buildNewSite();
   if (!originalOk || !newOk) process.exit(1);

@@ -36,8 +36,9 @@ function readIfExists(p) {
   try { return fs.readFileSync(p, 'utf8'); } catch { return null; }
 }
 
-function runBuild() {
-  execFileSync('node', ['build.js'], { cwd: ROOT, stdio: 'pipe' });
+function runBuild(only) {
+  const args = only ? ['build.js', '--only', only] : ['build.js'];
+  execFileSync('node', args, { cwd: ROOT, stdio: 'pipe' });
 }
 
 // Fixed row order: scratch first, then whatever else exists in operas/*.js,
@@ -168,7 +169,7 @@ async function buildOperaPreview(opera, id, fileText) {
   fs.writeFileSync(operaPath, fileText);
   let bytes = null, error = null;
   try {
-    runBuild();
+    runBuild(previewName);
     const min = readIfExists(path.join(DIST_DIR, `${previewName}.js`));
     if (min == null) throw new Error('build did not produce a dist file');
     bytes = gzipLen(min);
@@ -359,7 +360,9 @@ async function handleChoose(req, res) {
 
   const target = opera === 'house' ? SYNTH_PATH : path.join(OPERAS_DIR, `${opera}.js`);
   fs.writeFileSync(target, source);
-  try { runBuild(); } catch (e) { return sendJSON(res, 500, { error: `rebuild failed: ${e.message}` }); }
+  // house changes synth.js (part of the engine), so it needs a full rebuild;
+  // any other opera only needs its own dist files rebuilt.
+  try { runBuild(opera === 'house' ? undefined : opera); } catch (e) { return sendJSON(res, 500, { error: `rebuild failed: ${e.message}` }); }
 
   appendLog(opera, p.note, p.model, p.alternatives, id);
 
