@@ -35,13 +35,13 @@ The performance is a single timeline of about one minute. Each act sets a colour
 
 | Act | Stage | Sound |
 | --- | --- | --- |
-| I. Birth | One gold dot at the centre, pulsing with a heartbeat. | Low pedal tones, a synthesized heartbeat, then a rising four-note tenor phrase. |
-| II. Exploring | Rainbow stripes spread out from the middle row. The dot wanders across the grid, changing colour. | Plucked C major chords, then the tenor motif with echoes and a 50 Hz arpeggio on each step. |
-| III. Love | The grid dims to blue. A second, pink dot appears. The two circle each other and touch. | Tenor call, soprano answer, then a duet in parallel thirds over a harp arpeggio. |
-| IV. Jealousy | Green sweeps down the grid row by row. The pink dot is taken. The gold dot flees downward. | The room closes to a muffled 550 Hz. Minor seconds and tritones; a held soprano note as the pink dot is taken. |
-| V. Revenge | The gold dot turns red and cuts across the grid in twelve strikes, leaving embers. The stage shakes. | A sawtooth battle motif with ring modulation and hi-hats, ending in a driven C2 growl and a breath. |
-| VI. Acceptance | The red dot walks back to the centre, cooling to gold. Violet rings ripple outward. | The room opens. Four ascending chords, each with a ring pulse. |
-| VII. Death | The grid decays from the edges inward. One ember remains. The pink dot returns for a moment. | The heartbeat slows. A soprano aria climbing to high C, then everything fades over a 32.7 Hz C1 pedal. |
+| Act I | One gold dot at the centre, pulsing with a heartbeat. | Low pedal tones, a synthesized heartbeat, then a rising four-note tenor phrase. |
+| Act II | Rainbow stripes spread out from the middle row. The dot wanders across the grid, changing colour. | Plucked C major chords, then the tenor motif with echoes and a 50 Hz arpeggio on each step. |
+| Act III | The grid dims to blue. A second, pink dot appears. The two circle each other and touch. | Tenor call, soprano answer, then a duet in parallel thirds over a harp arpeggio. |
+| Act IV | Green sweeps down the grid row by row. The pink dot is taken. The gold dot flees downward. | The room closes to a muffled 550 Hz. Minor seconds and tritones; a held soprano note as the pink dot is taken. |
+| Act V | The gold dot turns red and cuts across the grid in twelve strikes, leaving embers. The stage shakes. | A sawtooth battle motif with ring modulation and hi-hats, ending in a driven C2 growl and a breath. |
+| Act VI | The red dot walks back to the centre, cooling to gold. Violet rings ripple outward. | The room opens. Four ascending chords, each with a ring pulse. |
+| Act VII | The grid decays from the edges inward. One ember remains. The pink dot returns for a moment. | The heartbeat slows. A soprano aria climbing to high C, then everything fades over a 32.7 Hz C1 pedal. |
 
 ## Subtitles
 
