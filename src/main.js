@@ -374,19 +374,19 @@ const camera = (tl, time, { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, eas
 };
 
 function hop(tl, light, col, row, time, opts = {}) {
-  const { leave = null, arriveScale = 1.3, note: pitch = null, vol = 0.11, dur = 0.45, pan = null, grit = false, voice = 'tenor', vibrato = false, echo = false, hat = false } = opts;
+  const { leave = null, arriveScale = 1.25, note: pitch = null, vol = 0.11, dur = 0.45, pan = null, grit = false, voice = 'tenor', vibrato = false, echo = false, hat = false, spring = true } = opts;
   const prev = at(light.col, light.row);
   const next = at(col, row);
 
   if (prev && prev !== next && leave) {
     tl.call(() => prev.el.style.setProperty('--dot-color', leave.color), [], time);
-    tl.to(prev.el, { opacity: leave.opacity, scale: leave.scale, duration: 0.6, ease: 'power2.inOut' }, time);
+    tl.to(prev.el, { opacity: leave.opacity, scale: leave.scale, duration: 0.45, ease: 'back.in(1.5)' }, time);
   }
   tl.call(() => next.el.style.setProperty('--dot-color', light.color), [], time);
   tl.fromTo(
     next.el,
-    { scale: 0.5 },
-    { opacity: 1, scale: arriveScale, duration: 0.45, ease: 'back.out(2)', immediateRender: false },
+    { scale: 0.4 },
+    { opacity: 1, scale: arriveScale, duration: spring ? 0.52 : 0.45, ease: spring ? 'elastic.out(1.2, 0.38)' : 'back.out(2)', immediateRender: false },
     time
   );
   if (pitch !== null) {
@@ -468,17 +468,15 @@ function actBirth(tl, hero) {
 
   [start + 1.2, start + 2.3, start + 3.2].forEach((hb, i) => {
     tl.to(soul.el, { scale: 1.25, duration: 0.12, ease: 'power2.out' }, hb)
-      .to(soul.el, { scale: 1.10, duration: 0.15, ease: 'power2.inOut' }, hb + 0.12)
-      .to(soul.el, { scale: 1.18, duration: 0.10, ease: 'power2.out' }, hb + 0.27)
-      .to(soul.el, { scale: 1.00, duration: 0.35, ease: 'power2.inOut' }, hb + 0.37);
+      .to(soul.el, { scale: 1.00, duration: 0.45, ease: 'elastic.out(1.25, 0.35)' }, hb + 0.12);
 
     score(tl, hb, () => drum('lubdub', 0.34 + i * 0.04, { startF: 78 - i * 4, endF: 32 }));
 
     for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const neighbor = at(hero.col + dc, hero.row + dr);
       if (neighbor) {
-        tl.to(neighbor.el, { opacity: 0.15 + i * 0.08, scale: 0.55 + i * 0.1, duration: 0.28 }, hb + 0.1);
-        tl.to(neighbor.el, { opacity: 0, scale: 0.2, duration: 0.4 }, hb + 0.38);
+        tl.to(neighbor.el, { opacity: 0.18 + i * 0.08, scale: 0.6 + i * 0.1, duration: 0.35, ease: 'elastic.out(1.1, 0.4)' }, hb + 0.1);
+        tl.to(neighbor.el, { opacity: 0, scale: 0.2, duration: 0.4 }, hb + 0.45);
       }
     }
   });
@@ -526,7 +524,14 @@ function actDevelopment(tl, hero) {
       vol: 0.15,
       voice: 'tenor',
       echo: true,
+      spring: true,
     });
+    for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const n = at(col + dc, row + dr);
+      if (n) {
+        tl.to(n.el, { scale: 1.12, duration: 0.14, yoyo: true, repeat: 1, ease: 'elastic.out(1.2, 0.32)' }, t + 0.05);
+      }
+    }
     score(tl, t, () => arp(MODES.ARP_MAJ, 0.52, 50, { vol: 0.08, pan: panAt(col) }));
     camera(tl, t, { col, row, zoom: 1.62, dur: 0.52 });
     t += 0.58;
@@ -555,7 +560,7 @@ function actLove(tl, hero, beloved) {
   const [bc, br] = [6, 4];
   const appearAt = start + 1.8;
   tl.call(() => at(bc, br).el.style.setProperty('--dot-color', COLORS.beloved), [], appearAt);
-  tl.fromTo(at(bc, br).el, { scale: 0 }, { opacity: 0.95, scale: 1.25, duration: 0.8, ease: 'back.out(1.5)', immediateRender: false }, appearAt);
+  tl.fromTo(at(bc, br).el, { scale: 0 }, { opacity: 0.95, scale: 1.25, duration: 0.75, ease: 'elastic.out(1.2, 0.4)', immediateRender: false }, appearAt);
   camera(tl, appearAt, { col: bc, row: br, zoom: 1.85, dur: 0.8 });
 
   MOTIF.belovedAnswer.forEach((p, i) => {
@@ -587,6 +592,7 @@ function actLove(tl, hero, beloved) {
       pan: -0.22,
       voice: 'tenor',
       echo: true,
+      spring: true,
     });
 
     hop(tl, beloved, belovedDance[i][0], belovedDance[i][1], t + 0.08, {
@@ -597,6 +603,7 @@ function actLove(tl, hero, beloved) {
       pan: 0.22,
       voice: 'soprano',
       vibrato: true,
+      spring: true,
     });
 
     if (harm.touch) {
@@ -606,7 +613,7 @@ function actLove(tl, hero, beloved) {
         const neighbor = at(Math.round(midCol) + dc, Math.round(midRow) + dr);
         if (neighbor && !(neighbor.col === heroDance[i][0] && neighbor.row === heroDance[i][1]) && !(neighbor.col === belovedDance[i][0] && neighbor.row === belovedDance[i][1])) {
           tl.call(() => neighbor.el.style.setProperty('--dot-color', COLORS.fusion), [], t + 0.1);
-          tl.to(neighbor.el, { opacity: 0.45, scale: 0.95, duration: 0.35, yoyo: true, repeat: 1 }, t + 0.1);
+          tl.to(neighbor.el, { opacity: 0.45, scale: 1.05, duration: 0.35, yoyo: true, repeat: 1, ease: 'elastic.out(1.15, 0.35)' }, t + 0.1);
         }
       }
       score(tl, t + 0.1, () => arp(MODES.ARP_HARP, 0.75, 50, { vol: 0.07, pan: 0 }));
@@ -615,7 +622,7 @@ function actLove(tl, hero, beloved) {
 
   const held = start + 3.4 + (heroDance.length - 1) * hopGap + 0.6;
   camera(tl, held, { col: 4.5, row: 4.5, zoom: 1.60, dur: 2.2 });
-  tl.to([at(4, 4).el, at(5, 4).el], { scale: 1.25, duration: 0.6, yoyo: true, repeat: 3, ease: 'sine.inOut' }, held);
+  tl.to([at(4, 4).el, at(5, 4).el], { scale: 1.25, duration: 0.6, yoyo: true, repeat: 3, ease: 'elastic.out(1.1, 0.4)' }, held);
 
   score(tl, held, () => {
     note(0, { dur: 4.2, vol: 0.12, pan: 0, type: 'triangle' });
@@ -768,10 +775,10 @@ function pulseCenterRings(tl, time, step = 0) {
       {
         scale: 1.25,
         opacity: 1.0,
-        duration: 0.22,
+        duration: 0.36,
         yoyo: true,
         repeat: 1,
-        ease: 'sine.out',
+        ease: 'elastic.out(1.15, 0.35)',
       },
       time + r * 0.075
     );
@@ -1101,6 +1108,10 @@ if (playBtn) {
 
 window.addEventListener('click', (e) => {
   if (e.target.closest('a') || e.target.closest('button')) return;
+  const dotEl = e.target.closest('.dot');
+  if (dotEl) {
+    gsap.fromTo(dotEl, { scale: 0.7 }, { scale: 1.25, duration: 0.5, ease: 'elastic.out(1.3, 0.3)' });
+  }
   if (isAmbient) startOpera();
 });
 

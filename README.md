@@ -104,16 +104,16 @@ The project enforces an absolute wire transfer constraint of **15,360 bytes (15 
 
 | Asset | Description | Uncompressed | Gzipped |
 |---|---|---|---|
-| `src/main.js` | Audio synthesis engine, GSAP choreography, stage logic | 38.4 KB | **10.4 KB** (10,620 B) |
+| `src/main.js` | Audio synthesis engine, GSAP spring choreography, stage logic | 38.8 KB | **10.5 KB** (10,732 B) |
 | `src/config.js` | Musical score, motif definitions, tuning tables | 3.3 KB | **1.3 KB** (1,316 B) |
-| `src/style.css` | Swiss typography, stage velvet ground, light coronas | 4.6 KB | **1.6 KB** (1,622 B) |
+| `src/style.css` | Swiss typography, stage velvet ground, light coronas, spring UI | 4.8 KB | **1.6 KB** (1,674 B) |
 | `index.html` | Stage markup, canvas-free DOM container | 1.1 KB | **0.6 KB** (596 B) |
 | `about.html` | Manifest-style manifesto with dynamic subhead typography | 5.7 KB | **2.2 KB** (2,254 B) |
 
 **Total Opera Delivery (`index.html` + `src/style.css` + `src/config.js` + `src/main.js`):**
-*   **Uncompressed:** 48.6 KB (48,584 bytes)
-*   **Gzipped Wire Transfer:** **13.82 KB (14,154 bytes)**
-*   **Budget Margin:** **1,206 bytes under the strict 15 KB (15,360 byte) ceiling.**
+*   **Uncompressed:** 49.3 KB (49,263 bytes)
+*   **Gzipped Wire Transfer:** **13.98 KB (14,318 bytes)**
+*   **Budget Margin:** **1,042 bytes under the strict 15 KB (15,360 byte) ceiling.**
 
 ---
 

@@ -109,7 +109,7 @@ body {
   display: flex;
   align-items: center;
   cursor: pointer;
-  transition: color 0.2s ease, text-shadow 0.2s ease;
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .n a:hover,
@@ -123,6 +123,11 @@ body {
   text-decoration-thickness: .15em;
   text-underline-offset: .12em;
   outline: 0;
+  transform: scale(1.08);
+}
+
+.n a:active {
+  transform: scale(0.92);
 }
 
 /* ------------------------------------------------------------
@@ -208,10 +213,11 @@ body {
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.6);
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  transform: translateX(-50%) translateY(-2px) scale(1.06);
 }
 
 .replay:active {
-  transform: translateX(-50%) translateY(1px);
+  transform: translateX(-50%) translateY(1px) scale(0.94);
 }
 
 
