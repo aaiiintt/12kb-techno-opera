@@ -5,7 +5,7 @@ const { minify } = require('terser');
 const CleanCSS = require('clean-css');
 
 const ROOT_LIMIT = 12288;
-const LIMITS = { engine: 10240, opera: 2048, standalone: 12288 };
+const LIMITS = { engine: 12288, opera: 2048, standalone: 14336 };
 const ENGINE_FILES = ['tween', 'synth', 'stage', 'gestures', 'score', 'index'].map((f) => `src/engine/${f}.js`);
 
 // --only <operaId>: fast path for the review panel. Skips the original-site

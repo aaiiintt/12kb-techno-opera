@@ -23,6 +23,8 @@ The aim, in Iain's words: maximum opera at minimal byte count, in a sonically an
 | Panel | A review panel, not an authoring tool: eight previews down a page, a chat beside each, three agent-built alternatives per note, pick one or cancel. No new dependencies needed; the earlier approval of `vite` and `typescript` is moot unless the page outgrows one script. See [panel.md](panel.md). |
 | Engine size | Target 10,240 bytes gzipped. Measured after Phase 1: 9,130 with all 53 gestures, formant soprano and ascend. `dialogue` dropped. |
 | Ears | Phase 0.5 line-up approved by Iain: four voices distinct, formant soprano works. |
+| Goal (26 Sep) | A curated series in the spirit of Tenori-on and Electroplankton: same dots, same voices, eight ways of telling (characters, pure feeling, light show, and combinations). Dots are discs of light; more shimmer. Premium 60 fps feel. Whole series under 48 KB. Series map in [visual-guide.md](visual-guide.md). |
+| Eyes | First drafts rejected by Iain on 26 Sep: samey, literal one-dot-per-character, not enough movement, scale or feeling. The audio is great. Visual redo: [visual-guide.md](visual-guide.md), a spectacle gesture family, stage that changes (background, grid density, dot size), characters as forces first and a dot only when it matters, cards rewritten as visual scores, one pilot then seven. Engine target raised to 12,288 and standalone to 14,336 to pay for it. |
 | The current opera | Retired. The site is the eight new operas. Its code is quarry for the engine, not a ninth piece. |
 
 
@@ -97,13 +99,13 @@ Extreme but passable. These are the numbers to design against; Phase 0 measures 
 
 | Thing | Target (gzipped) | Stretch | Why this number |
 | --- | --- | --- | --- |
-| Engine, with the full gesture library | 10,240 bytes | 8,192 | Raised from 8 KB on 26 Sep after the catalogue estimated ~10 KB for 53 gestures |
+| Engine, with the full gesture library | 12,288 bytes | 10,240 | Raised from 8 KB on 26 Sep after the catalogue estimated ~10 KB for 53 gestures |
 | One opera module | 2,048 bytes | 1,024 | Current opera is ~4 KB as imperative code; data halves it |
 | Of which, the score (motif, chords, patterns, sequence) | 512 bytes | 256 | 4k intros fit a whole track in ~1 KB of notes; ours are a minute long |
 | Site index | 2,048 bytes | 1,536 | Text and a list |
 | Per-opera page shell | 1,024 bytes | 768 | Shares CSS with the index |
-| Standalone single-file opera | 12,288 bytes | 10,240 | Engine + opera + minimal chrome. The original 12 KB rule survives per piece. |
-| Whole site, all eight operas, first load of everything | 34,816 bytes | 26,624 | "Eight operas in 32 KB." One floppy sector is 512 B; this is 64 sectors |
+| Standalone single-file opera | 14,336 bytes | 12,288 | Engine + opera + minimal chrome. Raised 26 Sep to pay for the spectacle gestures. |
+| Whole site, all eight operas, first load of everything | 49,152 bytes | 32,768 | "Eight operas in 32 KB." One floppy sector is 512 B; this is 64 sectors |
 
 Tactics that get us there, in order of payoff:
 
