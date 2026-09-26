@@ -10,148 +10,202 @@
     />
     <link rel="stylesheet" href="src/style.css" />
     <style>
-      .about-swiss-stage {
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 60px 24px;
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: auto !important;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto !important;
+        background: var(--bg-deep);
+        color: #ffffff;
+      }
+
+      .about-stage {
         position: relative;
         z-index: 1;
+        min-height: 100vh;
+        padding: 4vmin 3vw 160px;
+        max-width: 1440px;
       }
-      .about-swiss-card {
-        max-width: 620px;
-        width: 100%;
+
+      .about-text {
         font-family: var(--font-swiss);
-      }
-      .about-swiss-title {
-        font-size: clamp(3.2rem, 7.5vw, 4.8rem);
-        font-weight: 900;
-        letter-spacing: -0.04em;
-        line-height: 0.86;
+        font-size: var(--subhead-size, clamp(16px, 3.8vw, 56px));
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
         text-transform: uppercase;
-        margin: 0 0 32px;
         color: #ffffff;
         text-shadow: 
-          0 0 2px rgba(255, 255, 255, 0.9),
-          0 0 8px rgba(255, 255, 255, 0.5),
-          0 0 22px rgba(255, 255, 255, 0.25);
+          0 0 2px rgba(255, 255, 255, 0.8),
+          0 0 6px rgba(255, 255, 255, 0.4),
+          0 0 16px rgba(255, 255, 255, 0.2);
+        opacity: 0.95;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
-      .about-swiss-title span {
-        display: block;
+
+      .about-text p {
+        margin: 0 0 1.5em;
       }
-      .about-lead {
-        font-size: 19px;
-        font-weight: 700;
-        line-height: 1.45;
-        letter-spacing: -0.02em;
-        color: #ffffff;
-        margin: 0 0 28px;
+
+      .about-text p:last-child {
+        margin-bottom: 0;
       }
-      .about-breakdown {
-        margin: 28px 0 36px;
-        border-top: 2px solid rgba(255, 255, 255, 0.9);
-        border-bottom: 2px solid rgba(255, 255, 255, 0.9);
-        padding: 12px 0;
-      }
-      .breakdown-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        font-size: 14px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.85);
-      }
-      .breakdown-row.total {
-        border-bottom: none;
-        font-weight: 900;
-        color: #ffffff;
-        font-size: 15px;
-        padding-top: 12px;
-      }
-      .about-heading {
-        font-size: 24px;
-        font-weight: 900;
-        letter-spacing: -0.03em;
-        text-transform: uppercase;
-        margin: 40px 0 16px;
-        color: #ffffff;
-      }
-      .about-body p {
-        font-size: 16px;
-        line-height: 1.6;
-        color: rgba(255, 255, 255, 0.85);
-        margin: 0 0 20px;
-        letter-spacing: -0.01em;
-      }
-      .about-link {
+
+      .about-text a {
         color: #ffffff;
         text-decoration: underline;
+        text-decoration-thickness: 2px;
         text-underline-offset: 4px;
-        font-weight: 700;
-        transition: color 0.2s ease;
+        transition: color 0.15s ease, text-shadow 0.15s ease;
       }
-      .about-link:hover {
-        color: hsl(46, 100%, 56%);
+
+      .about-text a:hover {
+        color: hsl(46, 100%, 65%);
+        text-shadow: 
+          0 0 4px hsl(46, 100%, 75%),
+          0 0 14px hsl(46, 100%, 55%);
       }
-      .about-back-btn {
-        display: inline-block;
-        margin-top: 28px;
-        font-weight: 900;
-        font-size: 16px;
-        letter-spacing: -0.02em;
-        text-transform: uppercase;
-        color: rgba(255, 255, 255, 0.45);
-        text-decoration: none;
-        transition: color 0.2s ease;
+
+      /* Fixed bottom nav with smooth footlight fade to keep links legible while scrolling */
+      .about-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: space-between;
+        padding: 40px 4vw 18px;
+        background: linear-gradient(to top, rgba(8, 7, 6, 0.98) 55%, rgba(8, 7, 6, 0.8) 80%, transparent 100%);
+        pointer-events: none;
+        z-index: 30;
       }
-      .about-back-btn:hover {
-        color: #ffffff;
+
+      .about-nav a {
+        pointer-events: auto;
+      }
+
+      /* Ref element for computing identical subhead size */
+      #sub-ref {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+        visibility: hidden;
+        pointer-events: none;
+        white-space: nowrap;
+        font-family: var(--font-swiss);
+        font-weight: 800;
+        letter-spacing: -0.03em;
       }
     </style>
   </head>
   <body>
     <div class="bg-gradient" aria-hidden="true"></div>
 
-    <main class="about-swiss-stage">
-      <div class="about-swiss-card">
-        <h1 class="about-swiss-title">
-          <span>15KB</span>
-          <span>Techno</span>
-          <span>Opera</span>
-        </h1>
+    <div id="sub-ref" aria-hidden="true">
+      <span id="ref-techno" style="font-weight: 900; letter-spacing: -0.05em;">TECHNO</span>
+      <span id="ref-sub">81 DOTS. SEVEN ACTS. 15 KILOBYTES.</span>
+    </div>
 
-        <div class="about-body">
-          <p class="about-lead">
-            15KB Techno Opera is a short interactive story that fits in 15 kilobytes.
-          </p>
+    <main class="about-stage">
+      <div class="about-text">
+        <p>
+          15KB TECHNO OPERA<br />
+          A SHORT INTERACTIVE STORY<br />
+          THAT FITS IN 15 KILOBYTES.<br />
+          PLAYED OUT USING DOTS.
+        </p>
 
-          <div class="about-breakdown">
-            <div class="breakdown-row"><span>Audio synthesis & choreography</span><span>9.8 KB</span></div>
-            <div class="breakdown-row"><span>Musical score & act storyboards</span><span>2.6 KB</span></div>
-            <div class="breakdown-row"><span>Photonic bloom & Swiss typography</span><span>1.5 KB</span></div>
-            <div class="breakdown-row"><span>HTML stage & markup</span><span>0.5 KB</span></div>
-            <div class="breakdown-row total"><span>Total transfer footprint</span><span>14.5 KB (fits in 15 KB)</span></div>
-          </div>
+        <p>
+          FOR REFERENCE<br />
+          15KB IS 1/100TH OF A SECOND<br />
+          OF A YOUTUBE VIDEO.
+        </p>
 
-          <h2 class="about-heading">About this project</h2>
+        <p>
+          LARGE AI SYSTEMS<br />
+          MAKE IT EASIER<br />
+          TO BUILD SMALL SOFTWARE.<br />
+          WE CAN USE THEM<br />
+          TO MAKE TOOLS THAT SERVE<br />
+          ONE PURPOSE, ONE PERSON,<br />
+          OR A SMALL GROUP.
+        </p>
 
-          <p>
-            Large AI systems make it easier to build small software. We can use them to make tools that serve one purpose, one person, or a small group. The more of these small tools we make, the less we might rely on large systems in the future. Maybe it's time for some less is more, digitally too.
-          </p>
+        <p>
+          THE MORE OF THESE<br />
+          SMALL TOOLS WE MAKE,<br />
+          THE LESS WE MIGHT RELY<br />
+          ON LARGE SYSTEMS<br />
+          IN THE FUTURE.<br />
+          MAYBE IT'S TIME<br />
+          FOR SOME LESS IS MORE,<br />
+          DIGITALLY TOO.
+        </p>
 
-          <p>
-            I wanted to see if I could tell a story in a few kilobytes. This was my attempt. It ended up being a short opera about technology. Played out using dots.
-          </p>
+        <p>
+          I WANTED TO SEE<br />
+          IF I COULD TELL A STORY<br />
+          IN A FEW KILOBYTES.<br />
+          THIS WAS MY ATTEMPT.<br />
+          IT ENDED UP BEING<br />
+          A SHORT OPERA ABOUT TECHNOLOGY.
+        </p>
 
-          <p>
-            Repo: <a href="https://github.com/aaiiintt/15kb-techno-opera/" class="about-link" target="_blank" rel="noopener noreferrer">github.com/aaiiintt/15kb-techno-opera/</a>
-          </p>
+        <p>
+          AUDIO SYNTHESIS &amp;<br />
+          CHOREOGRAPHY — 9.8 KB<br />
+          MUSICAL SCORE &amp;<br />
+          STORYBOARDS — 2.6 KB<br />
+          PHOTONIC BLOOM &amp;<br />
+          TYPOGRAPHY — 1.5 KB<br />
+          HTML &amp; MARKUP — 0.5 KB<br />
+          TOTAL TRANSFER — 14.5 KB
+        </p>
 
-          <a href="index.html" class="about-back-btn">&larr; BACK</a>
-        </div>
+        <p>
+          REPO:<br />
+          <a
+            href="https://github.com/aaiiintt/15kb-techno-opera/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >GITHUB.COM/<wbr />AAIINTT/<wbr />15KB-TECHNO-OPERA</a>
+        </p>
+
+        <p id="end">
+          <a href="index.html">&larr; BACK</a>
+        </p>
       </div>
     </main>
+
+    <nav class="n about-nav">
+      <a href="index.html?play=1">Play</a>
+      <a href="index.html">Back</a>
+    </nav>
+
+    <script>
+      function fitAboutSubhead() {
+        const refT = document.getElementById('ref-techno');
+        const refS = document.getElementById('ref-sub');
+        if (!refT || !refS) return;
+        refT.style.fontSize = '100px';
+        refS.style.fontSize = '100px';
+        const tW = refT.offsetWidth || 1;
+        const sW = refS.offsetWidth || 1;
+        const byWidth = 100 * (innerWidth * 0.94) / tW;
+        const byHeight = (innerHeight - 110) / (3.6 * 0.82);
+        const titleSize = Math.min(byWidth, byHeight);
+        const subSize = titleSize * (tW / sW);
+        document.documentElement.style.setProperty('--subhead-size', subSize + 'px');
+      }
+      window.addEventListener('resize', fitAboutSubhead);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(fitAboutSubhead);
+      }
+      fitAboutSubhead();
+    </script>
   </body>
 </html>
