@@ -153,4 +153,4 @@ Open `http://localhost:8000` in any modern Chromium, Safari, or Firefox browser.
 > *Large AI systems make it easier to build small software.*
 > *We can use them to make tools that serve one purpose, one person, or a small group.*
 > *The more of these small tools we make, the less we might rely on large systems in the future.*
-> *Maybe it's time for some less is more, digitally too.*
+
