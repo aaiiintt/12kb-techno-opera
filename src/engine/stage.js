@@ -81,26 +81,23 @@ O.cue = (tl, time, text, hold = 1.6) => {
   }, [], time + len * 0.055 + hold);
 };
 
-let labelEl;
-O.label = (tl, time, actor, text, dur = 0.4) => {
-  if (!labelEl) { labelEl = document.createElement('div'); labelEl.className = 'label'; gridEl.appendChild(labelEl); }
-  tl.call(() => {
-    labelEl.textContent = text;
-    const p = O.cell(actor.col, actor.row);
-    labelEl.style.transform = `translate(${p.x + cellSize() * 0.75}px,${p.y}px)`;
-    labelEl.style.opacity = 1;
-  }, [], time);
-  tl.call(() => { labelEl.style.opacity = 0; }, [], time + dur + 1);
-};
-
-let speechEl;
-O.speech = (tl, time, actor, text, hold = 1) => {
-  if (!speechEl) { speechEl = document.createElement('div'); speechEl.className = 'speech'; gridEl.appendChild(speechEl); }
-  tl.call(() => {
-    speechEl.textContent = text;
-    const p = O.cell(actor.col, actor.row);
-    speechEl.style.transform = `translate(${p.x + cellSize() / 2}px,${p.y}px)`;
-    speechEl.style.opacity = 1;
-  }, [], time);
-  tl.call(() => { speechEl.style.opacity = 0; }, [], time + hold);
-};
+// shared positioned-div factory for the two text-on-actor gestures: each
+// keeps one reused div, positions it off the actor's cell by dx cells, and
+// shows it for `hold` seconds.
+function textDiv(cls, dx) {
+  let el;
+  return (tl, time, actor, text, hold) => {
+    if (!el) { el = document.createElement('div'); el.className = cls; gridEl.appendChild(el); }
+    tl.call(() => {
+      el.textContent = text;
+      const p = O.cell(actor.col, actor.row);
+      el.style.transform = `translate(${p.x + cellSize() * dx}px,${p.y}px)`;
+      el.style.opacity = 1;
+    }, [], time);
+    tl.call(() => { el.style.opacity = 0; }, [], time + hold);
+  };
+}
+const _label = textDiv('label', 0.75);
+const _speech = textDiv('speech', 0.5);
+O.label = (tl, time, actor, text, dur = 0.4) => _label(tl, time, actor, text, dur + 1);
+O.speech = (tl, time, actor, text, hold = 1) => _speech(tl, time, actor, text, hold);

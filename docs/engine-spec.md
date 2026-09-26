@@ -147,3 +147,33 @@ Iain's verdict on the scratch score: sounds pretty good overall, but the four vo
 7. **Scratch score.** Add an `ascend` line before the outro so the purple section can be heard against the rest, and make the soprano's `sing` lines hold their last note for two seconds so the formant voice gets to bloom.
 
 Rebuild, keep every gate, and add the new sizes to `docs/phase0-report.md` under a Phase 0.5 heading with a line on what the soprano cost in bytes. Do not commit.
+
+## Phase 1: the full catalogue and the playground
+
+Two agents in parallel. The gesture agent owns `src/engine/gestures.js`, `src/engine/meta.js`, `tools/gen-api.js` and may touch `synth.js` and `stage.js`. The playground agent owns `build.js` and `src/playground.html`. Neither touches the other's files. They meet at `meta.js`.
+
+### meta.js (not shipped)
+
+A plain data file the build reads. It is never concatenated into the engine.
+
+```js
+module.exports = {
+  enter: { family: 'entrance', doc: 'slide in from a grid edge to a cell', actors: 1,
+           params: { edge: ['left', ['left','right','top','bottom']], to: [[2,4], 'cell'], dur: [0.6, 0.1, 3] } },
+  sing:  { family: 'sound', doc: 'play the motif on the actor\'s voice, optional transform', actors: 1,
+           params: { transform: [null, ['inv','retro','aug','dim','frag','mi']], vol: [0.14, 0, 0.4], octave: [0, -2, 2] } },
+  ...
+};
+```
+
+Each param is `[default, control]` where control is `[min, max]` for a number, an array of strings for a select, `'cell'` for a grid cell, `'text'` for a string, or `'numeral'` for a chord numeral. `actors` is how many actor ids the gesture takes: 0, 1, 2 or `'grid'`. Every gesture in `O.G` has an entry, including the twenty already built and `ascend`.
+
+### Gesture agent
+
+Build every remaining gesture from `docs/gestures.md` except `dialogue` (dropped). That is 31: exit, reveal, path, orbit, wander, dash, weave, sink, scatter, waltz, touch, merge, split, keepDistance, swapSize, fillRing, fillColumn, closeIn, curtainParts, colourWash, dim, burnEmber, zoomTo, shake, drift, snapCut, label, speech, stutter, slow, drum, echoVoice. (`ascend` is done.) Add to `O.arp` an `octave` param so `ascend`'s last chord can lift. Fill `meta.js` for all 52. Write `tools/gen-api.js`, a Node script that reads `meta.js`, `dist/sizes.json` (per-gesture gzipped bytes, produced by the build) and the instrument objects and transform names from `synth.js` (by regex is fine), and writes `docs/engine-api.md`: one table per family with name, doc, actors, params and defaults, bytes; then the instrument fields; then the transforms; then the score time formats. Run it as the last step of `npm run build` once the playground agent's build change lands (coordinate by leaving a `postbuild` script in package.json that the build agent can wire).
+
+### Playground agent
+
+`dist/playground.html`, built from `src/playground.html` by `build.js`, no budget, dev only. It loads `dist/engine.js` and `dist/meta.json` (emitted by the build from `meta.js`). Layout: the stage on the left with the chorus grid and two actors (a red soprano, an amber tenor), a list of every gesture grouped by family on the right; click a gesture to see its params as controls generated from the meta, a play button that runs just that gesture from a fresh timeline at time 0 with those params, and its gzipped byte cost. Also a "house" panel at the top: the four instruments' fields as sliders that write straight into `O.inst`, and a room cutoff and feedback pair. It is ugly and fast. One page, one script, no framework, no dependencies. `build.js` additionally emits `dist/meta.json` and `dist/sizes.json`, the latter by extracting each `name: (` block from `gestures.js`, minifying it alone and gzipping it. Add a `postbuild` script to package.json that runs `tools/gen-api.js` if it exists.
+
+Both: no commits, every gate still passes, close any browser tabs you open.

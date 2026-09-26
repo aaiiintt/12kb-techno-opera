@@ -373,8 +373,9 @@ O.drum = (kind, t, vol = 0.15) => {
 O.arp = (numeral, dur, rateHz, t, o = {}) => {
   if (!ctx) return;
   const [bass, colour] = O.chord(numeral);
+  const oct = (o.octave || 0) * 12;
   const fifth = bass + 19;
-  const tones = [bass + 12, colour, fifth];
+  const tones = [bass + 12 + oct, colour + oct, fifth + oct];
   const vol = o.vol || 0.08, pan = o.pan || 0;
   const osc = ctx.createOscillator();
   osc.type = O.inst.arp.wave;

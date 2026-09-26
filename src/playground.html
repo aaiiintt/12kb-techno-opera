@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PLAYGROUND</title>
+    <style>
+@property --dot-color { syntax: '<color>'; inherits: false; initial-value: #fff; }
+:root { --dot-size: 26px; --gap: 5px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #080706; color: #fff; font-family: Helvetica, Arial, sans-serif; text-transform: uppercase; }
+body { display: flex; flex-direction: column; overflow: hidden; }
+h1, h2, h3 { margin: 0; font-weight: 900; letter-spacing: -.02em; }
+button, select, input { font-family: inherit; text-transform: uppercase; }
+.top { flex: 0 0 auto; border-bottom: 1px solid #333; padding: 10px 14px; display: flex; align-items: flex-start; gap: 22px; overflow-x: auto; }
+.top h1 { font-size: 14px; opacity: .6; margin-right: 8px; white-space: nowrap; }
+.inst { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.inst h3 { font-size: 11px; opacity: .55; margin-bottom: 2px; white-space: nowrap; }
+.field { display: flex; align-items: center; gap: 5px; font-size: 10px; white-space: nowrap; }
+.field label { width: 68px; opacity: .7; overflow: hidden; text-overflow: ellipsis; }
+.field input[type=range] { width: 70px; }
+.field input[type=number], .field input[type=text] { width: 54px; background: #111; color: #fff; border: 1px solid #444; font-size: 10px; padding: 1px 3px; }
+.field select { background: #111; color: #fff; border: 1px solid #444; font-size: 10px; }
+.field input[type=checkbox] { margin: 0; }
+.room { border-left: 1px solid #333; padding-left: 16px; }
+.main { flex: 1 1 auto; display: flex; min-height: 0; }
+.stage-pane { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; border-right: 1px solid #333; }
+.grid { position: relative; display: grid; gap: var(--gap); }
+.dot { position: relative; width: var(--dot-size); height: var(--dot-size); border-radius: 50%; background: var(--dot-color); opacity: 0; transform: scale(0); box-shadow: 0 0 10px var(--dot-color); }
+.actor { position: absolute; left: 0; top: 0; width: var(--dot-size); height: var(--dot-size); }
+.cue, .label, .speech { position: absolute; z-index: 22; color: #fff; text-transform: uppercase; font-weight: 800; font-size: 10px; }
+.cue, .speech { background: #000; }
+.cue { left: 50%; bottom: -20px; transform: translateX(-50%); max-width: 92vw; padding: .06em .3em; white-space: nowrap; visibility: hidden; }
+.label, .speech { opacity: 0; }
+.speech { padding: .2em .4em; transform: translate(-50%, -140%); }
+.list-pane { flex: 1 1 auto; display: flex; min-height: 0; }
+.gestures { flex: 0 0 220px; overflow-y: auto; border-right: 1px solid #333; padding: 8px; }
+.fam { margin-top: 10px; font-size: 10px; opacity: .5; letter-spacing: .1em; }
+.gbtn { display: block; width: 100%; text-align: left; background: none; border: none; color: #fff; padding: 4px 6px; font-size: 12px; cursor: pointer; }
+.gbtn:hover, .gbtn.sel { background: #1c1a17; }
+.gbtn .b { opacity: .4; font-size: 9px; float: right; }
+.detail { flex: 1 1 auto; padding: 14px; overflow-y: auto; }
+.detail h2 { font-size: 20px; }
+.doc { opacity: .6; font-size: 12px; text-transform: none; margin: 4px 0 12px; }
+.params { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+.param { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.param label { width: 90px; opacity: .7; }
+.param .ctl { display: flex; align-items: center; gap: 4px; }
+.param input[type=range] { width: 140px; }
+.param input[type=number], .param input[type=text] { background: #111; color: #fff; border: 1px solid #444; padding: 2px 4px; width: 80px; }
+.param select { background: #111; color: #fff; border: 1px solid #444; padding: 2px; }
+.val { opacity: .5; min-width: 40px; font-size: 10px; }
+.actorpick { display: flex; align-items: center; gap: 8px; font-size: 11px; margin-bottom: 8px; }
+.actorpick select { background: #111; color: #fff; border: 1px solid #444; }
+.play { margin-top: 16px; background: #e63b2e; color: #fff; border: none; padding: 8px 22px; font-size: 13px; font-weight: 900; cursor: pointer; letter-spacing: .05em; }
+.play:hover { background: #ff5340; }
+.bytes { margin-top: 10px; font-size: 11px; opacity: .5; }
+.err { color: #ff8a80; font-size: 11px; margin-top: 10px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <div class="top" id="house"></div>
+    <div class="main">
+      <div class="stage-pane">
+        <div id="grid" class="grid"></div>
+      </div>
+      <div class="list-pane">
+        <div class="gestures" id="gestureList"></div>
+        <div class="detail" id="detail"></div>
+      </div>
+    </div>
+    <script src="engine.js"></script>
+    <script>
+var META = {}, SIZES = {};
+var current = null; // selected gesture name
+var uiParams = {}, uiActor = 'a';
+
+var BASE_OPERA = {
+  title: 'PLAYGROUND', lang: 'en', tempo: 96, root: 0, mode: 'phrygian',
+  cast: { a: { color: '#e63b2e', size: 1.3, voice: 'soprano' }, b: { color: '#f5a623', size: 1.0, voice: 'tenor' } },
+  motif: ['1 2 3 4 5', 'x-x-x-x-'], chords: 'i iv V i', room: [1200, 0.4], intro: 0, outro: 0,
+  score: [],
+};
+
+function resetActors() {
+  var g = document.getElementById('grid');
+  Array.prototype.slice.call(g.querySelectorAll('.actor')).forEach(function (el) { el.remove(); });
+}
+
+function idleStage() {
+  O.stop();
+  resetActors();
+  O.load(Object.assign({}, BASE_OPERA, { score: [] }));
+  ['a', 'b'].forEach(function (id) {
+    var el = O.actors[id].el;
+    el.style.opacity = 1;
+    var p = O.cell(O.actors[id].col, O.actors[id].row);
+    el.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) scale(1)';
+  });
+}
+
+function fetchJSON(url) {
+  return fetch(url).then(function (r) { return r.json(); });
+}
+
+Promise.all([fetchJSON('meta.json'), fetchJSON('sizes.json')]).then(function (r) {
+  META = r[0]; SIZES = r[1];
+  buildGestureList();
+  buildHouse();
+  idleStage();
+}).catch(function (e) {
+  document.getElementById('detail').innerHTML = '<div class="err">failed to load meta.json / sizes.json: ' + e.message + '</div>';
+});
+
+// ---- gesture list, grouped by family ----
+function buildGestureList() {
+  var byFamily = {};
+  Object.keys(META).sort().forEach(function (name) {
+    var fam = META[name].family || 'unsorted';
+    (byFamily[fam] = byFamily[fam] || []).push(name);
+  });
+  var host = document.getElementById('gestureList');
+  host.innerHTML = '';
+  Object.keys(byFamily).sort().forEach(function (fam) {
+    var h = document.createElement('div');
+    h.className = 'fam';
+    h.textContent = fam;
+    host.appendChild(h);
+    byFamily[fam].forEach(function (name) {
+      var b = document.createElement('button');
+      b.className = 'gbtn';
+      b.id = 'g_' + name;
+      var bytes = SIZES[name] != null ? SIZES[name] + 'B' : '';
+      b.innerHTML = name + '<span class="b">' + bytes + '</span>';
+      b.onclick = function () { selectGesture(name); };
+      host.appendChild(b);
+    });
+  });
+}
+
+function paramControl(spec) {
+  var def = spec[0], rest = spec.slice(1);
+  if (rest.length === 1 && Array.isArray(rest[0])) return { type: 'select', def: def, options: rest[0] };
+  if (rest.length === 1 && typeof rest[0] === 'string') return { type: rest[0], def: def };
+  if (rest.length === 2) return { type: 'number', def: def, min: rest[0], max: rest[1] };
+  return { type: 'text', def: def };
+}
+
+function selectGesture(name) {
+  current = name;
+  Array.prototype.slice.call(document.querySelectorAll('.gbtn')).forEach(function (b) { b.classList.remove('sel'); });
+  var btn = document.getElementById('g_' + name);
+  if (btn) btn.classList.add('sel');
+
+  var meta = META[name] || { family: '', doc: '', actors: 1, params: {} };
+  uiParams = {};
+  uiActor = 'a';
+
+  var host = document.getElementById('detail');
+  host.innerHTML = '';
+
+  var h2 = document.createElement('h2'); h2.textContent = name; host.appendChild(h2);
+  var doc = document.createElement('div'); doc.className = 'doc'; doc.textContent = meta.doc || ''; host.appendChild(doc);
+
+  if (meta.actors === 1) {
+    var pick = document.createElement('div'); pick.className = 'actorpick';
+    var lab = document.createElement('span'); lab.textContent = 'actor'; pick.appendChild(lab);
+    var sel = document.createElement('select');
+    ['a', 'b'].forEach(function (id) { var o = document.createElement('option'); o.value = id; o.textContent = id; sel.appendChild(o); });
+    sel.onchange = function () { uiActor = sel.value; };
+    pick.appendChild(sel);
+    host.appendChild(pick);
+  }
+
+  var paramsHost = document.createElement('div'); paramsHost.className = 'params'; host.appendChild(paramsHost);
+  var params = meta.params || {};
+  Object.keys(params).forEach(function (key) {
+    var ctl = paramControl(params[key]);
+    uiParams[key] = ctl.def;
+    paramsHost.appendChild(buildParamRow(key, ctl));
+  });
+
+  var playBtn = document.createElement('button');
+  playBtn.className = 'play';
+  playBtn.textContent = 'Play';
+  playBtn.onclick = function () { playGesture(name, meta); };
+  host.appendChild(playBtn);
+
+  var bytesEl = document.createElement('div'); bytesEl.className = 'bytes';
+  bytesEl.textContent = SIZES[name] != null ? SIZES[name] + ' bytes gzipped, alone' : '(no size measured)';
+  host.appendChild(bytesEl);
+
+  var errEl = document.createElement('div'); errEl.className = 'err'; errEl.id = 'playErr';
+  host.appendChild(errEl);
+}
+
+function buildParamRow(key, ctl) {
+  var row = document.createElement('div'); row.className = 'param';
+  var label = document.createElement('label'); label.textContent = key; row.appendChild(label);
+  var wrap = document.createElement('div'); wrap.className = 'ctl';
+
+  if (ctl.type === 'select') {
+    var sel = document.createElement('select');
+    if (ctl.def === null || ctl.def === undefined) {
+      var none = document.createElement('option'); none.value = '__null__'; none.textContent = '(none)'; sel.appendChild(none);
+    }
+    ctl.options.forEach(function (opt) { var o = document.createElement('option'); o.value = opt; o.textContent = opt; sel.appendChild(o); });
+    sel.value = (ctl.def === null || ctl.def === undefined) ? '__null__' : ctl.def;
+    sel.onchange = function () { uiParams[key] = sel.value === '__null__' ? null : sel.value; };
+    wrap.appendChild(sel);
+  } else if (ctl.type === 'cell') {
+    var col = document.createElement('input'); col.type = 'number'; col.min = 0; col.max = 8;
+    var row2 = document.createElement('input'); row2.type = 'number'; row2.min = 0; row2.max = 8;
+    var def = ctl.def || [4, 4];
+    col.value = def[0]; row2.value = def[1];
+    var sync = function () { uiParams[key] = [Number(col.value), Number(row2.value)]; };
+    col.oninput = sync; row2.oninput = sync;
+    wrap.appendChild(col); wrap.appendChild(row2);
+  } else if (ctl.type === 'text' || ctl.type === 'numeral') {
+    var t = document.createElement('input'); t.type = 'text'; t.value = ctl.def == null ? '' : ctl.def;
+    t.oninput = function () { uiParams[key] = t.value; };
+    wrap.appendChild(t);
+  } else if (ctl.type === 'number') {
+    var range = document.createElement('input'); range.type = 'range';
+    range.min = ctl.min; range.max = ctl.max; range.step = (ctl.max - ctl.min) / 200 || 0.01;
+    range.value = ctl.def == null ? ctl.min : ctl.def;
+    var val = document.createElement('span'); val.className = 'val'; val.textContent = range.value;
+    range.oninput = function () { uiParams[key] = Number(range.value); val.textContent = range.value; };
+    wrap.appendChild(range); wrap.appendChild(val);
+  } else {
+    var fallback = document.createElement('input'); fallback.type = 'text'; fallback.value = JSON.stringify(ctl.def);
+    fallback.oninput = function () { try { uiParams[key] = JSON.parse(fallback.value); } catch (e) {} };
+    wrap.appendChild(fallback);
+  }
+  row.appendChild(wrap);
+  return row;
+}
+
+function actorsArgFor(meta) {
+  if (meta.actors === 0) return null;
+  if (meta.actors === 'grid') return 'grid';
+  if (meta.actors === 2) return ['a', 'b'];
+  return uiActor;
+}
+
+function playGesture(name, meta) {
+  var errEl = document.getElementById('playErr');
+  errEl.textContent = '';
+  try {
+    O.initAudio();
+    var opera = Object.assign({}, BASE_OPERA, {
+      score: [[0, name, actorsArgFor(meta), Object.assign({}, uiParams)]],
+    });
+    O.stop();
+    resetActors();
+    O.load(opera);
+    ['a', 'b'].forEach(function (id) {
+      var el = O.actors[id].el;
+      if (getComputedStyle(el).opacity === '0') { el.style.opacity = 1; }
+    });
+  } catch (e) {
+    errEl.textContent = 'error running "' + name + '": ' + e.message;
+  }
+}
+
+// ---- house panel: every instrument field, live-bound to O.inst; room cutoff/feedback bound to O.setRoom ----
+var FIELD_RANGE = {
+  detune: [0, 20, 0.1], attack: [0, 2, 0.01], decay: [0, 2, 0.01], release: [0, 2, 0.01],
+  filterStart: [0, 6000, 10], filterEnd: [0, 6000, 10], filterClose: [0, 6000, 10], breathFreq: [0, 8000, 10],
+  vibratoDepth: [0, 20, 0.1], vibDepth: [0, 20, 0.1], vibratoDelay: [0, 2, 0.01],
+  gain: [0, 1, 0.01], layer: [0, 2, 0.01], layerGain: [0, 1, 0.01], octave: [-3, 3, 1],
+  lfoRate: [0, 20, 0.1], tremolo: [0, 1, 0.01], roomSend: [0, 3, 0.01],
+};
+var WAVES = ['sine', 'square', 'sawtooth', 'triangle'];
+
+function buildHouse() {
+  var host = document.getElementById('house');
+  host.innerHTML = '';
+  var title = document.createElement('h1'); title.textContent = 'House'; host.appendChild(title);
+
+  Object.keys(O.inst).forEach(function (instName) {
+    var inst = O.inst[instName];
+    var box = document.createElement('div'); box.className = 'inst';
+    var h3 = document.createElement('h3'); h3.textContent = instName; box.appendChild(h3);
+    Object.keys(inst).forEach(function (field) {
+      box.appendChild(buildHouseField(inst, field));
+    });
+    host.appendChild(box);
+  });
+
+  var room = document.createElement('div'); room.className = 'inst room';
+  var rh = document.createElement('h3'); rh.textContent = 'room'; room.appendChild(rh);
+  var roomState = { cutoff: (BASE_OPERA.room || [1200, 0.4])[0], feedback: (BASE_OPERA.room || [1200, 0.4])[1] };
+  room.appendChild(buildHouseRangeField('cutoff', roomState, 0, 6000, 10, function (v) {
+    O.initAudio(); O.setRoom(v, roomState.feedback, 0.05, O.now());
+  }));
+  room.appendChild(buildHouseRangeField('feedback', roomState, 0, 0.9, 0.01, function (v) {
+    O.initAudio(); O.setRoom(roomState.cutoff, v, 0.05, O.now());
+  }));
+  host.appendChild(room);
+}
+
+function buildHouseRangeField(name, state, min, max, step, onChange) {
+  var row = document.createElement('div'); row.className = 'field';
+  var label = document.createElement('label'); label.textContent = name; row.appendChild(label);
+  var input = document.createElement('input'); input.type = 'range';
+  input.min = min; input.max = max; input.step = step; input.value = state[name];
+  input.oninput = function () { state[name] = Number(input.value); onChange(state[name]); };
+  row.appendChild(input);
+  return row;
+}
+
+function buildHouseField(inst, field) {
+  var row = document.createElement('div'); row.className = 'field';
+  var label = document.createElement('label'); label.textContent = field; row.appendChild(label);
+  var value = inst[field];
+
+  if (field === 'wave') {
+    var sel = document.createElement('select');
+    WAVES.forEach(function (w) { var o = document.createElement('option'); o.value = w; o.textContent = w; sel.appendChild(o); });
+    sel.value = value;
+    sel.onchange = function () { inst[field] = sel.value; };
+    row.appendChild(sel);
+  } else if (typeof value === 'boolean') {
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = value;
+    cb.onchange = function () { inst[field] = cb.checked; };
+    row.appendChild(cb);
+  } else if (typeof value === 'number') {
+    var range = FIELD_RANGE[field] || [0, Math.max(value * 3, 10), 0.01];
+    var input = document.createElement('input'); input.type = 'range';
+    input.min = range[0]; input.max = range[1]; input.step = range[2]; input.value = value;
+    input.oninput = function () { inst[field] = Number(input.value); };
+    row.appendChild(input);
+  } else {
+    // arrays (harmonics, formants, lfoDelay) and anything else: raw JSON, edit at your own risk
+    var t = document.createElement('input'); t.type = 'text'; t.value = JSON.stringify(value);
+    t.oninput = function () { try { inst[field] = JSON.parse(t.value); } catch (e) {} };
+    row.appendChild(t);
+  }
+  return row;
+}
+    </script>
+  </body>
+</html>

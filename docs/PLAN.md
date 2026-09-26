@@ -21,7 +21,8 @@ The aim, in Iain's words: maximum opera at minimal byte count, in a sonically an
 | Music brief | [music-guide.md](music-guide.md). Every sound, story and engine agent reads it first. Its rules are hard rules. |
 | The eight | Approved: Carmen, Pagliacci, Rigoletto, Dido and Aeneas, The Magic Flute, Don Giovanni, The Barber of Seville, Turandot. Alternates La Traviata, Tosca. See [operas.md](operas.md). |
 | Panel | A review panel, not an authoring tool: eight previews down a page, a chat beside each, three agent-built alternatives per note, pick one or cancel. No new dependencies needed; the earlier approval of `vite` and `typescript` is moot unless the page outgrows one script. See [panel.md](panel.md). |
-| Engine size | Target raised to 10,240 bytes gzipped to keep the full catalogue. `dialogue` dropped; authors write two labels. |
+| Engine size | Target 10,240 bytes gzipped. Measured after Phase 1: 9,130 with all 53 gestures, formant soprano and ascend. `dialogue` dropped. |
+| Ears | Phase 0.5 line-up approved by Iain: four voices distinct, formant soprano works. |
 | The current opera | Retired. The site is the eight new operas. Its code is quarry for the engine, not a ninth piece. |
 
 

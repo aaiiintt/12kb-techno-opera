@@ -12,6 +12,24 @@ function applyT(pair, spec) {
   return O.T[name](arg)(pair);
 }
 
+// shared by rise/sink: step one row per beat, dir -1 up (rise) or +1 down
+// (sink), with the held note moving the opposite way in pitch.
+const rowStep = (dir) => (tl, t, a, p = {}) => {
+  const { rows = 2, stepDur = 0.8 } = p;
+  const actor = A(a);
+  let time = t, row = actor.row;
+  for (let i = 0; i < rows; i++) {
+    row += dir;
+    O.move(actor, actor.col, row, tl, time, stepDur);
+    if (actor.lastSemi != null) {
+      const semi = actor.lastSemi - dir * i * 2;
+      snd(tl, time, () => O.voice(actor.voice, semi, ctx.currentTime, stepDur, { vol: 0.12, pan: O.pan(actor) }));
+    }
+    time += stepDur;
+  }
+  return time;
+};
+
 O.G = {
   cue: (tl, t, a, p = {}) => {
     const { text = '', hold = 1.6 } = p;
@@ -148,21 +166,7 @@ O.G = {
     return t + beats * beat;
   },
 
-  rise: (tl, t, a, p = {}) => {
-    const { rows = 2, stepDur = 0.8 } = p;
-    const actor = A(a);
-    let time = t, col = actor.col, row = actor.row;
-    for (let i = 0; i < rows; i++) {
-      row -= 1;
-      O.move(actor, col, row, tl, time, stepDur);
-      if (actor.lastSemi != null) {
-        const semi = actor.lastSemi + i * 2;
-        snd(tl, time, () => O.voice(actor.voice, semi, ctx.currentTime, stepDur, { vol: 0.12, pan: O.pan(actor) }));
-      }
-      time += stepDur;
-    }
-    return time;
-  },
+  rise: rowStep(-1),
 
   grow: (tl, t, a, p = {}) => {
     const { to = 1.6, dur = 1 } = p;
@@ -207,7 +211,7 @@ O.G = {
         const ct = ctx.currentTime;
         O.voice('bass', bass, ct, dur, { vol: 0.18, pan: 0 });
         O.voice('tenor', colour, ct, dur, { vol: 0.16, pan });
-        O.arp(numeral, dur, 14 + step, ct, { vol: 0.09, pan: -pan });
+        O.arp(numeral, dur, 14 + step, ct, { vol: 0.09, pan: -pan, octave: octUp ? 1 : 0 });
         O.setRoom(2800 + step * 300, 0.44 + step * 0.02, 1.0, ct);
       });
       const ringColor = `hsl(${hue + step * hueStep}, 100%, 55%)`;
@@ -233,5 +237,324 @@ O.G = {
       O.voice('tenor', colour, ctx.currentTime, 0.8, { vol: 0.14, pan: 0 });
     });
     return t + dur + 0.8;
+  },
+
+  // ---- Phase 1: the remaining 32 from docs/gestures.md ----
+
+  sink: rowStep(1),
+
+  exit: (tl, t, a, p = {}) => {
+    const { edge = 'right', speed = 1 } = p;
+    const actor = A(a);
+    const dur = 0.5 / speed;
+    const end = edge === 'left' ? [-1, actor.row] : edge === 'right' ? [9, actor.row] : edge === 'top' ? [actor.col, -1] : [actor.col, 9];
+    O.move(actor, end[0], end[1], tl, t, dur, 'power1.in');
+    tl.to(actor.el, { opacity: 0, duration: dur }, t);
+    if (actor.lastSemi != null) snd(tl, t, () => O.voice(actor.voice, actor.lastSemi + 12 * speed, ctx.currentTime, dur * 0.6, { vol: 0.12, pan: O.pan(actor) }));
+    return t + dur;
+  },
+
+  reveal: (tl, t, a, p = {}) => {
+    const { to, dur = 0.3, color } = p;
+    const actor = A(a);
+    if (to) O.move(actor, to[0], to[1], tl, t, dur);
+    if (color) tl.call(() => actor.el.style.setProperty('--dot-color', color), [], t + dur / 2);
+    tl.to(actor.el, { scale: 1.3, duration: dur / 2, yoyo: true, repeat: 1 }, t);
+    snd(tl, t + dur / 2, () => O.drum('hat', ctx.currentTime, 0.15));
+    return t + dur;
+  },
+
+  path: (tl, t, a, p = {}) => {
+    const { cells = [], stepDur = 0.4, trail = false } = p;
+    const actor = A(a);
+    let time = t;
+    cells.forEach((c) => {
+      O.move(actor, c[0], c[1], tl, time, stepDur);
+      if (trail) tl.to(actor.el, { opacity: 0.6, duration: stepDur * 0.3, yoyo: true, repeat: 1 }, time);
+      if (actor.lastSemi != null) snd(tl, time, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, stepDur * 0.8, { vol: 0.1, pan: O.pan(actor) }));
+      time += stepDur;
+    });
+    return time;
+  },
+
+  orbit: (tl, t, a, p = {}) => {
+    // the timeline only tweens x/y/scale/opacity on real elements (no
+    // onUpdate), so a circle is stepped in short straight hops, not a curve.
+    const { center = [CENTER, CENTER], radius = 1.5, turns = 1 } = p;
+    const actor = A(a), steps = 8 * turns, stepDur = 0.2;
+    let time = t;
+    for (let i = 1; i <= steps; i++) {
+      const ang = (i / 8) * Math.PI * 2;
+      O.move(actor, center[0] + Math.cos(ang) * radius, center[1] + Math.sin(ang) * radius, tl, time, stepDur, 'sine.inOut');
+      time += stepDur;
+    }
+    return time;
+  },
+
+  wander: (tl, t, a, p = {}) => {
+    const { range = 2, dur = 1 } = p;
+    const actor = A(a);
+    const col = Math.max(0, Math.min(8, actor.col + Math.round((Math.random() * 2 - 1) * range)));
+    const row = Math.max(0, Math.min(8, actor.row + Math.round((Math.random() * 2 - 1) * range)));
+    O.move(actor, col, row, tl, t, dur, 'sine.inOut');
+    return t + dur;
+  },
+
+  dash: (tl, t, a, p = {}) => {
+    const { cells = [], speed = 2 } = p;
+    const actor = A(a);
+    const stepDur = 0.3 / speed;
+    let time = t;
+    cells.forEach((c) => {
+      O.move(actor, c[0], c[1], tl, time, stepDur, 'power1.in');
+      tl.to(actor.el, { opacity: 0.5, duration: stepDur, yoyo: true, repeat: 1 }, time);
+      snd(tl, time, () => O.arp('i', stepDur, 60, ctx.currentTime, { vol: 0.06, pan: O.pan(actor) }));
+      time += stepDur;
+    });
+    return time;
+  },
+
+  weave: (tl, t, a, p = {}) => {
+    const { targets = [], stepDur = 0.3 } = p;
+    const actor = A(a);
+    let time = t, vol = 0.16;
+    targets.forEach((id) => {
+      const tg = O.actors[id];
+      O.move(actor, tg.col, tg.row, tl, time, stepDur);
+      if (actor.lastSemi != null) { const v = vol; snd(tl, time, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, stepDur * 0.7, { vol: v, pan: O.pan(actor) })); }
+      vol *= 0.7;
+      time += stepDur;
+    });
+    return time;
+  },
+
+  scatter: (tl, t, a, p = {}) => {
+    const { actors = [], from = [CENTER, CENTER], dur = 0.5 } = p;
+    actors.forEach((id, i) => {
+      const actor = O.actors[id];
+      const ang = (i / actors.length) * Math.PI * 2;
+      const col = Math.max(0, Math.min(8, Math.round(from[0] + Math.cos(ang) * 3)));
+      const row = Math.max(0, Math.min(8, Math.round(from[1] + Math.sin(ang) * 3)));
+      O.move(actor, col, row, tl, t, dur, 'power2.out');
+    });
+    return t + dur;
+  },
+
+  waltz: (tl, t, a, p = {}) => {
+    const { partner, turns = 2 } = p;
+    const actor = A(a), pt = O.actors[partner], steps = 6 * turns, stepDur = 0.2, dur = steps * stepDur;
+    let time = t;
+    for (let i = 1; i <= steps; i++) {
+      const ang = (i / 6) * Math.PI * 2;
+      O.move(actor, pt.col + Math.cos(ang) * 1.2, pt.row + Math.sin(ang) * 1.2, tl, time, stepDur, 'sine.inOut');
+      time += stepDur;
+    }
+    snd(tl, t, () => O.arp('i', dur, 8, ctx.currentTime, { vol: 0.07, pan: 0 }));
+    return t + dur;
+  },
+
+  touch: (tl, t, a, p = {}) => {
+    const actor = A(a), other = O.actors[p.other];
+    tl.to([actor.el, other.el], { scale: 1.3, duration: 0.1, yoyo: true, repeat: 1 }, t);
+    snd(tl, t, () => O.drum('snare', ctx.currentTime, 0.12));
+    return t + 0.2;
+  },
+
+  merge: (tl, t, a, p = {}) => {
+    const { dur = 0.8 } = p;
+    const actor = A(a), other = O.actors[p.other];
+    O.move(other, actor.col, actor.row, tl, t, dur);
+    tl.to(other.el, { scale: 0, opacity: 0, duration: dur * 0.4 }, t + dur * 0.6);
+    if (actor.lastSemi != null) snd(tl, t + dur * 0.6, () => O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur * 0.6, { vol: 0.18, pan: O.pan(actor) }));
+    return t + dur;
+  },
+
+  split: (tl, t, a, p = {}) => {
+    const { to = [[3, 4], [5, 4]], dur = 0.8 } = p;
+    const actor = A(a);
+    const ghost = actor.el.cloneNode();
+    gridEl.appendChild(ghost);
+    const p1 = O.cell(to[0][0], to[0][1]), p2 = O.cell(to[1][0], to[1][1]);
+    tl.to(actor.el, { x: p1.x, y: p1.y, duration: dur }, t);
+    tl.to(ghost, { x: p2.x, y: p2.y, duration: dur }, t);
+    tl.call(() => { actor.col = to[0][0]; actor.row = to[0][1]; }, [], t + dur);
+    tl.call(() => ghost.remove(), [], t + dur + 0.5);
+    if (actor.lastSemi != null) snd(tl, t, () => {
+      O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.1, pan: -0.6 });
+      O.voice(actor.voice, actor.lastSemi, ctx.currentTime, dur, { vol: 0.1, pan: 0.6 });
+    });
+    return t + dur;
+  },
+
+  keepDistance: (tl, t, a, p = {}) => {
+    const { target, gap = 3 } = p;
+    const actor = A(a), tgt = O.actors[target];
+    const d = Math.hypot(actor.col - tgt.col, actor.row - tgt.row);
+    if (d < gap) {
+      const ang = Math.atan2(actor.row - tgt.row, actor.col - tgt.col) || 0.01;
+      const col = Math.max(0, Math.min(8, Math.round(tgt.col + Math.cos(ang) * gap)));
+      const row = Math.max(0, Math.min(8, Math.round(tgt.row + Math.sin(ang) * gap)));
+      O.move(actor, col, row, tl, t, 0.6);
+    }
+    return t + 0.6;
+  },
+
+  swapSize: (tl, t, a, p = {}) => {
+    const { dur = 0.5 } = p;
+    const actor = A(a), other = O.actors[p.other];
+    const s1 = actor.size, s2 = other.size;
+    tl.to(actor.el, { scale: s2, duration: dur }, t);
+    tl.to(other.el, { scale: s1, duration: dur }, t);
+    tl.call(() => { actor.size = s2; other.size = s1; }, [], t + dur);
+    return t + dur;
+  },
+
+  fillRing: (tl, t, a, p = {}) => {
+    const { center = [CENTER, CENTER], ring = 1, color = '#fff' } = p;
+    const ringDots = dots.filter((d) => Math.max(Math.abs(d.col - center[0]), Math.abs(d.row - center[1])) === ring);
+    tl.call(() => ringDots.forEach((d) => d.el.style.setProperty('--dot-color', color)), [], t);
+    tl.to(ringDots.map((d) => d.el), { scale: 1.3, opacity: 1, duration: 0.4, yoyo: true, repeat: 1 }, t);
+    snd(tl, t, () => O.arp('i', 0.8, 45, ctx.currentTime, { vol: 0.07 }));
+    return t + 0.8;
+  },
+
+  fillColumn: (tl, t, a, p = {}) => {
+    const { col = CENTER, stepDur = 0.3 } = p;
+    let time = t;
+    for (let row = 0; row < SIZE; row++) {
+      const d = O.at(col, row);
+      tl.to(d.el, { opacity: 1, scale: 1.2, duration: stepDur * 0.6, yoyo: true, repeat: 1 }, time);
+      snd(tl, time, () => O.voice('arp', O.opera.root - row, ctx.currentTime, stepDur * 0.5, { vol: 0.08 }));
+      time += stepDur;
+    }
+    return time;
+  },
+
+  closeIn: (tl, t, a, p = {}) => {
+    const { center = [CENTER, CENTER], dur = 1.5 } = p;
+    const cp = O.cell(center[0], center[1]);
+    dots.forEach((d) => {
+      const dp = O.cell(d.col, d.row);
+      tl.to(d.el, { x: (cp.x - dp.x) * 0.4, y: (cp.y - dp.y) * 0.4, duration: dur, ease: 'power2.in' }, t);
+    });
+    snd(tl, t, () => O.auto(O.master.gain, O.master.gain.value, 0.95, dur, ctx.currentTime, 'linear'));
+    tl.call(() => dots.forEach((d) => { d.el.style.transform = ''; }), [], t + dur + 0.3);
+    return t + dur;
+  },
+
+  curtainParts: (tl, t, a, p = {}) => {
+    const { dur = 1 } = p;
+    const left = dots.filter((d) => d.col < CENTER).map((d) => d.el);
+    const right = dots.filter((d) => d.col > CENTER).map((d) => d.el);
+    tl.to(left, { x: '-=' + cellSize() * 2, duration: dur, ease: 'power2.inOut' }, t);
+    tl.to(right, { x: '+=' + cellSize() * 2, duration: dur, ease: 'power2.inOut' }, t);
+    snd(tl, t + dur, () => {
+      const [b, c] = O.chord('i');
+      O.voice('bass', b, ctx.currentTime, 1, { vol: 0.16, pan: 0 });
+      O.voice('tenor', c, ctx.currentTime, 1, { vol: 0.14, pan: 0 });
+    });
+    return t + dur;
+  },
+
+  colourWash: (tl, t, a, p = {}) => {
+    const { color = '#fff', dur = 2 } = p;
+    const target = a === 'grid' || a == null ? dots.map((d) => d.el) : Array.isArray(a) ? a.map((id) => O.actors[id].el) : [A(a).el];
+    tl.call(() => target.forEach((el) => el.style.setProperty('--dot-color', color)), [], t);
+    tl.to(target, { opacity: 0.8, duration: dur * 0.5, yoyo: true, repeat: 1 }, t);
+    snd(tl, t, () => O.setRoom(2200, 0.5, dur, ctx.currentTime));
+    return t + dur;
+  },
+
+  dim: (tl, t, a, p = {}) => {
+    const { to = 0.3, dur = 1 } = p;
+    const target = a === 'grid' ? dots.map((d) => d.el) : [A(a).el];
+    tl.to(target, { opacity: to, duration: dur }, t);
+    return t + dur;
+  },
+
+  burnEmber: (tl, t, a, p = {}) => {
+    const { dur = 2 } = p;
+    const actor = A(a);
+    tl.call(() => actor.el.style.setProperty('--dot-color', '#8a1a00'), [], t);
+    tl.to(actor.el, { opacity: 0, duration: dur, ease: 'power1.in' }, t);
+    snd(tl, t, () => {
+      const n = ctx.createBufferSource(); n.buffer = O.noise;
+      const bp = ctx.createBiquadFilter(); bp.type = 'lowpass'; bp.frequency.value = 500;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.15, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+      n.connect(bp); bp.connect(g); g.connect(O.master);
+      n.start(); n.stop(ctx.currentTime + dur);
+    });
+    return t + dur;
+  },
+
+  zoomTo: (tl, t, a, p = {}) => {
+    const { target, zoom = 1.5, dur = 1 } = p;
+    const tgt = target ? O.actors[target] : A(a);
+    O.camera(tl, t, { col: tgt.col, row: tgt.row, zoom, dur });
+    return t + dur;
+  },
+
+  shake: (tl, t, a, p = {}) => {
+    const { amount = 6, dur = 0.3 } = p;
+    tl.to(worldEl, { x: '+=' + amount, duration: dur / 6, yoyo: true, repeat: 5 }, t);
+    return t + dur;
+  },
+
+  drift: (tl, t, a, p = {}) => {
+    const { to = [CENTER, CENTER], dur = 3 } = p;
+    O.camera(tl, t, { col: to[0], row: to[1], zoom: 1, dur, ease: 'sine.inOut' });
+    return t + dur;
+  },
+
+  snapCut: (tl, t, a, p = {}) => {
+    const { target, zoom = 1.5 } = p;
+    const tgt = target ? O.actors[target] : A(a);
+    O.camera(tl, t, { col: tgt.col, row: tgt.row, zoom, dur: 0.001 });
+    return t;
+  },
+
+  label: (tl, t, a, p = {}) => {
+    const { text = '', dur = 0.4 } = p;
+    O.label(tl, t, A(a), text, dur);
+    return t + dur;
+  },
+
+  speech: (tl, t, a, p = {}) => {
+    const { text = '', hold = 1 } = p;
+    O.speech(tl, t, A(a), text, hold);
+    return t + hold;
+  },
+
+  stutter: (tl, t, a, p = {}) => {
+    const { beats = 4 } = p;
+    const actor = A(a);
+    const step = 60 / O.opera.tempo / 4;
+    tl.to(actor.el, { opacity: 0.3, duration: step, yoyo: true, repeat: beats * 2 - 1 }, t);
+    return t + beats * step * 2;
+  },
+
+  // approximation: the timeline has no timeScale/onUpdate (it's a minimal
+  // x/y/scale/opacity tweener, not full GSAP), so a live clock-ease isn't
+  // possible here. Reads instead as a held breath: the grid dips and holds.
+  slow: (tl, t, a, p = {}) => {
+    const { dur = 1 } = p;
+    tl.to(dots.map((d) => d.el), { opacity: 0.7, duration: dur * 0.4, yoyo: true, repeat: 1 }, t);
+    return t + dur;
+  },
+
+  drum: (tl, t, a, p = {}) => {
+    const { pattern = 'kick', vol = 0.15 } = p;
+    snd(tl, t, () => O.drum(pattern, ctx.currentTime, vol));
+    return t + 0.2;
+  },
+
+  echoVoice: (tl, t, a, p = {}) => {
+    const { delay = 0.3, voice } = p;
+    const actor = A(a);
+    const v = voice || (actor.voice === 'tenor' ? 'soprano' : 'tenor');
+    if (actor.lastSemi != null) snd(tl, t + delay, () => O.voice(v, actor.lastSemi, ctx.currentTime, 0.6, { vol: 0.06, pan: -O.pan(actor) }));
+    return t + delay + 0.6;
   },
 };
