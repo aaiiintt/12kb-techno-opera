@@ -9,7 +9,7 @@ O.opera = {
     jose: { color: 'gold', voice: 'tenor' },
     carmen: { color: 'coral', voice: 'soprano' },
   },
-  motif: ['5 4 3 2 1', 'x-x.x-x.'],
+  motif: ['1+ 7# 7 6# 6 5', 'x-xxxx-x---'], // the Habanera's chromatic slide, D down to A
   room: [2600, 0.3],
   intro: 6, outro: 6,
   score: [
