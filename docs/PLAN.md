@@ -28,6 +28,8 @@ The aim, in Iain's words: maximum opera at minimal byte count, in a sonically an
 | Kawaii (26 Sep, night) | The tone underneath is sweet and charming, cute. The presentation is not: it stays austere and stripped back. The cuteness comes through a tweak to the sounds, the use of colours, and the ideas and characters in the stories. The cue register is "HELP!": rescue-the-princess videogame innocence, said quietly. Rainbows and sparkles are house devices. The original already has it: a gold dot with a heartbeat, a pink dot taken, a hero fleeing. Small round vulnerable things with big feelings. |
 | Palette and light (27 Sep) | Approved by Iain: eight lights in OKLCH (bulb, gold, sakura, coral, lemon, mint, sky, violet), brightness as L only, chroma falling with L, quiet halos scaled by size, and light driven by the voice's envelope. Law written into [visual-guide.md](visual-guide.md), third version. |
 | On the grid (27 Sep) | Iain: no floating dots. Everything is on the grid; characters are lit cells. The grid runs edge to edge across the screen; the story uses the central stage, the rest rests in dusk for expanse and for full-screen wipes. |
+| Opera builder (27 Sep) | Iain: once the first eight are done, consolidate the learnings into a cheap, efficient way to make new operas. Planned as Phase 5 below. |
+| Status (27 Sep, early) | Carmen v3 pilot done and gated. Seven v3 drafts were cut off by the account session limit (resets 3am London). Pagliacci, Giovanni, Barber and Turandot left unverified files in operas/; Rigoletto, Dido and the Flute were not written. Resume: re-run each drafting agent from docs/opera-brief.md, telling the four with files to verify and finish rather than start over. |
 | Status (26 Sep, late) | All eight v2 operas built in their series modes, engine at 11,329 bytes gzipped with 69 gestures, series total 21,357 bytes gzipped for engine, shell, index and eight operas. Review panel live (`npm run review`). Next: Iain's review pass through the panel, then deployment (replace root site with dist/ or keep both). |
 | Eyes | First drafts rejected by Iain on 26 Sep: samey, literal one-dot-per-character, not enough movement, scale or feeling. The audio is great. Visual redo: [visual-guide.md](visual-guide.md), a spectacle gesture family, stage that changes (background, grid density, dot size), characters as forces first and a dot only when it matters, cards rewritten as visual scores, one pilot then seven. Engine target raised to 12,288 and standalone to 14,336 to pay for it. |
 | The current opera | Retired. The site is the eight new operas. Its code is quarry for the engine, not a ninth piece. |
@@ -204,6 +206,16 @@ The page, the server, the prompt, and `docs/engine-api.md` generated from the en
 ### Phase 3: eight operas (Sonnet drafts, top model directs)
 
 One opera per agent run, in parallel, each from its story card. The orchestrator reviews all eight in one session against a checklist: recognisable in ten seconds, one clear visual idea, cues land, under budget. Gestures missing from the library get added to the engine, not hacked into an opera.
+
+### Phase 5: the opera builder
+
+After the eight are approved, fold everything learned into one skill, `opera-builder`, so a new opera costs one cheap drafting run plus one gate.
+
+- **Inputs.** An opera or story title and, optionally, a hero and a mode.
+- **What it bundles.** The music guide's hard rules, the visual guide's law and taste gate, the palette, the engine API, a card template, the drafting brief, and the lessons from the eight drafts (the failures each gate caught: hero colour lost under a fill, fills too brief, square bursts, close-ups on stale positions, held notes with no sound).
+- **Steps.** Write the card (Sonnet, one run, from the template). Draft the opera file from the card (Sonnet, one run). Build and size-check. Capture the six gate frames at computed times, muted (Haiku or a script). Judge the frames against the reference frames and the law (the top model, one short review). Loop once on failures.
+- **Cost target.** Under a tenth of what the first eight cost, because nothing is re-read that the skill already summarises.
+- **Also.** A frame-capture script, so the gate stops depending on hand-timed screenshots.
 
 ### Phase 4: site and ship
 
