@@ -56,6 +56,7 @@ function makeKit(tl) {
     // a small speech tag beside a cell: someone in the crowd says something
     say: (el, text, t, hold = 1) => {
       let d;
+      if (!el) return;                              // the cell may not exist on a small grid
       tl.call(() => {
         const b = el.getBoundingClientRect();
         d = document.createElement('div');
