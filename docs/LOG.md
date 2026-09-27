@@ -7,6 +7,7 @@ What worked and what didn't, per run. Newest first. One line per finding.
 Setup: `docs/BRIEF.md` (358 words), the original opera as the only example, a thin kit instead of the gesture library, one conversation.
 
 - Treatment written straight from knowledge of the opera in one pass, no rules consulted. It chose Carmen, not José, as hero, and found a central visual idea tied to the tune (each chromatic semitone is a ring of red). Neither came out of the earlier rule-driven cards. Worked.
+- Didn't work: colours picked from a generic palette (coral, lemon, sakura) read as odd. Fix: colours come from traditional staging (Carmen's red, the toreador's gold suit of lights, José's dragoon blue). Added to the brief.
 - Uncertain: the Habanera's second phrase is written from memory and may be slightly off; flagged for Iain's ear.
 
 ## Lessons carried in from earlier rounds

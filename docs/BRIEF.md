@@ -19,7 +19,7 @@ Be ambitious with the grid. The failure mode is timidity: two dots in a sea of g
 ## Hard limits
 
 - Flat discs on black. No gradients, no 3D, no drifting grid.
-- A handful of colours that feel like light, chosen to suit the opera.
+- A handful of colours, taken from how the opera is traditionally staged: the costumes, sets and lighting audiences know. Carmen's red, a toreador's gold suit of lights, a soldier's blue. Rendered as light, not paint. Name where each one comes from.
 - The opera's most recognisable tune, quoted, as the heart of the soundtrack.
 - One lower-third cue per act at most, in the opera's language.
 - It loops: the end is the beginning.
