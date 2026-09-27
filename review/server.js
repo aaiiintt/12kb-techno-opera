@@ -14,8 +14,9 @@ const REVIEW_DIR = path.join(ROOT, '.review');
 const DOCS_REVIEW_DIR = path.join(ROOT, 'docs', 'review');
 const SYNTH_PATH = path.join(ROOT, 'src', 'engine', 'synth.js');
 const MUSIC_GUIDE_PATH = path.join(ROOT, 'docs', 'music-guide.md');
-const ENGINE_API_PATH = path.join(ROOT, 'docs', 'engine-api.md');
-const STORIES_PATH = path.join(ROOT, 'docs', 'stories.md');
+const KIT_PATH = path.join(ROOT, 'docs', 'KIT.md');
+const BRIEF_PATH = path.join(ROOT, 'docs', 'BRIEF.md');
+const TREATMENTS_DIR = path.join(ROOT, 'docs', 'treatments');
 const SYSTEM_PROMPT_PATH = path.join(__dirname, 'prompt.md');
 
 const OPERA_BUDGET = 2048;
@@ -67,20 +68,10 @@ function operaBytes(id) {
   return raw == null ? null : gzipLen(raw);
 }
 
-// Extract the story card section for an opera from docs/stories.md, if any.
-// Cards are level-3 headings, e.g. "### CARMEN (French, tragedy)".
+// The opera's treatment, docs/treatments/<id>.md, if one exists.
 function storyCard(id) {
-  const md = readIfExists(STORIES_PATH);
-  if (!md) return null;
-  const name = id.toUpperCase();
-  const lines = md.split('\n');
-  let start = -1, end = lines.length;
-  for (let i = 0; i < lines.length; i++) {
-    if (start === -1 && /^###\s+/.test(lines[i]) && lines[i].toUpperCase().includes(name)) { start = i; continue; }
-    if (start !== -1 && /^###\s+/.test(lines[i])) { end = i; break; }
-  }
-  if (start === -1) return null;
-  return lines.slice(start, end).join('\n').trim();
+  const md = readIfExists(path.join(TREATMENTS_DIR, `${id}.md`));
+  return md ? md.trim() : null;
 }
 
 function threadLog(id) {
@@ -92,10 +83,11 @@ function threadLog(id) {
 function assemblePrompt({ opera, currentFile, note }) {
   const parts = [];
   parts.push('## docs/music-guide.md\n\n' + fs.readFileSync(MUSIC_GUIDE_PATH, 'utf8'));
-  parts.push('## docs/engine-api.md\n\n' + fs.readFileSync(ENGINE_API_PATH, 'utf8'));
+  parts.push('## docs/BRIEF.md\n\n' + fs.readFileSync(BRIEF_PATH, 'utf8'));
+  parts.push('## docs/KIT.md\n\n' + fs.readFileSync(KIT_PATH, 'utf8'));
   if (opera !== 'house') {
     const card = storyCard(opera);
-    parts.push(card ? `## Story card for ${opera}\n\n${card}` : `## Story card for ${opera}\n\n(none — no story card exists for this opera yet)`);
+    parts.push(card ? `## Treatment for ${opera}\n\n${card}` : `## Treatment for ${opera}\n\n(none — no treatment exists for this opera yet)`);
   }
   parts.push(
     opera === 'house'
