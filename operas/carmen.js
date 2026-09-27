@@ -305,10 +305,11 @@ O.opera = {
     k.say(jose3, 'CARMEN… ADORÉE', t + 0.2, 2.2);
     t += 3.5 * B;
 
-    // ---- VII. Libre. Feeling: grief, then release. From the dark, one red
-    // dot rises from where she fell, up and off the top: she's free. Then rose
-    // petals drift down over the whole grid to the music box, and the square
-    // warms back to sand for the loop.
+    // ---- VII. Libre. Feeling: grief, then catharsis, how an audience feels
+    // as the curtain comes down on Carmen. One red dot rises from where she
+    // fell and off the top: she's free. Then a long lament on the fate motif,
+    // petals drifting, José glowing alone; two last fortissimo chords light the
+    // whole grid red; blackout and silence; only then does the loop begin.
     k.act('LIBRE', t);
     k.cue('CARMEN...', t + 0.3, 2.4);
     for (let r = 4; r >= -8; r--) {
@@ -317,21 +318,43 @@ O.opera = {
       k.note('arp', k.deg('5') + (4 - r), at, 0.4, { vol: 0.05, light: el });
     }
     t += 13 * 0.16 + 0.3;
-    // petals falling everywhere, over the whole grid, not just the stage
+    // the lament: time to wallow. The fate motif from the prelude, slow and
+    // low, over a held D in the bass, in a dark, long room. Petals drift down,
+    // slow, a few at a time, and José glows on every note.
+    k.room(500, 0.62, t, 2);
+    const FATE = ['5', '6', '7#', '1+', '1+', '7', '6', '5'].map(k.deg);   // fate: A Bb C# D, then down (from memory)
+    const FATE_D = [1.5, 1.5, 1.5, 2.5, 1.5, 1.5, 1.5, 3.5];
+    sing('tenor', FATE, FATE_D, t, () => jose3, { vol: 0.15 });
+    sing('soprano', FATE, FATE_D, t + 0.1, null, { up: 12, vol: 0.05 });
+    const lament = FATE_D.reduce((x, y) => x + y) * B;
+    for (let at = t; at < t + lament; at += 3 * B) k.note('bass', k.deg('1-'), at, 3 * B, { vol: 0.12 });
     let ps = 3;
     const pr = () => (ps = (ps * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 14; i++) {
-      const x = -8 + Math.floor(pr() * 25), y = -10 + Math.floor(pr() * 22), at = t + i * B * 0.35;
-      for (let j = 0; j < 4; j++) {                 // a petal drifting down: four cells, one after another
+    for (let i = 0; i < 12; i++) {
+      const x = -8 + Math.floor(pr() * 25), y = -10 + Math.floor(pr() * 18), at = t + i * lament / 12;
+      for (let j = 0; j < 5; j++) {                 // a petal drifting down, slowly
         const el = cell(x + (j % 2), y + j);
         if (!el || el === jose3) continue;
-        paint(el, 'red', at + j * 0.22 - 0.01);
-        k.note('arp', SLIDE[i % 6] + 12, at + j * 0.22, B * 0.5, { vol: 0.05 - j * 0.01, light: el });
-        if (i === 2 && j === 1) k.say(el, 'DES PÉTALES…', at + j * 0.22, 1.6);
+        paint(el, 'red', at + j * 0.4 - 0.01);
+        k.note('arp', FATE[(i + j) % 8] + 12, at + j * 0.4, 0.9, { vol: 0.025 - j * 0.004, light: el });
+        if (i === 2 && j === 1) k.say(el, 'DES PÉTALES…', at + j * 0.4, 2);
       }
     }
-    k.note('tenor', k.deg('1'), t, 5 * B, { vol: 0.08, light: jose3 });
-    t += 6 * B;
+    t += lament;
+    // the last chords: fortissimo, the whole grid glows red once, twice, and holds
+    const last = (at, dur) => {
+      paint(W.filter((el) => el !== jose3), 'red', at - 0.01, 1);
+      ['1-', '5-'].forEach((d) => k.note('bass', k.deg(d), at, dur, { vol: 0.1 }));
+      ['1', '3', '5'].forEach((d, i) => k.note('tenor', k.deg(d), at, dur, { vol: 0.07, light: i ? null : [jose3, ...W] }));
+      k.note('soprano', k.deg('1+'), at, dur, { vol: 0.1 });
+    };
+    last(t, B);
+    last(t + 1.5 * B, 4 * B);
+    t += 5.5 * B;
+    // blackout, and a long silence before the square fills again
+    pilot(jose3, null, t);
+    k.silence(t, 3 * B);
+    t += 3 * B;
     k.scale(jose, 1, t - B, B);
     k.scale(carmen, 1, t - 0.3, 0.3);
     paint(W, 'sand', t - 0.3);
