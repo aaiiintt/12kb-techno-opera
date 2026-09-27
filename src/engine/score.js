@@ -64,5 +64,10 @@ O.load = (opera) => {
   buildTimeline(opera);
 };
 
-O.start = () => O.initAudio();
+// Gate mode for review: ?gate=12.5,43.3 plays muted and freezes the picture
+// and the audio clock at each listed second until O.gateNext() is called.
+const G = (new URLSearchParams(location.search).get('gate') || '').split(',').filter(Boolean).map(Number);
+O.onFrame = () => { if (G.length && tl && !tl.paused && tl.t >= G[0]) { G.shift(); tl.paused = 1; O.suspend(1); } };
+O.gateNext = () => { tl.paused = 0; O.suspend(0); };
+O.start = () => { O.initAudio(); if (location.search.includes('gate')) O.master.gain.value = 0; };
 O.stop = () => { if (tl) tl.kill(); };

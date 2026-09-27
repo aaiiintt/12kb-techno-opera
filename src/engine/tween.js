@@ -83,6 +83,7 @@ class Timeline {
   kill() { this.dead = true; cancelAnimationFrame(this.raf); }
   tick = (now) => {
     if (this.dead) return;
+    if (this.paused) { this.last = now; this.raf = requestAnimationFrame(this.tick); return; }
     if (this.last) this.t += (now - this.last) / 1000;
     this.last = now;
     const live = this.render();

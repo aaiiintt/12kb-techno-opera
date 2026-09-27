@@ -33,8 +33,9 @@ You are drafting one opera as a data file for the engine. Read, in order, and no
 ## Before you report
 
 1. `npm run build` passes and prints your opera's size line.
-2. Open `dist/<id>.html` in the built-in browser. Immediately after pressing play, run `O.master.gain.value = 0` so nothing is audible. Attach a `window.onerror` listener and let it loop once with no errors.
-3. Take the six screenshots named in the card's "Taste gate frames" and check each against the guide's taste gate yourself. Fix anything that fails.
-4. Close every tab you opened with `tabs_close`.
+2. Work out the six gate times, in seconds from play, for the card's six taste-gate frames: intro seconds, then each bar is 4 × 60 / tempo seconds (stretch for any ritardando before it). Aim for the peak of each move, not its start.
+3. Open `dist/<id>.html?gate=t1,t2,t3,t4,t5,t6` in the built-in browser and press play. Gate mode is muted and freezes the picture and the audio clock at each listed second. Take a screenshot at each freeze, then run `O.gateNext()` in the console to continue to the next. Attach a `window.onerror` listener before pressing play; it must stay empty.
+4. Check each frame against the visual guide's taste gate. Fix anything that fails and repeat.
+5. Close every tab you opened with `tabs_close`.
 
 Do not edit any other file. Do not commit. Report back in under 150 words: the size line, whether it loops clean, what each of the six frames shows in one line each, and anything the card asked for that the engine could not do.

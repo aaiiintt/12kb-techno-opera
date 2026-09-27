@@ -157,6 +157,7 @@ O.initAudio = () => {
 // current audio-clock time; used by the shell's ?scale harness. Not in the
 // spec's public list, but there is no other way to reach ctx.currentTime
 // from outside this module, and something has to drive the scale test.
+O.suspend = (on) => ctx && (on ? ctx.suspend() : ctx.resume());
 O.now = () => ctx.currentTime;
 
 O.setRoom = (cutoff, feedback, dur = 1.5, t) => {
