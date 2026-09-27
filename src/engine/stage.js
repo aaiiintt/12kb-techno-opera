@@ -1,7 +1,8 @@
 /* Stage: an edge-to-edge grid of cells at the house pitch. The centre SIZE by
    SIZE block is the stage (stage coordinates 0..SIZE-1, unchanged); outer
-   cells fill the rest of the screen and rest at dusk. Actors are cells, not
-   floating dots: an actor's light lives on O.at(actor.col, actor.row).el.
+   cells fill the rest of the screen and rest at dusk. O.at(col, row) returns
+   the cell element itself; a character's light is O.pilot'd onto whichever
+   cell it occupies, and O.hop moves that pilot claim, cell to cell.
    The grid never drifts; it only ever rebuilds whole, on load or resize. */
 let SIZE = 9, CENTER = 4;
 let OCOLS = 0, OROWS = 0, offCol = 0, offRow = 0;
@@ -12,10 +13,15 @@ let dots = [], gridEl, worldEl, _cell = 0;
 O.at = (col, row) => {
   const c = col + offCol, r = row + offRow;
   if (c < 0 || c >= OCOLS || r < 0 || r >= OROWS) return undefined;
-  return dots[r * OCOLS + c];
+  const d = dots[r * OCOLS + c];
+  return d && d.el;
 };
 O.every = (fn) => dots.forEach(fn);
 O.stageCells = () => dots.filter((d) => d.col >= offCol && d.col < offCol + SIZE && d.row >= offRow && d.row < offRow + SIZE);
+O.cells = () => dots.map((d) => d.el);
+O.stage = () => O.stageCells().map((d) => d.el);
+O.size = () => SIZE;
+O.centre = () => CENTER;
 
 // ---- the eight lights: H, Cmax, Lmax. Named, never hex. ----
 O.P = {
@@ -33,6 +39,41 @@ O.light = (el, name) => {
   el.style.setProperty('--h', L[0]);
   el.style.setProperty('--cmax', L[1]);
   el.style.setProperty('--lmax', L[2]);
+};
+
+// ---- an opera may declare its own lights (O.opera.lights = { name: cssColour }),
+// staged for that story rather than picked from the fixed eight. Each is
+// converted to OKLCH once at load and registered into O.P by name, so
+// k.paint/pilot/note light it exactly like a built-in: brightness via L,
+// chroma falling with L, halos in its own hue. No dependency - a browser
+// <div> resolves any CSS colour string to rgb(), then a few lines of the
+// standard sRGB -> OKLab -> OKLCH maths (Björn Ottosson's public formulas)
+// take it from there. Lmax for a declared light is its own L. ----
+function cssToRgb01(css) {
+  const d = document.createElement('div');
+  d.style.color = css;
+  document.body.appendChild(d);
+  const m = getComputedStyle(d).color.match(/[\d.]+/g) || [0, 0, 0];
+  document.body.removeChild(d);
+  return [m[0] / 255, m[1] / 255, m[2] / 255];
+}
+const toLinear = (c) => (c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+function oklch(css) {
+  const [r0, g0, b0] = cssToRgb01(css).map(toLinear);
+  const l = 0.4122214708 * r0 + 0.5363325363 * g0 + 0.0514459929 * b0;
+  const m = 0.2119034982 * r0 + 0.6806995451 * g0 + 0.1073969566 * b0;
+  const s = 0.0883024619 * r0 + 0.2817188376 * g0 + 0.6299787005 * b0;
+  const l_ = Math.cbrt(l), m_ = Math.cbrt(m), s_ = Math.cbrt(s);
+  const L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_;
+  const a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
+  const b = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
+  const C = Math.hypot(a, b);
+  let H = (Math.atan2(b, a) * 180) / Math.PI;
+  if (H < 0) H += 360;
+  return [H, C, L];
+}
+O.declareLights = (lights) => {
+  for (const name in lights || {}) O.P[name] = oklch(lights[name]);
 };
 
 // the stage background: black, or one light at low L, cut with no transition.
@@ -112,70 +153,55 @@ O.applyStage = (o = {}) => {
   sizeGrid();
 };
 
-O.pan = (actor) => (actor.col - CENTER) / CENTER;
-
 // the camera cuts almost always; when it moves it moves once, deliberately.
 // The stage sits exactly centred in the outer grid, so the pixel maths are
 // unchanged by how far the grid now reaches past it.
 O.camera = (tl, time, o = {}) => {
-  const { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut', actor } = o;
-  // An actor target is read when the move plays, not when the score is
-  // built, so the camera finds the actor wherever its hops have taken it.
+  const { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut' } = o;
   tl.to(worldEl, {
-    x: () => (CENTER - (actor ? actor.col : col)) * cellSize() * zoom,
-    y: () => (CENTER - (actor ? actor.row : row)) * cellSize() * zoom,
+    x: () => (CENTER - col) * cellSize() * zoom,
+    y: () => (CENTER - row) * cellSize() * zoom,
     scale: zoom,
     duration: dur,
     ease,
   }, time);
 };
 
-// ---- actors: a logical binding of {col,row,light} to whichever cell they
-// currently occupy. No floating element; O.at(actor.col,actor.row).el is
-// always the actor's disc. pilotEls holds every cell currently claimed by an
-// actor, so it rests at the pilot level instead of true dusk. ----
-function claim(actor, cellObj) {
-  pilotEls.add(cellObj.el);
-  cellObj.el._occ = actor.id;
-  O.light(cellObj.el, actor.light);
-}
+O.shake = (tl, time, amount = 6, dur = 0.3) => {
+  tl.to(worldEl, { x: '+=' + amount, duration: dur / 6, yoyo: true, repeat: 5 }, time);
+};
 
-// The cell an actor just left cools like an ember: it keeps the actor's own
-// hue while its pilot brightness fades over ~0.4s, then rests at dusk.
-function coolCell(cellObj, actor, tl, time) {
-  const el = cellObj.el;
-  if (el._occ !== actor.id) return; // someone else has since claimed it
-  el._occ = null;
+// ---- pilot light: a cell a character is resting on keeps its own hue at
+// a dim, steady level instead of true dusk. pilotEls (from synth.js, which
+// also drives the light loop) holds every cell currently claimed this way. ----
+O.pilot = (el, name) => {
+  if (!el) return;
+  if (!name) { pilotEls.delete(el); el._pilot = null; return; } // null clears it
+  el._pilot = name;
+  pilotEls.add(el);
+  O.light(el, name);
+};
+
+// The cell a character just left cools like an ember: it keeps its own hue
+// while the pilot brightness fades over ~0.4s, then rests at true dusk.
+function coolCell(el, tl, time) {
+  if (!el || !pilotEls.has(el)) return;
   pilotEls.delete(el);
+  el._pilot = null;
   const start = ctx.currentTime;
   O.registerLight(el, start, start + 0.4, (t) => Math.max(0, 0.3 * (1 - t / 0.4)));
-  tl.call(() => { if (!el._occ) O.light(el, 'bulb'); }, [], time + 0.4);
+  tl.call(() => { if (!pilotEls.has(el)) O.light(el, 'bulb'); }, [], time + 0.4);
 }
 
-function buildActors() {
-  O.actors = {};
-  for (const id in O.opera.cast) {
-    const c = O.opera.cast[id];
-    const actor = { id, col: CENTER, row: CENTER, light: c.color, size: c.size || 1, voice: c.voice, lastSemi: null };
-    O.actors[id] = actor;
-    const cell = O.at(CENTER, CENTER);
-    if (cell) claim(actor, cell);
-  }
-}
-
-// Relight the actor's cell to cell, on the beat: the destination cell pops
-// in scale as the light arrives; the cell it left cools behind it.
-O.move = (actor, col, row, tl, time, dur = 0.6, ease = 'elastic.out(1,0.5)', pop = 1.25, settle = true) => {
-  const to = O.at(col, row);
-  if (to) {
-    if (settle) tl.to(to.el, { scale: pop, duration: dur / 2, yoyo: true, repeat: 1, ease }, time);
-    else tl.to(to.el, { scale: pop, duration: dur, ease }, time);
-  }
+// Move a character's pilot light from one cell to another: the destination
+// pops in scale (an elastic settle) as the light arrives; the cell it left
+// cools behind it, ember-style.
+O.hop = (tl, time, from, to, dur = 0.6, ease = 'elastic.out(1,0.5)', pop = 1.25) => {
+  if (to) tl.to(to, { scale: pop, duration: dur / 2, yoyo: true, repeat: 1, ease }, time);
   tl.call(() => {
-    const from = O.at(actor.col, actor.row);
-    if (from && from !== to) coolCell(from, actor, tl, time);
-    actor.col = col; actor.row = row;
-    if (to) claim(actor, to);
+    const name = from && from._pilot;
+    if (from && from !== to) coolCell(from, tl, time);
+    if (to && name) O.pilot(to, name);
   }, [], time);
 };
 
@@ -199,12 +225,7 @@ O.cue = (tl, time, text, hold = 1.6) => {
 };
 
 // On resize or full screen, rebuild the whole grid to cover the new
-// viewport, then re-assert every actor's pilot light on its stage cell.
-function reassertActors() {
-  for (const id in O.actors || {}) {
-    const a = O.actors[id], c = O.at(a.col, a.row);
-    if (c) claim(a, c);
-  }
-}
-addEventListener('resize', () => { sizeGrid(); reassertActors(); });
-addEventListener('fullscreenchange', () => { sizeGrid(); reassertActors(); });
+// viewport. Every cell's pilot claim is lost with it (the elements
+// themselves are destroyed); the opera keeps playing on the new grid.
+addEventListener('resize', sizeGrid);
+addEventListener('fullscreenchange', sizeGrid);

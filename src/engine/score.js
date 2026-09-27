@@ -1,71 +1,81 @@
-/* Opera loader: resolves score times to seconds via a tempo map, schedules
-   every gesture, and drives start/stop/loop. */
+/* Opera loader: builds a fresh kit each loop, hands it to opera.build(k),
+   and drives start/stop/loop. The kit is the thin surface an opera author
+   writes against - see docs/KIT.md. Every audio call on the kit is wrapped
+   in tl.call so the author just passes a timeline time; the callback reads
+   the audio clock fresh when it actually fires, exactly as snd() always did. */
 
-function parseBarBeat(t) {
-  const m = /^(\d+)\.(\d+)$/.exec(t);
-  return [+m[1], +m[2]];
-}
+function makeKit(tl) {
+  const beat = 60 / O.opera.tempo;
+  const k = {
+    tl,
+    end: 0,
+    size: SIZE,
+    centre: CENTER,
 
-function buildTempoMap(score, tempo) {
-  const defaultLen = 60 / tempo;
-  const rits = score.filter((l) => l[1] === 'ritardando').map((l) => {
-    const [bar, beat] = parseBarBeat(l[0]);
-    const p = l[3] || {};
-    return { start: (bar - 1) * 4 + (beat - 1), span: p.beats ?? 1, stretch: p.stretch ?? 1.15 };
-  });
-  function beatLen(i) {
-    for (const r of rits) if (i >= r.start && i < r.start + r.span) return defaultLen * r.stretch;
-    return defaultLen;
-  }
-  const cache = [0];
-  return {
-    beatIndexToSeconds(bIdx) {
-      while (cache.length <= bIdx) cache.push(cache[cache.length - 1] + beatLen(cache.length - 1));
-      return cache[bIdx];
-    },
+    bar: (b, beat2 = 1) => ((b - 1) * 4 + (beat2 - 1)) * beat,
+
+    at: O.at,
+    cells: O.cells,
+    stage: O.stage,
+
+    paint: (els, name) => (Array.isArray(els) ? els : [els]).forEach((el) => el && O.light(el, name)),
+    bg: (name, t) => snd(tl, t, () => O.bg(name)),
+
+    note: (voice, semi, t, dur, o = {}) => snd(tl, t, () => O.voice(voice, semi, ctx.currentTime, dur, o)),
+    deg: O.deg,
+    motif: O.motif,
+    T: O.T,
+    play: (voice, pair, t, o = {}) => snd(tl, t, () => O.play(voice, pair, ctx.currentTime, o)),
+    arp: (numeral, t, dur, rate, o = {}) => snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, o)),
+    chord: O.chord,
+    drum: (kind, t, vol, els) => snd(tl, t, () => O.drum(kind, ctx.currentTime, vol, els)),
+    room: (cutoff, feedback, t, dur) => snd(tl, t, () => O.setRoom(cutoff, feedback, dur, ctx.currentTime)),
+    swell: (to, t, dur) => snd(tl, t, () => O.auto(O.master.gain, O.master.gain.value, to, dur, ctx.currentTime, 'linear')),
+    silence: (t, dur) => snd(tl, t, () => {
+      const g = O.master.gain, ct = ctx.currentTime, v = g.value;
+      g.setValueAtTime(0.0001, ct);
+      g.setValueAtTime(v, ct + dur);
+    }),
+
+    pilot: O.pilot,
+    hop: (from, to, t) => O.hop(tl, t, from, to),
+
+    scale: (els, to, t, dur = 0.5, ease) => tl.to(els, { scale: to, duration: dur, ease }, t),
+    pulse: (els, t) => tl.to(els, { scale: 1.15, duration: 0.15, yoyo: true, repeat: 1 }, t),
+
+    camera: (o, t) => O.camera(tl, t, o),
+    shake: (t, amount, dur) => O.shake(tl, t, amount, dur),
+
+    cue: (text, t, hold) => O.cue(tl, t, text, hold),
   };
+  return k;
 }
 
-function resolveTime(t, introSec, outroStart, map) {
-  if (typeof t === 'number') return t;
-  if (t[0] === 'o') return outroStart + parseFloat(t.slice(1));
-  const [bar, beat] = parseBarBeat(t);
-  return introSec + map.beatIndexToSeconds((bar - 1) * 4 + (beat - 1));
-}
-
-let tl;
 O.duration = 0;
 
 function buildTimeline(opera) {
-  const introSec = opera.intro ?? 0;
-  const map = buildTempoMap(opera.score, opera.tempo);
-  let maxBar = 0;
-  opera.score.forEach(([t]) => {
-    if (typeof t === 'string' && t[0] !== 'o') maxBar = Math.max(maxBar, parseBarBeat(t)[0]);
-  });
-  const outroStart = introSec + map.beatIndexToSeconds(maxBar * 4);
-  const resolved = opera.score
-    .map(([t, g, a, p]) => [resolveTime(t, introSec, outroStart, map), g, a, p || {}])
-    .sort((x, y) => x[0] - y[0]);
   tl = gsap.timeline({ onComplete: () => buildTimeline(opera) });
-  resolved.forEach(([t, g, a, p]) => {
-    if (!O.G[g]) throw new Error('unknown gesture: ' + g);
-    O.G[g](tl, t, a, p);
-  });
+  const k = makeKit(tl);
+  opera.build(k);
+  // Hold the timeline live until the loop's declared end, even if the last
+  // scheduled note or paint finishes earlier - the loop point is the
+  // author's call, not whatever happens to be the final tween.
+  tl.call(() => {}, [], k.end);
   O.duration = tl.end;
 }
 
 O.load = (opera) => {
   O.opera = opera;
+  O.declareLights(opera.lights);
   const s = opera.stage || {};
   O.bg(null);
-  O.applyStage({ grid: s.grid ?? 9, dot: s.dot ?? 1, gap: s.gap ?? 1 });
-  buildActors();
+  O.applyStage({ grid: s.grid ?? 9 });
   buildTimeline(opera);
 };
 
 // Gate mode for review: ?gate=12.5,43.3 plays muted and freezes the picture
 // and the audio clock at each listed second until O.gateNext() is called.
+let tl;
 const G = (new URLSearchParams(location.search).get('gate') || '').split(',').filter(Boolean).map(Number);
 O.onFrame = () => { if (G.length && tl && !tl.paused && tl.t >= G[0]) { G.shift(); tl.paused = 1; O.suspend(1); } };
 O.gateNext = () => { tl.paused = 0; O.suspend(0); };

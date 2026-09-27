@@ -6,7 +6,7 @@ const CleanCSS = require('clean-css');
 
 const ROOT_LIMIT = 12288;
 const LIMITS = { engine: 12288, opera: 2048, standalone: 14336, index: 2048 };
-const ENGINE_FILES = ['tween', 'synth', 'stage', 'gestures', 'score', 'index'].map((f) => `src/engine/${f}.js`);
+const ENGINE_FILES = ['tween', 'synth', 'stage', 'score', 'index'].map((f) => `src/engine/${f}.js`);
 
 // Site order for the index: the eight shipped operas, in programme order.
 // Anything with an id starting "scratch" is a dev demo and never appears here.
@@ -22,9 +22,9 @@ const SITE_ORDER = [
 ];
 
 // --only <operaId>: fast path for the review panel. Skips the original-site
-// build, reuses dist/engine.js when it already exists, skips meta/sizes/
-// playground, and builds just that one opera's three dist files, printing
-// and gating only on those. No flag: behaviour is unchanged.
+// build, reuses dist/engine.js when it already exists, and builds just that
+// one opera's three dist files, printing and gating only on those. No flag:
+// behaviour is unchanged.
 const argv = process.argv.slice(2);
 const onlyIdx = argv.indexOf('--only');
 const ONLY = onlyIdx !== -1 ? argv[onlyIdx + 1] : null;
@@ -70,95 +70,6 @@ async function buildEngine() {
   return js(wrapped);
 }
 
-// ---- meta.js / sizes.json / playground: a small hand-rolled parser for the
-// O.G = { name: (tl, ...) => {...}, ... } object in gestures.js, since we
-// need each top-level entry's own source text (for per-gesture gzip size)
-// without pulling in a real JS parser dependency.
-function extractBalanced(src, openIdx) {
-  let depth = 0, inStr = null;
-  for (let i = openIdx; i < src.length; i++) {
-    const c = src[i], prev = src[i - 1];
-    if (inStr) { if (c === inStr && prev !== '\\') inStr = null; continue; }
-    if (c === '"' || c === "'" || c === '`') { inStr = c; continue; }
-    if (c === '/' && src[i + 1] === '/') { const nl = src.indexOf('\n', i); i = nl === -1 ? src.length : nl; continue; }
-    if (c === '/' && src[i + 1] === '*') { const end = src.indexOf('*/', i + 2); i = end === -1 ? src.length : end + 1; continue; }
-    if (c === '{') depth++;
-    else if (c === '}') { depth--; if (depth === 0) return { body: src.slice(openIdx + 1, i), end: i + 1 }; }
-  }
-  throw new Error('unbalanced braces while scanning O.G');
-}
-
-function splitTopLevelEntries(body) {
-  const entries = [];
-  let depth = 0, start = 0, inStr = null;
-  for (let i = 0; i < body.length; i++) {
-    const c = body[i], prev = body[i - 1];
-    if (inStr) { if (c === inStr && prev !== '\\') inStr = null; continue; }
-    if (c === '"' || c === "'" || c === '`') { inStr = c; continue; }
-    if (c === '/' && body[i + 1] === '/') { const nl = body.indexOf('\n', i); i = nl === -1 ? body.length : nl; continue; }
-    if (c === '/' && body[i + 1] === '*') { const end = body.indexOf('*/', i + 2); i = end === -1 ? body.length : end + 1; continue; }
-    if ('{(['.includes(c)) depth++;
-    else if ('})]'.includes(c)) depth--;
-    else if (c === ',' && depth === 0) { entries.push(body.slice(start, i)); start = i + 1; }
-  }
-  const last = body.slice(start).trim();
-  if (last) entries.push(last);
-  return entries;
-}
-
-function parseEntry(entry) {
-  const s = entry.replace(/^(\s*\/\/[^\n]*\n|\s*\/\*[\s\S]*?\*\/)+/, '').trimStart();
-  const m = /^(\w+)\s*:\s*/.exec(s);
-  if (!m) return null;
-  return { name: m[1], value: s.slice(m[0].length).trim() };
-}
-
-function extractGestureEntries(src) {
-  const marker = 'O.G = {';
-  const idx = src.indexOf(marker);
-  if (idx === -1) throw new Error('O.G object not found in gestures.js');
-  const openIdx = idx + marker.length - 1;
-  const { body } = extractBalanced(src, openIdx);
-  return splitTopLevelEntries(body).map(parseEntry).filter(Boolean);
-}
-
-function loadMeta(gesturesSrc) {
-  const metaPath = path.resolve('src/engine/meta.js');
-  if (fs.existsSync(metaPath)) {
-    try {
-      const code = fs.readFileSync(metaPath, 'utf8');
-      const mod = { exports: {} };
-      new Function('module', 'exports', 'require', code)(mod, mod.exports, require);
-      return { meta: mod.exports, real: true };
-    } catch (e) {
-      console.warn(`meta.js present but failed to load (${e.message}); falling back to gesture names from gestures.js`);
-    }
-  }
-  const meta = {};
-  extractGestureEntries(gesturesSrc).forEach(({ name }) => {
-    meta[name] = { family: 'unsorted', doc: '', actors: 1, params: {} };
-  });
-  return { meta, real: false };
-}
-
-async function buildMetaAndSizes() {
-  const gesturesSrc = fs.readFileSync('src/engine/gestures.js', 'utf8');
-  const { meta, real } = loadMeta(gesturesSrc);
-  fs.writeFileSync('dist/meta.json', JSON.stringify(meta));
-  console.log(`meta.json: ${real ? 'from src/engine/meta.js' : 'FALLBACK (meta.js not found yet) - gesture names only, empty params'}, ${Object.keys(meta).length} gestures`);
-
-  const entries = extractGestureEntries(gesturesSrc);
-  const sizes = {};
-  for (const { name, value } of entries) {
-    const wrapped = `const g = ${value};`;
-    let min;
-    try { min = await js(wrapped); } catch (e) { console.warn(`sizes.json: could not minify gesture "${name}" alone (${e.message}); using raw length`); min = wrapped; }
-    sizes[name] = gzip(min);
-  }
-  fs.writeFileSync('dist/sizes.json', JSON.stringify(sizes));
-  console.log(`sizes.json: ${entries.length} gestures measured individually`);
-}
-
 async function buildIndexPage(operaList, siteTotalGz) {
   let html = fs.readFileSync('src/site.html', 'utf8');
 
@@ -182,19 +93,6 @@ async function buildIndexPage(operaList, siteTotalGz) {
   html = html.replace(/<style>([\s\S]*?)<\/style>/, (m, code) => '<style>' + css(code) + '</style>');
   html = html.replace(/\n\s+/g, '\n').replace(/\n+/g, '\n');
   return html;
-}
-
-async function buildPlaygroundPage() {
-  let html = fs.readFileSync('src/playground.html', 'utf8');
-  html = html.replace(/<style>([\s\S]*?)<\/style>/, (m, code) => '<style>' + css(code) + '</style>');
-  const scriptMatch = /<script>([\s\S]*?)<\/script>/.exec(html);
-  if (scriptMatch) {
-    const minified = await js(scriptMatch[1]);
-    html = html.replace(scriptMatch[0], '<script>' + minified + '</script>');
-  }
-  html = html.replace(/\n\s+/g, '\n').replace(/\n+/g, '\n');
-  fs.writeFileSync('dist/playground.html', html);
-  console.log(`playground.html: ${html.length} bytes, ${gzip(html)} bytes gzipped (dev tool, no size gate)`);
 }
 
 async function buildNewSite() {
@@ -260,9 +158,6 @@ async function buildNewSite() {
   if (indexGz > LIMITS.index) fail = true;
 
   console.log(`series total (engine + shell + index + ${shipped.length} opera${shipped.length === 1 ? '' : 's'}): ${siteTotal + indexGz} bytes gzipped`);
-
-  await buildMetaAndSizes();
-  if (fs.existsSync('src/playground.html')) await buildPlaygroundPage();
 
   return !fail;
 }

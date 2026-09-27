@@ -1,6 +1,6 @@
 {
   "name": "12kb-techno-opera",
   "private": true,
-  "scripts": { "build": "node build.js", "postbuild": "node tools/gen-api.js", "review": "node review/server.js" },
+  "scripts": { "build": "node build.js", "review": "node review/server.js" },
   "devDependencies": { "terser": "^5", "clean-css": "^5" }
 }

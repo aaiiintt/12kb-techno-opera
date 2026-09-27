@@ -8,6 +8,13 @@ Setup: `docs/BRIEF.md` (358 words), the original opera as the only example, a th
 
 - Treatment written straight from knowledge of the opera in one pass, no rules consulted. It chose Carmen, not José, as hero, and found a central visual idea tied to the tune (each chromatic semitone is a ring of red). Neither came out of the earlier rule-driven cards. Worked.
 - Didn't work: colours picked from a generic palette (coral, lemon, sakura) read as odd. Fix: colours come from traditional staging (Carmen's red, the toreador's gold suit of lights, José's dragoon blue). Added to the brief.
+- Worked: writing the opera as real code on the thin kit. The treatment's central idea (semitones as spreading rings) went straight into about fifteen lines, and it reads full screen. The preset library could not have produced it.
+- Worked: the thin kit halved the engine (10.0 KB to 7.5 KB gzipped).
+- Worked: gate mode caught every fault on the first look, eight frames in one pass.
+- Didn't work first time: the kit's paint acts immediately, so painting later acts at build time leaked colours backwards. Fix in the opera: schedule paints on the timeline. Worth making the kit's paint take a time.
+- Didn't work first time: mass paints repainted the characters (Carmen turned blue under José's wall). Fix: mass paints skip character cells. Worth building into the kit.
+- Didn't work first time: transforms are factories, `k.T.inv()(pair)`, which KIT.md doesn't say. One error stopped the build at Act V and silently cut three acts.
+- Beauty pass came in at 1.8 KB, under the 2 KB limit without trying. Golf pass deferred until Iain has seen it, since golfing something he wants changed is wasted work.
 - Uncertain: the Habanera's second phrase is written from memory and may be slightly off; flagged for Iain's ear.
 
 ## Lessons carried in from earlier rounds

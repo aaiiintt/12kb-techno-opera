@@ -379,10 +379,7 @@ O.chord = (numeral) => {
   return [bass, colour];
 };
 
-O.motif = () => {
-  const [degs, rhythm] = O.opera.motif;
-  return [degs.split(' ').map(O.deg), rhythm];
-};
+O.motif = (degs, rhythm) => [degs.split(' ').map(O.deg), rhythm];
 
 // ---- transform kit: each a function on a [semis, rhythm] pair ----
 O.T = {
