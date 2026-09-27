@@ -188,7 +188,7 @@ function coolCell(el, tl, time) {
   if (!el || !pilotEls.has(el)) return;
   pilotEls.delete(el);
   el._pilot = null;
-  const start = ctx.currentTime;
+  const start = O.now();
   O.registerLight(el, start, start + 0.4, (t) => Math.max(0, 0.3 * (1 - t / 0.4)));
   tl.call(() => { if (!pilotEls.has(el)) O.light(el, 'bulb'); }, [], time + 0.4);
 }
@@ -208,6 +208,14 @@ O.hop = (tl, time, from, to, dur = 0.6, ease = 'elastic.out(1,0.5)', pop = 1.25)
 // the original cue: a typed lower third, letterboxed in, held, cleared. The
 // only type this stage shows.
 let cueEl;
+// A fresh rebuild (normal loop point, or a step-mode jump to any frame)
+// must start from the same cue state a first load would: hidden, no
+// leftover reveal animation.
+O.resetCue = () => {
+  cueEl = cueEl || document.getElementById('cue');
+  cueEl.getAnimations().forEach((a) => a.cancel());
+  cueEl.style.visibility = 'hidden';
+};
 O.cue = (tl, time, text, hold = 1.6) => {
   cueEl = cueEl || document.getElementById('cue');
   const len = Math.max(4, text.length);
@@ -215,7 +223,10 @@ O.cue = (tl, time, text, hold = 1.6) => {
     cueEl.textContent = text;
     cueEl.style.visibility = 'visible';
     cueEl.getAnimations().forEach((a) => a.cancel());
-    cueEl.animate({ clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] }, { duration: len * 55, easing: `steps(${len})`, fill: 'forwards' });
+    const anim = cueEl.animate({ clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] }, { duration: len * 55, easing: `steps(${len})`, fill: 'forwards' });
+    // Step mode: this reveal is a native Web Animation, outside the timeline's
+    // own clock - freeze it at the frame's own progress instead of real time.
+    if (O.step != null) { anim.currentTime = Math.max(0, (tl.t - time) * 1000); anim.pause(); }
   }, [], time);
   tl.call(() => {
     if (cueEl.textContent !== text) return;

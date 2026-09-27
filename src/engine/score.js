@@ -21,18 +21,18 @@ function makeKit(tl) {
     paint: (els, name) => (Array.isArray(els) ? els : [els]).forEach((el) => el && O.light(el, name)),
     bg: (name, t) => snd(tl, t, () => O.bg(name)),
 
-    note: (voice, semi, t, dur, o = {}) => snd(tl, t, () => O.voice(voice, semi, ctx.currentTime, dur, o)),
+    note: (voice, semi, t, dur, o = {}) => snd(tl, t, () => O.voice(voice, semi, O.now(), dur, o)),
     deg: O.deg,
     motif: O.motif,
     T: O.T,
-    play: (voice, pair, t, o = {}) => snd(tl, t, () => O.play(voice, pair, ctx.currentTime, o)),
-    arp: (numeral, t, dur, rate, o = {}) => snd(tl, t, () => O.arp(numeral, dur, rate, ctx.currentTime, o)),
+    play: (voice, pair, t, o = {}) => snd(tl, t, () => O.play(voice, pair, O.now(), o)),
+    arp: (numeral, t, dur, rate, o = {}) => snd(tl, t, () => O.arp(numeral, dur, rate, O.now(), o)),
     chord: O.chord,
-    drum: (kind, t, vol, els) => snd(tl, t, () => O.drum(kind, ctx.currentTime, vol, els)),
-    room: (cutoff, feedback, t, dur) => snd(tl, t, () => O.setRoom(cutoff, feedback, dur, ctx.currentTime)),
-    swell: (to, t, dur) => snd(tl, t, () => O.auto(O.master.gain, O.master.gain.value, to, dur, ctx.currentTime, 'linear')),
+    drum: (kind, t, vol, els) => snd(tl, t, () => O.drum(kind, O.now(), vol, els)),
+    room: (cutoff, feedback, t, dur) => snd(tl, t, () => O.setRoom(cutoff, feedback, dur, O.now())),
+    swell: (to, t, dur) => snd(tl, t, () => O.auto(O.master.gain, O.master.gain.value, to, dur, O.now(), 'linear')),
     silence: (t, dur) => snd(tl, t, () => {
-      const g = O.master.gain, ct = ctx.currentTime, v = g.value;
+      const g = O.master.gain, ct = O.now(), v = g.value;
       g.setValueAtTime(0.0001, ct);
       g.setValueAtTime(v, ct + dur);
     }),
@@ -47,6 +47,7 @@ function makeKit(tl) {
     shake: (t, amount, dur) => O.shake(tl, t, amount, dur),
 
     cue: (text, t, hold) => O.cue(tl, t, text, hold),
+    act: (name, t) => O.acts.push({ name, t }),
   };
   return k;
 }
@@ -55,6 +56,9 @@ O.duration = 0;
 
 function buildTimeline(opera) {
   tl = gsap.timeline({ onComplete: () => buildTimeline(opera) });
+  O.tl = tl;
+  O.acts = [];
+  O.resetCue();
   const k = makeKit(tl);
   opera.build(k);
   // Hold the timeline live until the loop's declared end, even if the last

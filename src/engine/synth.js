@@ -62,7 +62,7 @@ O.registerLight = (els, start, end, ampFn) => {
 };
 function tickLights() {
   if (ctx) {
-    const now = ctx.currentTime;
+    const now = O.now();
     lightEnvs = lightEnvs.filter((e) => now <= e.end);
     const peak = new Map();
     for (const e of lightEnvs) {
@@ -157,8 +157,14 @@ O.initAudio = () => {
 // current audio-clock time; used by the shell's ?scale harness. Not in the
 // spec's public list, but there is no other way to reach ctx.currentTime
 // from outside this module, and something has to drive the scale test.
+// The one choke point for the audio clock: step mode (src/engine/index.js)
+// sets O.step to a virtual second while it fast-forwards a muted rebuild;
+// every other reader - here, score.js and stage.js - goes through O.now()
+// instead of ctx.currentTime directly, so lighting never depends on a
+// running (resumed) AudioContext while stepping.
 O.suspend = (on) => ctx && (on ? ctx.suspend() : ctx.resume());
-O.now = () => ctx.currentTime;
+O.step = null;
+O.now = () => (O.step != null ? O.step : (ctx ? ctx.currentTime : 0));
 
 O.setRoom = (cutoff, feedback, dur = 1.5, t) => {
   const time = t ?? (ctx ? ctx.currentTime : 0);

@@ -30,7 +30,10 @@ function ease(name) {
 }
 
 // One state object per element so x, y and scale compose into a single transform.
-const STATES = new WeakMap();
+// let, not const: step mode (index.js) reassigns this to a fresh WeakMap
+// before every rebuild, so a tween's implicit "from" is always read off a
+// clean base rather than whatever a previous jump left cached.
+let STATES = new WeakMap();
 function state(el) {
   let s = STATES.get(el);
   if (!s) {
@@ -74,11 +77,15 @@ class Timeline {
   fromTo(el, a, b, time = this.end) { return this.add(el, a, b, b, time); }
   set(el, o, time = this.end) { return this.add(el, null, o, { duration: 0 }, time); }
   call(fn, args, time = this.end) { this.items.push({ fn, s: time, n: 0, done: false }); this.end = Math.max(this.end, time); return this; }
-  seek(t) {
+  // stepping (step mode only): fire every tl.call with the audio clock set
+  // to that call's own scheduled time (see O.now in synth.js), not the
+  // frame's target time, so registered light envelopes get the right
+  // start; tweens still render at the frame's own time, below.
+  seek(t, stepping) {
     this.t = t;
     this.last = 0;
     this.items.forEach((i) => { i.done = i.on = false; });
-    this.render();
+    this.render(stepping);
   }
   kill() { this.dead = true; cancelAnimationFrame(this.raf); }
   tick = (now) => {
@@ -91,13 +98,13 @@ class Timeline {
     if (live) this.raf = requestAnimationFrame(this.tick);
     else if (this.onComplete) this.onComplete();
   };
-  render() {
+  render(stepping) {
     if (!this.sorted) { this.items.sort((a, b) => a.s - b.s); this.sorted = true; }
     let live = false;
     for (const i of this.items) {
       if (i.done) continue;
       if (this.t < i.s) { live = true; continue; }
-      if (i.fn) { i.done = true; i.fn(); continue; }
+      if (i.fn) { if (stepping) O.step = i.s; i.done = true; i.fn(); continue; }
       if (i.getEl && !i.on) i.el = i.getEl();
       if (!i.el) { i.done = true; continue; }
       const st = state(i.el);
@@ -117,6 +124,7 @@ class Timeline {
       for (const k in i.a) st[k] = i.a[k] + (i.b[k] - i.a[k]) * q;
       apply(i.el, st);
     }
+    if (stepping) O.step = this.t;
     return live;
   }
 }

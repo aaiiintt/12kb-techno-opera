@@ -37,6 +37,7 @@ O.opera = {
 - `k.scale(el, to, t, dur, ease)` / `k.pulse(el, t)` - scale cells in place.
 - `k.camera({ col, row, zoom, dur, ease }, t)`, `k.shake(t, amount, dur)`.
 - `k.cue(text, t, hold)` - one lower-third line.
+- `k.act(name, t)` - record an act marker (name, start second) for the current build. Step mode (`?step`) reads these to label its counter and to jump act to act with shift+arrow.
 
 ## Declared lights
 

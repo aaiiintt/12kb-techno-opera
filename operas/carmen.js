@@ -70,10 +70,12 @@ O.opera = {
     k.room(2400, 0.34, 0, 0.1);
 
     // ---- I. Seville (0 to 6): the square breathes on the habanera bass, a column per beat
+    k.act('SEVILLE', 0);
     let t = 0.3;
     t = habanera(t, 3, (b, i) => col(-6 + b * 8 + i * 2), 0.1);
 
     // ---- II. L'amour (6 to 22): each semitone of the slide is a ring of red
+    k.act("L'AMOUR", t);
     k.cue("L'AMOUR", t + 0.4, 1.6);
     for (let p = 0; p < 2; p++) {
       const start = t;
@@ -85,6 +87,7 @@ O.opera = {
     }
 
     // ---- III. The flower (22 to 30): a red spark arcs to José, whose blue heart starts beating
+    k.act('THE FLOWER', t);
     const arc = [[5, 3], [6, 2], [7, 2], [8, 3], [9, 4], [9, 5], [8, 6]];
     arc.forEach(([c, r], i) => {
       const el = cell(c, r);
@@ -104,6 +107,7 @@ O.opera = {
     t += 6 * B;
 
     // ---- IV. Toréador (30 to 38): a gold comet races the stage's edge, sparkling
+    k.act('TORÉADOR', t);
     k.cue('TORÉADOR!', t + 0.2, 1.4);
     const edge = [];
     for (let c = 0; c < 9; c++) edge.push([c, 0]);
@@ -127,6 +131,7 @@ O.opera = {
     t += lap;
 
     // ---- V. Jealousy (38 to 46): José sings her tune back, inverted, minor; his blue walls in
+    k.act('JEALOUSY', t);
     k.room(700, 0.5, t, 6);
     const inv = k.T.inv()([SLIDE, 'x'.repeat(6)])[0];
     let at = t;
@@ -141,6 +146,7 @@ O.opera = {
     t = at + 0.3;
 
     // ---- VI. The knife (46 to 50): a bar of dark, one beat of the arena, she burns out
+    k.act('THE KNIFE', t);
     k.silence(t, 2 * B);
     t += 2 * B;
     k.bg('sand', t);
@@ -158,6 +164,7 @@ O.opera = {
     k.scale(carmen, 0, t - 2 * B, 2 * B, 'power2.in');
 
     // ---- VII. Libre (50 to 58): her embers rise off the top; the music box plays the slide once more
+    k.act('LIBRE', t);
     k.cue('CARMEN...', t + 0.3, 2.4);
     SLIDE.forEach((n, i) => {
       const x = C + [0, -2, 2, -1, 1, 0][i], at = t + i * B * 0.75;
