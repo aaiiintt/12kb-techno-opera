@@ -8,6 +8,7 @@ Colours, from how Carmen is staged:
 - **Escamillo: gold.** The toreador's *traje de luces*, the suit of lights. He should glitter.
 - **Seville: warm sand.** The sun on the square and the bullring's arena.
 - **Night: black.** The smugglers' mountains, and the background.
+
 **Tune:** the Habanera, D minor, 72 bpm, over its dotted bass (dum, da-dum dum).
 Opening phrase, *L'amour est un oiseau rebelle*: `1+ 7# 7 6# 6 5`, the chromatic slide from D down to A. Answer, *que nul ne peut apprivoiser*: `5 4 5 6 5 4 3`.
 About 60 seconds.
@@ -16,7 +17,7 @@ About 60 seconds.
 
 **II. L'amour.** (16 s) Carmen sings the slide. Every note lights a ring around her, one ring further out per semitone, so the chromatic descent becomes red rings spreading across the grid. The crowd sways: left half on "dum", right half on "da-dum". Cue: L'AMOUR.
 
-**III. The flower.** (8 s) She throws it: one sakura spark arcs across the grid to a blue cell at the edge. José. His cell blooms, and a halo of blue rings starts to beat like a heart.
+**III. The flower.** (8 s) She throws it: one red spark, the flower, arcs across the grid to a blue cell at the edge. José. His cell blooms, and a halo of blue rings starts to beat like a heart.
 
 **IV. Toréador.** (8 s) Escamillo arrives as a gold comet racing round the outside of the stage on the tune, transposed up, sparkling as he goes: the suit of lights. The crowd of sand flashes in stripes. Carmen's rings turn gold where he passes; José's blue halo shrinks. Cue: TORÉADOR!
 
