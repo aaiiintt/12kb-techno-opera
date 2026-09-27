@@ -59,7 +59,9 @@ function makeKit(tl) {
       tl.call(() => {
         const b = el.getBoundingClientRect();
         d = document.createElement('div');
-        d.className = 'say'; d.textContent = text;
+        d.className = 'say';
+        d._rawText = text;
+        d.textContent = O.getText(text);
         document.body.appendChild(d);
         // beside the speaker, but always on screen and clear of the title and buttons
         const w = d.offsetWidth, h = d.offsetHeight;
@@ -70,7 +72,10 @@ function makeKit(tl) {
       }, [], t);
       tl.call(() => d && d.remove(), [], t + hold);
     },
-    act: (name, t) => O.acts.push({ name, t }),
+    act: (name, t) => {
+      O.acts.push({ name, t });
+      tl.call(() => document.querySelectorAll('.say').forEach((d) => d.remove()), [], t);
+    },
   };
   // an act's cue is a caption like any other, beside the dot it belongs to
   k.cue = (text, t, hold = 1.6, el = O.at(CENTER, CENTER)) => k.say(el, text, t, hold);
@@ -78,6 +83,26 @@ function makeKit(tl) {
 }
 
 O.duration = 0;
+O.lang = 'en';
+
+O.getText = (text) => {
+  if (Array.isArray(text)) return O.lang === 'orig' ? (text[1] ?? text[0]) : text[0];
+  if (typeof text === 'object' && text) return O.lang === 'orig' ? (text.orig ?? text.it ?? text.fr ?? text.en) : text.en;
+  return text;
+};
+
+O.setLang = (lang) => {
+  O.lang = lang;
+  document.querySelectorAll('.say').forEach((d) => {
+    if (d._rawText) d.textContent = O.getText(d._rawText);
+  });
+  const en = document.getElementById('lgen'), og = document.getElementById('lgog');
+  if (en && og) {
+    const isEn = O.lang === 'en';
+    en.style.opacity = isEn ? '1' : '.35';
+    og.style.opacity = isEn ? '.35' : '1';
+  }
+};
 
 function buildTimeline(opera) {
   tl = gsap.timeline({ onComplete: () => buildTimeline(opera) });
@@ -99,6 +124,9 @@ O.load = (opera) => {
   const s = opera.stage || {};
   O.bg(null);
   O.applyStage({ grid: s.grid ?? 9 });
+  const og = document.getElementById('lgog');
+  if (og) og.textContent = (opera.lang || 'orig').toUpperCase();
+  O.setLang(O.lang || 'en');
   buildTimeline(opera);
 };
 

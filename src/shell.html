@@ -10,7 +10,9 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .t, .n { position: fixed; text-transform: uppercase; z-index: 20; }
 .t { inset: 0; margin: 0; pointer-events: none; font-weight: 700; letter-spacing: -.03em; }
 .t span, .n a { position: fixed; line-height: 1; white-space: nowrap; }
-.b { position: fixed; top: 1.2vmin; right: 2vw; font-size: 12px; opacity: .5; z-index: 20; }
+.b { position: fixed; top: 1.2vmin; right: 2vw; font-size: 12px; opacity: .5; z-index: 20; display: flex; gap: .8em; align-items: center; }
+.b:hover { opacity: 1; }
+.b a { color: #fff; text-decoration: none; font-weight: 700; cursor: pointer; }
 .n { font-weight: 900; z-index: 25; }
 .mu { position: fixed; z-index: 22; display: none; flex-direction: column; font-weight: 900; text-transform: uppercase; line-height: 1.05; overflow-y: auto; scrollbar-width: none; }
 .mu::-webkit-scrollbar { display: none; }
@@ -50,7 +52,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
   </head>
   <body>
     <h1 class="t" id="ti"></h1>
-    <span class="b" id="bd">%%BYTES%% B</span>
+    <div class="b"><span id="bd">%%BYTES%% B</span><a href="#" id="lg"><span id="lgen">EN</span>/<span id="lgog">IT</span></a></div>
     <nav class="n"><a href="#" id="mn">Menu</a><a href="#" id="pb">Play</a></nav>
     <div class="mu" id="mu"></div>
     <div class="tx" id="tx"></div>
@@ -189,6 +191,11 @@ if (location.search.indexOf('scale') > -1) {
     layout();
   };
 }
+var lg = document.getElementById('lg');
+if (lg) lg.onclick = function (e) {
+  e.preventDefault();
+  if (window.O && O.setLang) O.setLang(O.lang === 'en' ? 'orig' : 'en');
+};
     </script>
   </body>
 </html>

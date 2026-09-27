@@ -35,7 +35,9 @@ O.P = {
   violet: [295, 0.17, 0.72],
 };
 O.light = (el, name) => {
+  if (!el || !el.style) return;
   const L = O.P[name];
+  if (!L) return;
   if (el._l !== name) { el._was = el._l; el._l = name; }   // remember the last light, so a vacated cell can go back to it
   el.style.setProperty('--h', L[0]);
   el.style.setProperty('--cmax', L[1]);
@@ -178,8 +180,13 @@ O.shake = (tl, time, amount = 6, dur = 0.3) => {
 // ---- pilot light: a cell a character is resting on keeps its own hue at
 // a dim, steady level instead of true dusk. pilotEls (from synth.js, which
 // also drives the light loop) holds every cell currently claimed this way. ----
-O.pilot = (el, name) => {
-  if (!el) return;
+O.pilot = (els, name) => {
+  if (!els) return;
+  if (Array.isArray(els)) {
+    els.forEach((el) => O.pilot(el, name));
+    return;
+  }
+  const el = els;
   if (!name) { pilotEls.delete(el); el._pilot = null; return; } // null clears it
   el._pilot = name;
   pilotEls.add(el);

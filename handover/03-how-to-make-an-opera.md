@@ -8,6 +8,10 @@ This is the workflow that produced Carmen, in the order Iain set (his notebook p
 - Read `docs/archive/operas.md` for the research on this opera (tune, strongest dot idea, "fewest moving parts" musical analysis).
 - Know the opera better than the audience: plot, characters, the famous tune, the traditional staging colours.
 
+## Shortcut: the one-shot prompt
+
+`docs/PROMPT.md` does steps 1 to 4 in one go: fill in the opera's name, run it, save the JSON it returns to `docs/treatments/<id>.json`, sanity-check it (plot, tune, colours), and take it to Iain to pick versions. The prompt carries the stage rules and the proven moves, so it works in any LLM without the repo.
+
 ## 1. Break it into acts
 
 Five to seven acts that tell a simple story, one plot beat each, named in the opera's language. Carmen: SEVILLE, L'AMOUR, THE FLOWER, TORÉADOR, JEALOUSY, THE KNIFE, LIBRE. The last act is the audience's feeling at the curtain, not a plot beat: give it the most time.

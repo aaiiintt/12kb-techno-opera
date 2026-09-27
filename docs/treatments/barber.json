@@ -1,0 +1,164 @@
+{
+  "$schema": "../treatment.schema.json",
+  "id": "barber",
+  "title": "IL BARBIERE DI SIVIGLIA",
+  "lang": "it",
+  "key": { "root": 0, "mode": "major" },
+  "tempo": 132,
+  "tune": {
+    "name": "Largo al factotum: Figaro qua, Figaro là",
+    "degrees": ["1", "3", "5", "1+", "7", "6", "5", "4", "3", "2", "1"],
+    "beats": [0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0],
+    "fromMemory": true
+  },
+  "motifs": [
+    {
+      "name": "Ecco ridente in cielo (Almaviva's serenade)",
+      "degrees": ["1", "3", "5", "6", "5", "3", "4", "2", "1"],
+      "beats": [1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5, 1.5],
+      "fromMemory": true
+    },
+    {
+      "name": "Una voce poco fa (Rosina's mischief)",
+      "degrees": ["3", "4", "5", "6", "5", "4", "3", "2", "1", "7-", "1"],
+      "beats": [0.5, 0.25, 0.25, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.0],
+      "fromMemory": true
+    },
+    {
+      "name": "La tempesta (Rossini storm)",
+      "degrees": ["1+", "7", "7b", "6", "6b", "5", "5b", "4", "3", "2", "1"],
+      "beats": [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.5, 0.5, 1.0],
+      "fromMemory": true
+    },
+    {
+      "name": "Felicità (Di sì felice innesto)",
+      "degrees": ["1", "3", "5", "1+", "5", "3", "1"],
+      "beats": [0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 1.5],
+      "fromMemory": true
+    }
+  ],
+  "colours": [
+    { "name": "sand", "css": "#e8c894", "means": "Seville streets and town square (shared with Carmen)", "kind": "staging", "source": "sunlit pavement of Seville" },
+    { "name": "night", "css": "#1c2a4a", "means": "Dawn moonlight and midnight storm", "kind": "staging", "source": "night sky over Seville" },
+    { "name": "gold", "css": "#f4b93a", "means": "Count Almaviva and candlelight", "kind": "staging", "source": "nobleman's coat and window light" },
+    { "name": "rose", "css": "#f08098", "means": "Rosina", "kind": "staging", "source": "Rosina's silk dress" },
+    { "name": "soldier", "css": "#62c43a", "means": "Almaviva's drunken soldier disguise", "kind": "story", "source": "cavalry uniform" },
+    { "name": "fusty", "css": "#8b5a2b", "means": "Dr. Bartolo, guardian and lock", "kind": "staging", "source": "drab doctor's frock coat" },
+    { "name": "bulb", "css": "#ffffff", "means": "Figaro, clean linen and razor glint", "kind": "staging", "source": "barber's apron and bright daylight" }
+  ],
+  "characters": [
+    { "name": "Figaro", "colour": "bulb", "cell": [4, 4], "voice": "tenor", "enters": "LARGO AL FACTOTUM" },
+    { "name": "Almaviva", "colour": "gold", "cell": [4, 7], "voice": "tenor", "enters": "ECCO RIDENTE" },
+    { "name": "Rosina", "colour": "rose", "cell": [4, 1], "voice": "soprano", "enters": "ECCO RIDENTE" },
+    { "name": "Bartolo", "colour": "fusty", "cell": [2, 4], "voice": "bass", "enters": "UNA VOCE POCO FA" }
+  ],
+  "acts": [
+    {
+      "name": "I PERSONAGGI",
+      "happens": "Overture roll call: dark stage spotlights and zooms in on each of the four characters one by one with their signature sound and badge.",
+      "feeling": "Anticipation, theatrical charm, clarity",
+      "set": "Dark stage in deep night indigo.",
+      "characters": "Almaviva (gold), Rosina (rose), Bartolo (fusty brown), Figaro (clean white).",
+      "actions": "Close-up zooms on each character in turn: Almaviva with guitar strum (ALMAVIVA : THE LOVER 🎸), Rosina with soprano flutter (ROSINA : THE WARD), Bartolo with grumpy bass thud (BARTOLO : THE GUARDIAN), Figaro with razor snip rhythm (FIGARO : THE BARBER ✂️); then camera pulls wide as the street settles for dawn.",
+      "music": "Signature character motifs and acoustic Spanish guitar strums.",
+      "emotion": "Setting the comedic stage and meeting the players.",
+      "captions": ["ALMAVIVA : THE LOVER 🎸", "ROSINA : THE WARD", "BARTOLO : THE GUARDIAN", "FIGARO : THE BARBER ✂️"],
+      "chosen": "theatrical roll call"
+    },
+    {
+      "name": "ECCO RIDENTE",
+      "happens": "Count Almaviva serenades Rosina's locked balcony at dawn.",
+      "feeling": "Hopeful, romantic, silly",
+      "set": "Dark street at dawn in deep blue-black night, with one warm gold window glowing high at the top.",
+      "characters": "Almaviva in gold alone at the bottom; Rosina a dim rose dot behind the top window.",
+      "actions": "Almaviva strums upward arpeggios that radiate towards the window; Rosina's shutter opens and brightens; she drops a secret note before the window shuts.",
+      "music": "Lyrical serenade on tenor voice with guitar-like arp plucks; soft morning bass pulse.",
+      "emotion": "A lone lover looking up into the dark; sweet, gentle comedy.",
+      "captions": ["ALMAVIVA", "🎸", "ROSINA", "CHI È ?", "LINDORO !"],
+      "versions": [
+        { "label": "serenade under the shutter", "idea": "Almaviva stands below, plucking guitar arpeggios that radiate small upward arcs; the window at [4, 1] flickers awake in gold, revealing Rosina." },
+        { "label": "drifting dawn wash", "idea": "Street starts in pure indigo; with each phrase of the song, dawn light spreads from bottom to top until the window opens." },
+        { "label": "hired musicians crowd", "idea": "A little trio of dots accompanies Almaviva, plucking around him, then scurrying off when Bartolo stirs." }
+      ],
+      "chosen": "serenade under the shutter"
+    },
+    {
+      "name": "LARGO AL FACTOTUM",
+      "happens": "Figaro bursts onto the scene, bragging that everyone in town demands his services. He snakes across the market, bumping into townspeople with rapid-fire service pitches.",
+      "feeling": "Pure energy, delight, unstoppable swagger",
+      "set": "Seville town square in broad daylight; townspeople stand dotted across the entire screen like market stalls and shoppers.",
+      "characters": "Figaro in clean linen white, owning the bustling square.",
+      "actions": "Figaro enters solo in the center; as the crowd gathers dotted across the entire screen, Figaro snakes like the classic Nokia Snake game through the pedestrian lanes at lightning speed, leaving a glowing speed blur trail behind him; he bumps into customers in turn to deliver his services (✂️ FIGARO !, 🦱 FIGARO !, 🧪 FIGARO !, 💌 FIGARO !); finally zips back dead centre as the whole crowd shouts FIGARO ! and he delivers his comic wink (😉 SON QUA !).",
+      "music": "Galloping 6/8 Rossini tempo; tenor swagger jumping into lightning-fast 16th-note arp patter.",
+      "emotion": "Relentless momentum and ego; the thrill of someone completely in control of the room.",
+      "captions": ["✂️ FIGARO !", "🦱 FIGARO !", "🧪 FIGARO !", "💌 FIGARO !", "FIGARO !", "😉 SON QUA !"],
+      "wink": "Crowd flashes FIGARO! as Figaro freezes dead centre.",
+      "versions": [
+        { "label": "the nokia snake crowd", "idea": "Townspeople dotted across the entire screen; Figaro slithers between them leaving a speed blur trail, bumping into customers with his badges (barber, wigmaker, doctor, postman), then freezes dead centre for the wink." },
+        { "label": "the four-corner dash", "idea": "Figaro zips to all four corners of the grid in rapid succession while the stage freezes; at the climax, 3 corner dots simultaneously shout FIGARO! and he freezes dead centre (SON QUA!)." },
+        { "label": "bouncing pinball", "idea": "Figaro bounces off the grid borders like a billiard ball on every 6/8 beat, stopping dead in the centre on the wink." }
+      ],
+      "chosen": "the nokia snake crowd"
+    },
+    {
+      "name": "UNA VOCE POCO FA",
+      "happens": "Rosina writes her secret love letter while Bartolo guards the parlour. Figaro arrives as the courier to deliver the note to Lindoro waiting in the street.",
+      "feeling": "Mischief, yearning, cunning",
+      "set": "Bartolo's parlour. Bartolo guards on the left [2, 4]; Rosina is at her writing desk on the right [6, 4]; Lindoro waits below in the street [4, 7].",
+      "characters": "Rosina in rose silk, Bartolo in fusty brown, Figaro in white linen, Lindoro in gold.",
+      "actions": "Rosina sings her sweet cantabile melody; she shows the secret letter (💌 A LOVE LETTER / 💌 IL BIGLIETTO); Figaro arrives as the courier (💌 POSTMAN! / 💌 POSTINO!); Rosina hands him the note (💌 FOR LINDORO! / 💌 PER LINDORO!); Figaro agrees (🤫 LEAVE IT TO ME! / 🤫 LASCIA FARE!) and darts down to the street where Lindoro catches it with a joyful guitar strum; Bartolo stalks over suspicious (🧐 WHO WAS THAT?! / 🧐 CHI ERA?!); Rosina plays innocent (😇 NOBODY! / 😇 NESSUNO!); Rosina winks at the audience (😉 …BUT! / 😉 …MA!).",
+      "music": "Sweet soprano cantabile melody over pizzicato accompaniment, bursting into playful coloratura trills and guitar strum.",
+      "emotion": "Apparent innocence hiding pure scheming; outsmarting the guardian right under his nose.",
+      "captions": ["💌 A LOVE LETTER", "💌 POSTMAN!", "💌 FOR LINDORO!", "🤫 LEAVE IT TO ME!", "🧐 WHO WAS THAT?!", "😇 NOBODY!", "😉 …BUT!"],
+      "versions": [
+        { "label": "the courier handoff", "idea": "Rosina writes her secret note; Figaro slips into the room to take it; Figaro runs it down to Lindoro waiting in the street; Bartolo stalks over suspicious; Rosina plays innocent; winks …BUT! when he turns away." }
+      ],
+      "chosen": "the courier handoff"
+    },
+    {
+      "name": "IL SOLDATO",
+      "happens": "Bartolo's soldier guard is asleep and snoring in the parlour corridor. Almaviva tiptoes past to rescue Rosina, but accidental clatter wakes the guard.",
+      "feeling": "Silent comedy, suspense, slapstick escape",
+      "set": "Bartolo's parlour corridor; guard asleep dead centre [4, 4].",
+      "characters": "Guard in soldier green [4, 4], Almaviva in gold [1, 4], Rosina waiting on the right [7, 4].",
+      "actions": "Guard snores asleep with deep saw-wave rumbles (💤 SNORE... / 💤 RONF...); Almaviva tiptoes in with staccato pizzicato steps; guard lets out a loud snort (💤 ZZZ!) and Almaviva freezes; Almaviva slips around the guard; sudden kick/snare clatter; guard snaps awake shouting (🛑 STOP! / 🛑 ALTO!); Almaviva grabs Rosina and runs (🏃 RUN! / 🏃 VIA!).",
+      "music": "Deep comical snoring drone, stealthy pizzicato tiptoe runs, sudden cymbal/drum crash, and panicked allegro sprint.",
+      "emotion": "Classic slapstick farce: holding your breath, sudden noise, and thrilling escape.",
+      "captions": ["💤 SNORE...", "💤 ZZZ!", "🛑 STOP!", "🏃 RUN!"],
+      "versions": [
+        { "label": "the sleeping guard tiptoe", "idea": "Guard snores asleep in the corridor; lover tiptoes past; guard snorts; freeze; clatter wakes him; STOP!; lovers dash." }
+      ],
+      "chosen": "the sleeping guard tiptoe"
+    },
+    {
+      "name": "LA TEMPESTA",
+      "happens": "A midnight storm rages as Figaro and Almaviva sneak a ladder up to Rosina's balcony.",
+      "feeling": "Hurry, suspense, urgency",
+      "set": "Midnight sky in dark indigo; violent full-grid lightning strobes.",
+      "characters": "Figaro (white) and Almaviva (gold) below; Rosina (rose) above at the window.",
+      "actions": "Chromatic rain runs sweep the grid; lightning flashes; a column of cells lights 1-by-1 upward like a ladder (🪜 THE LADDER! / 🪜 LA SCALA!); the lovers unite and run (🏃 RUN! / 🏃 VIA!).",
+      "music": "Rossini thunderstorm: rapid piccolo-like arp chromatic descents, deep bass drum thunder rumbles, silence between thunderclaps.",
+      "emotion": "Danger and urgency, rushing against the clock.",
+      "captions": ["🪜 THE LADDER!", "🏃 RUN!"],
+      "versions": [
+        { "label": "the lightning ladder", "idea": "Chromatic rain runs on the arp voice; sudden full-grid white lightning strobes; ladder lights 1-by-1 upward; lovers unite and flee." }
+      ],
+      "chosen": "the lightning ladder"
+    },
+    {
+      "name": "FELICITÀ",
+      "happens": "In the cathedral, Almaviva and Rosina are married at the altar. Bartolo accepts defeat, the couple share a tender altar close-up with a glowing heart emoji, and a warm wave of love turns the whole congregation pink.",
+      "feeling": "Joy, romantic release, radiant celebration",
+      "set": "Cathedral interior: central aisle flanked by pews of wedding guests.",
+      "characters": "Groom (Almaviva in gold) and Bride (Rosina in rose) at the altar [3,2] and [5,2]; Figaro (white) presiding at [4,1]; Bartolo (fusty brown) at the church doors [4,8].",
+      "actions": "Bartolo rushes into church doors (STOP!); sees bride (💍 MARRIED! / 💍 SPOSI!); shrugs defeat (🤷 OH WELL! / 🤷 PAZIENZA!); close-up zoom on couple at altar with glowing heart emoji (❤️) and lyrical love duet crescendo; camera pulls wide as concentric pink waves radiate from the altar, turning all wedding guests throughout the cathedral pink; triumphant tutti Rossini wedding cadence (🎉 HAPPINESS! / 🎉 FELICITÀ!).",
+      "music": "Cathedral acoustics; sparkling church bell arpeggios on arp; full-throated soprano and tenor duet; triumphant Rossini wedding cadence.",
+      "emotion": "Unadulterated celebration; love wins, the fixer gets paid, everyone is happy.",
+      "captions": ["STOP!", "💍 MARRIED!", "🤷 OH WELL!", "❤️", "🎉 HAPPINESS!"],
+      "versions": [
+        { "label": "the altar zoom and pink love wave", "idea": "Cathedral pews; Bartolo shrugs OH WELL!; close-up zoom on altar couple with heart emoji and love duet crescendo; concentric pink waves turn the whole congregation pink." }
+      ],
+      "chosen": "the altar zoom and pink love wave"
+    }
+  ]
+}

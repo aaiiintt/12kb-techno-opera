@@ -22,6 +22,7 @@ Then read the working documents in the repo, which the handover points at rather
 - `docs/KIT.md`: the API an opera file writes against.
 - `docs/LOG.md`: every technique that was accepted and every idea that was rejected, with reasons.
 - `docs/music-guide.md`: Iain's own music brief. Its rules are hard rules.
+- `docs/PROMPT.md`: the one-shot prompt that turns an opera's name into a treatment brief.
 - `.claude/skills/dot-opera/SKILL.md`: the five-step workflow as a skill. Invoke it with `/dot-opera` when starting an opera.
 - `operas/carmen.js` and `docs/treatments/carmen.json`: the worked example. Read them side by side.
 

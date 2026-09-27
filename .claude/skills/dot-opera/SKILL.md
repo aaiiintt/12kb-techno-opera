@@ -9,6 +9,10 @@ Read first: `docs/BRIEF.md` (the limits), `docs/TOOLSET.md` (what we can make), 
 
 Work in Iain's five steps. Stop where it says stop.
 
+## Shortcut for steps 1 to 4
+
+`docs/PROMPT.md` is a one-shot prompt: fill in the opera's name, run it, and it returns the pitch and the treatment JSON with three versions per act. Save the JSON to `docs/treatments/<id>.json`, check it against the schema and against what you know of the opera, then take it to Iain for step 4. Steps 1 to 4 below are what the prompt does, for when you'd rather do them by hand.
+
 ## 1. Break it into acts
 
 Break the opera into five to seven key acts that tell a simple story. One beat of plot each. Name each act in the opera's language.

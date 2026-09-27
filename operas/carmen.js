@@ -116,7 +116,7 @@ O.opera = {
     });
     // what the crowd says, one voice at a time
     const voice = (i, text) => { const [c, r] = PATH[i + 1]; const p = crowd.filter((q) => Math.hypot(q.c - c, q.r - r) < 1.6)[0]; if (p) k.say(p.el, text, walkStart + i * B + 0.1, 1.1); };
-    voice(0, 'QUI EST-ELLE ?');
+    voice(0, ['WHO IS SHE ?', 'QUI EST-ELLE ?']);
     voice(3, 'OH LÀ LÀ !');
     voice(5, 'CARMEN !');
     // she stops dead; the whole square glows faintly towards her
@@ -129,7 +129,7 @@ O.opera = {
 
     // ---- II. L'amour (6 to 22): each semitone of the slide is a ring of red
     k.act("L'AMOUR", t);
-    k.cue("L'AMOUR", t + 0.4, 1.6, carmen);
+    k.cue(['LOVE', "L'AMOUR"], t + 0.4, 1.6, carmen);
     for (let p = 0; p < 2; p++) {
       const start = t;
       habanera(start, 4, (b, i) => (i === 0 || i === 3) ? W.filter((_, n) => n % 2 === 0) : null, 0.06);
@@ -159,7 +159,7 @@ O.opera = {
     const petals = [cell(2, 4)];                     // the flower: one red dot beside him
     paint(petals, 'red', t - 0.01);
     petals.forEach((el) => pilot(el, 'red', t));  // he keeps her flower until she dies
-    k.say(petals[0], 'UNE FLEUR !', t + 0.1, 1.4);
+    k.say(petals[0], ['A FLOWER !', 'UNE FLEUR !'], t + 0.1, 1.4);
    
     for (let h = 0; h < 6; h++) {
       k.drum('heartbeat', t + h * B, 0.14, [jose, ...petals]);
@@ -248,7 +248,7 @@ O.opera = {
     k.note('tenor', SLIDE[2] - 12, t + 1 * B, 1.2 * B, { vol: 0.12, light: jose });
     paint(petals, 'green', t + 1.9 * B - 0.01, 1);
     k.note('tenor', SLIDE[4] - 12, t + 1.9 * B, 1.2 * B, { vol: 0.1, light: petals });
-    k.say(jose, 'ELLE EST À MOI', t + 1.2 * B, 1.8);
+    k.say(jose, ['SHE IS MINE', 'ELLE EST À MOI'], t + 1.2 * B, 1.8);
     t += 3.2 * B;
     // the ink: the box round her, nearest him first
     const ink = [];
@@ -289,14 +289,14 @@ O.opera = {
       k.hop(from, to, at);
       k.note('tenor', k.deg(['3', '2'][i]), at, 1.8 * B, { vol: 0.14, light: to });
     });
-    k.say(jose2, "CARMEN, JE T'AIME", t + 1.2 * B, 1.6);
+    k.say(jose2, ['CARMEN, I LOVE YOU', "CARMEN, JE T'AIME"], t + 1.2 * B, 1.6);
     k.note('soprano', k.deg('5'), t + 3.6 * B, B, { vol: 0.15, light: [carmen, esca] });   // she looks to the gold
-    k.say(carmen, 'NON !', t + 3.6 * B, 1.2);
+    k.say(carmen, ['NO !', 'NON !'], t + 3.6 * B, 1.2);
     t += 5 * B;
     // silence, close on the two of them, side by side
     k.shot('close', t, { on: [3.5, 4] });
     k.silence(t, 3 * B);
-    k.say(jose3, 'UN COUTEAU !', t + 1.6 * B, 1.3);
+    k.say(jose3, ['A KNIFE !', 'UN COUTEAU !'], t + 1.6 * B, 1.3);
     t += 3 * B;
     // the hit: she flashes white and red, white and red, a snare on each white
     k.shake(t, 6, 0.3);
@@ -309,7 +309,7 @@ O.opera = {
     t += 2 * B;
     // the wink: José realises what he's done. A beat of nothing, then one word
     // and a small falling "uh-oh" in his voice.
-    k.say(jose3, 'MERDE !', t + 0.4 * B, 1.4);
+    k.say(jose3, ['DAMN !', 'MERDE !'], t + 0.4 * B, 1.4);
     k.note('tenor', k.deg('3'), t + 0.4 * B, 0.3 * B, { vol: 0.12, light: jose3 });
     k.note('tenor', k.deg('1'), t + 0.75 * B, 0.6 * B, { vol: 0.1, light: jose3 });
     t += 1.6 * B;
@@ -332,7 +332,7 @@ O.opera = {
     // alone, and himself again
     pilot(jose3, 'blue', t);
     k.note('tenor', k.deg('1-'), t, 3 * B, { vol: 0.12, light: jose3 });
-    k.say(jose3, 'CARMEN… ADORÉE', t + 0.2, 2.2);
+    k.say(jose3, ['CARMEN… MY LOVE', 'CARMEN… ADORÉE'], t + 0.2, 2.2);
     t += 3.5 * B;
 
     // ---- VII. Libre. Feeling: grief, then catharsis, how an audience feels
