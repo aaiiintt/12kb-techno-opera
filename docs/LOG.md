@@ -51,6 +51,8 @@ The skill is `.claude/skills/dot-opera/SKILL.md`; treatments are JSON (`docs/tre
 - **A stab is a flash on her, not an object (27 Sep).** They stand side by side; UN COUTEAU ! in the silence; she flashes white and red, white and red. A separate white dot between them read as big and odd.
 - **Characters join the no-repaint list when they enter (27 Sep).** A character's cell is protected from mass paints only once they're on stage; before that it's part of the scene, or it shows up as a rogue dot in someone else's rings.
 
+- **The wink (27 Sep, Iain).** A well-timed MERDE ! just after the knife: big feeling, then one deadpan caption at exactly the wrong moment. One or two per opera.
+
 ## Avoid
 
 - Two caption treatments (27 Sep): the lower-third cue and the speech tags looked like two systems.

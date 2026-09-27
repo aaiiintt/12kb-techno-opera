@@ -307,6 +307,12 @@ O.opera = {
       k.drum('snare', t + i * B / 2, 0.2 - i * 0.04, [carmen]);
     }
     t += 2 * B;
+    // the wink: José realises what he's done. A beat of nothing, then one word
+    // and a small falling "uh-oh" in his voice.
+    k.say(jose3, 'MERDE !', t + 0.4 * B, 1.4);
+    k.note('tenor', k.deg('3'), t + 0.4 * B, 0.3 * B, { vol: 0.12, light: jose3 });
+    k.note('tenor', k.deg('1'), t + 0.75 * B, 0.6 * B, { vol: 0.1, light: jose3 });
+    t += 1.6 * B;
     // pity: still close, she sings the end of her Habanera, slow and soft, and fades out
     t = sing('soprano', ANSWER, ANSWER_D, t, () => carmen, { vol: 0.09, slow: 1.3 });
     pilot(carmen, null, t - B);

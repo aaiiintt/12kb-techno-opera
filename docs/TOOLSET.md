@@ -48,4 +48,5 @@ What we can make with dots, sound and captions, grouped the way a treatment asks
 - **Contrast lands endings.** Reuse what the audience already knows, slowed or silenced.
 - **Time to wallow.** The ending gets the most time.
 - **Captions carry what the dots can't,** one style only: a small white-on-black tag beside a dot, in the opera's language. The pictures must still tell the story without them.
+- **The wink.** One or two per opera: a deadpan caption at exactly the wrong moment, with a tiny musical shrug, after a beat of nothing. José's MERDE ! and a falling "uh-oh" just after the knife, before the pity. (The knife)
 - **Story colours,** at most three, each meaning one thing (green is jealousy, white is the knife).

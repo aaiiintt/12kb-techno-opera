@@ -61,6 +61,7 @@
           "music": { "type": "string", "description": "Which theme, which voice, tempo, silence" },
           "emotion": { "type": "string", "description": "How the pieces add up to the feeling" },
           "captions": { "type": "array", "items": { "type": "string" }, "description": "Small tags beside dots, in the opera's language" },
+          "wink": { "type": "string", "description": "The deadpan comic beat, if this act has one (one or two per opera)" },
           "versions": {
             "type": "array", "minItems": 3, "maxItems": 3,
             "items": { "type": "object", "required": ["label", "idea"], "properties": { "label": { "type": "string" }, "idea": { "type": "string" } } }
