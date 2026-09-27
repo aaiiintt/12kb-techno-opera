@@ -180,6 +180,7 @@ O.pilot = (el, name) => {
   if (!name) { pilotEls.delete(el); el._pilot = null; return; } // null clears it
   el._pilot = name;
   pilotEls.add(el);
+  startLightLoop();                                 // resting lights show before any sound has played
   O.light(el, name);
 };
 

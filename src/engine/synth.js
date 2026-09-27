@@ -61,7 +61,7 @@ O.registerLight = (els, start, end, ampFn) => {
   lightEnvs.push({ els: list, start, end, ampFn });
 };
 function tickLights() {
-  if (ctx) {
+  if (ctx || O.step != null) {
     const now = O.now();
     lightEnvs = lightEnvs.filter((e) => now <= e.end);
     const peak = new Map();

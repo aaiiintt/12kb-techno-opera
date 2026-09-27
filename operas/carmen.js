@@ -75,38 +75,27 @@ O.opera = {
     k.room(2400, 0.34, 0, 0.1);
     k.shot('wide', 0);
 
-    // ---- I. Seville: a teeming square. Every dot is someone moving; every
-    // step is a murmur. Wide on the crowd, then mid as Carmen starts to dance
-    // through it, then close, following her red, then wide as she stops to sing.
+    // ---- I. Seville. Feeling: she draws every eye. The square is packed and
+    // warm and still; only Carmen moves, and the people beside her brighten
+    // and swell as she passes, heads turning, a wake of attention. Wide on the
+    // crowd, mid as she starts, close following her, wide as she stops dead.
     k.act('SEVILLE', 0);
     let seed = 7;                                  // seeded, so every rebuild is the same crowd
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     const CHAT = ['1', '3', '4', '5', '7', '1+', '3+'].map(k.deg);
-    const walkHop = 2 * B;                         // Carmen moves on dum and on the last dum of each bar
     const walkStart = 2.5, arrive = walkStart + (PATH.length - 1) * B;
-    const where = (t2) => PATH[Math.max(0, Math.min(PATH.length - 1, Math.floor((t2 - walkStart) / B) + 1))];
-    // each person is a dim resting light that wanders, murmuring as it steps
-    const taken = new Set();
-    for (let w = 0; w < 34; w++) {
-      let c, r, el;
-      do { c = Math.floor(rnd() * 26) - 9; r = Math.floor(rnd() * 30) - 11; el = cell(c, r); } while (!el || taken.has(el) || (c === 4 && r === 4));
-      taken.add(el);
-      pilot(el, 'sand', 0);
-      let at = 0.2 + rnd() * 0.9;
-      while (at < arrive - 0.6) {                   // settle before she arrives, so every ember has cooled
-        const nc = c + Math.floor(rnd() * 3) - 1, nr = r + Math.floor(rnd() * 3) - 1, [pc, pr] = where(at);
-        const to = cell(nc, nr);
-        if (to && !taken.has(to) && !(nc === pc && nr === pr) && !(nc === 4 && nr === 4) && !PATH.some(([x, y]) => x === nc && y === nr)) {
-          taken.delete(el); taken.add(to);
-          paint(to, 'sand', at - 0.01);
-          k.hop(el, to, at);
-          k.note('arp', CHAT[Math.floor(rnd() * CHAT.length)] + 12, at, 0.12, { vol: 0.03, light: to });
-          el = to; c = nc; r = nr;
-        }
-        at += 0.5 + rnd() * 0.6;
-      }
-      pilot(el, null, arrive);                       // the crowd stills as she stops to sing
+    const onPath = (c, r) => PATH.some(([x, y]) => x === c && y === r);
+    // the crowd: about half the square, standing, each one a dim resting light
+    const crowd = [];
+    for (let c = -9; c <= 17; c++) for (let r = -11; r <= 19; r++) {
+      const el = cell(c, r);
+      if (el && rnd() < 0.5 && !onPath(c, r) && !(c === C && r === C)) crowd.push({ el, c, r });
     }
+    crowd.forEach(({ el }) => { paint(el, 'sand', 0); pilot(el, 'sand', 0); });
+    // murmur: each person twinkles now and then on their own little note, in place
+    for (let at = 0.1; at < arrive; at += 0.12)     // about 25 murmurs a second, from anyone
+      for (let n = 0; n < 3; n++)
+        k.note('arp', CHAT[Math.floor(rnd() * CHAT.length)] + 12, at + rnd() * 0.1, 0.1, { vol: 0.012, light: crowd[Math.floor(rnd() * crowd.length)].el });
     habanera(0.3, Math.ceil((arrive + 0.6) / (2 * B)), null, 0.1);
     k.pulse(start, 0.3); k.pulse(start, 0.3 + 2 * B);            // she waits, alive
     k.shot('mid', walkStart, { on: PATH[0] });
@@ -116,9 +105,26 @@ O.opera = {
       k.hop(from, to, at);
       k.note('soprano', k.deg(['5', '4', '3', '2', '3', '5'][i]), at, B * 0.5, { vol: 0.05, light: to });
       if (i >= 1) k.shot('close', at, { on: [c, r], dur: 0.35 });   // close, and the camera walks with her
+      // the people beside her turn to look: brighten, swell, settle
+      const near = crowd.filter((p) => Math.hypot(p.c - c, p.r - r) < 1.6).map((p) => p.el);
+      if (near.length) {
+        k.note('arp', k.deg('5+'), at + 0.06, B * 0.7, { vol: 0.045, light: near });
+        k.scale(near, 1.18, at + 0.06, 0.18, 'power2.out');
+        k.scale(near, 1, at + 0.4, 0.6, 'sine.inOut');
+      }
     });
-    let t = arrive + 0.4;
-    k.shot('wide', t);
+    // what the crowd says, one voice at a time
+    const voice = (i, text) => { const [c, r] = PATH[i + 1]; const p = crowd.filter((q) => Math.hypot(q.c - c, q.r - r) < 1.6)[0]; if (p) k.say(p.el, text, walkStart + i * B + 0.1, 1.1); };
+    voice(0, 'QUI EST-ELLE ?');
+    voice(3, 'OH LÀ LÀ !');
+    voice(5, 'CARMEN !');
+    // she stops dead; the whole square glows faintly towards her
+    k.shot('wide', arrive + 0.2);
+    const byRing = {};
+    crowd.forEach((p) => { const d = Math.round(Math.hypot(p.c - C, p.r - C)); (byRing[d] = byRing[d] || []).push(p.el); });
+    Object.keys(byRing).forEach((d) => k.note('arp', k.deg('1+'), arrive + 0.2 + d * 0.04, 1.4, { vol: 0.02, light: byRing[d] }));
+    crowd.forEach(({ el }) => pilot(el, null, arrive + 0.4));
+    let t = arrive + 0.6;
 
     // ---- II. L'amour (6 to 22): each semitone of the slide is a ring of red
     k.act("L'AMOUR", t);

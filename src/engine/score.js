@@ -53,6 +53,23 @@ function makeKit(tl) {
     shake: (t, amount, dur) => O.shake(tl, t, amount, dur),
 
     cue: (text, t, hold) => O.cue(tl, t, text, hold),
+    // a small speech tag beside a cell: someone in the crowd says something
+    say: (el, text, t, hold = 1) => {
+      let d;
+      tl.call(() => {
+        const b = el.getBoundingClientRect();
+        d = document.createElement('div');
+        d.className = 'say'; d.textContent = text;
+        document.body.appendChild(d);
+        // beside the speaker, but always on screen and clear of the title and buttons
+        const w = d.offsetWidth, h = d.offsetHeight;
+        const ti = document.querySelector('#ti span'), nv = document.querySelector('.n a');
+        const top = ti ? ti.getBoundingClientRect().bottom + 8 : 8, bot = nv ? nv.getBoundingClientRect().top - h - 8 : innerHeight - h - 8;
+        d.style.left = (b.right + w < innerWidth - 8 ? b.right : Math.max(8, b.left - w)) + 'px';
+        d.style.top = Math.min(bot, Math.max(top, b.top - b.height * 0.2)) + 'px';
+      }, [], t);
+      tl.call(() => d && d.remove(), [], t + hold);
+    },
     act: (name, t) => O.acts.push({ name, t }),
   };
   return k;
@@ -65,6 +82,7 @@ function buildTimeline(opera) {
   O.tl = tl;
   O.acts = [];
   O.resetCue();
+  document.querySelectorAll('.say').forEach((d) => d.remove());
   const k = makeKit(tl);
   opera.build(k);
   // Hold the timeline live until the loop's declared end, even if the last

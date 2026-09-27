@@ -42,6 +42,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .dot::after { filter: blur(calc(var(--dot-size) * .30)); transform: scale(1.7); opacity: calc(var(--l) * var(--wide,0)); }
 .cue { position: fixed; z-index: 22; color: #fff; text-transform: uppercase; font-weight: 800; background: #000;
   left: 50%; bottom: 14vh; transform: translateX(-50%); max-width: 92vw; padding: .06em .3em; font-size: clamp(16px, 3.8vw, 48px); letter-spacing: -.03em; white-space: nowrap; visibility: hidden; }
+.say { position: fixed; z-index: 23; background: #000; color: #fff; font-weight: 900; text-transform: uppercase; font-size: clamp(11px, 1.6vw, 18px); line-height: 1; padding: .35em .5em; white-space: nowrap; pointer-events: none; }
 .st { position: fixed; z-index: 26; right: 2vw; bottom: 1.2vh; text-transform: uppercase; font-weight: 900; font-size: clamp(12px, 2vw, 16px); }
     </style>
   </head>
