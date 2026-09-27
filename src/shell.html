@@ -66,13 +66,17 @@ document.title = O.opera.title;
 // row. Left edges sit on the first whole column, right edges on the last. A title too wide for one line wraps to the next pair of
 // rows, one empty row between.
 function grid() {
-  var r = [], c = [], D = 0;
+  // measure the grid as it is, not as the camera sees it: a close shot would
+  // make the type huge (the transform goes straight back after)
+  var r = [], c = [], D = 0, tr = world.style.transform;
+  world.style.transform = 'none';
   document.querySelectorAll('#grid .dot').forEach(function (d) {
     var b = d.getBoundingClientRect();
     D = b.width;
     if (b.top >= 0 && b.bottom <= innerHeight) r.push(Math.round(b.top));
     if (b.left >= 0 && b.right <= innerWidth) c.push(Math.round(b.left));
   });
+  world.style.transform = tr;
   var u = function (a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; }); };
   return { r: u(r), c: u(c), D: D };
 }
