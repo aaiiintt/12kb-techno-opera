@@ -10,6 +10,7 @@ O.opera = {
     blue: '#3d6fe0',   // José: the dragoon's uniform
     gold: '#f4b93a',   // Escamillo: the suit of lights
     sand: '#e8c894',   // Seville: sun on the square, the arena
+    green: '#62c43a',  // jealousy, the green-eyed monster: a storytelling colour, José's alone
   },
 
   build(k) {
@@ -67,6 +68,7 @@ O.opera = {
     k.paint(W, 'sand');
     k.pilot(jose, null);
     k.pilot(cell(3, 4), null);
+    k.pilot(cell(2, 4), null);
     k.pilot(esca, null);
     k.pilot(carmen, null);
     paint(start, 'red', 0, 1);
@@ -182,25 +184,39 @@ O.opera = {
     k.say(L[13], 'BRAVO !', t + 0.5 * B, 1.2);
     k.say(R[22], 'HOU !', t + 1.5 * B, 1.2);
     t += 3 * B;
-    // the entrance: the crowd hushes, a drum roll, gold sweeps in from the far edge and lands
+    // the entrance: the crowd hushes and a drum roll builds. Mid on his side:
+    // he walks in through his crowd, the people either side flashing as he
+    // passes. Close as he lands, and he announces himself with a fanfare.
     for (let j = 0; j < 12; j++) k.drum('snare', t + j * B / 8, 0.02 + j * 0.008);
-    const sweep = []; for (let c = 16; c >= 7; c--) sweep.push(cell(c, 4));
-    sweep.filter(Boolean).forEach((el, j) => {
-      paint(el, 'gold', t + 1.5 * B + j * 0.05 - 0.01);
-      k.note('arp', k.deg('1+') + j, t + 1.5 * B + j * 0.05, 0.25, { vol: 0.06, light: el });
+    k.shot('mid', t, { on: [10, 4] });
+    const walk = [13, 12, 11, 10, 9, 8, 7].map((c) => cell(c, 4));
+    const w0 = t + 1.5 * B;
+    paint(walk[0], 'gold', w0 - 0.02, 1);
+    pilot(walk[0], 'gold', w0 - 0.01);
+    walk.slice(1).forEach((to, i) => {
+      const at = w0 + (i + 1) * B / 2, from = walk[i], c = 12 - i;
+      paint(to, 'gold', at - 0.01, 1);
+      k.hop(from, to, at);
+      k.note('arp', k.deg(['1', '3', '5', '1+', '3+', '5+'][i]), at, 0.3, { vol: 0.06, light: to });
+      const near = [cell(c, 3), cell(c, 5)].filter((el) => R.includes(el));
+      if (near.length) k.note('arp', k.deg('5+'), at + 0.05, 0.4, { vol: 0.03, light: near });
+      if (R.includes(from)) { paint(from, 'sand', at + 0.42, 1); pilot(from, 'sand', at + 0.45); }
     });
-    t += 1.5 * B + sweep.length * 0.05;
-    pilot(esca, 'gold', t);
+    t = w0 + 3 * B;
     paint(esca, 'gold', t, 1);
-    k.drum('snare', t, 0.2, R);
-    k.note('bass', k.deg('3-'), t, 2 * B, { vol: 0.14 });
-    k.shake(t, 4, 0.25);
     k.shot('close', t, { on: [7, 4] });
-    k.cue('TORÉADOR!', t + 0.1, 1.6);
-    k.say(esca, 'ESCAMILLO', t + 0.2, 1.4);
+    k.drum('snare', t, 0.2, R);
+    k.shake(t, 4, 0.25);
+    k.cue('TORÉADOR!', t + 0.1, 2);
+    // the fanfare: up the chord and hold the top, the whole of his crowd roaring
+    ['5-', '1', '3', '5'].forEach((d, i) => k.note('tenor', k.deg(d), t + i * 0.13, 0.2, { vol: 0.15, light: esca }));
+    k.note('tenor', k.deg('1+'), t + 0.52, 1.8 * B, { vol: 0.16, light: esca });
+    k.note('bass', k.deg('1-'), t, 2 * B, { vol: 0.14 });
+    shout(R, 16, t + 0.5, 1);
+    k.say(esca, 'ESCAMILLO !', t + 0.6, 1.8);
     // B: he sings; his side goes wild, José's falls quiet
-    const tb = t + B;
-    k.shot('wide', tb + B);
+    const tb = t + 3 * B;
+    k.shot('wide', tb);
     const TOR = ['7', '1+', '7', '5', '5', '5', '4', '5', '6', '5'].map(k.deg);   // Toréador, en garde (from memory, relative major)
     const TOR_D = [0.75, 0.25, 0.5, 1, 0.5, 0.25, 0.25, 0.5, 0.5, 1.5];
     sing('tenor', TOR, TOR_D, tb, () => esca, { vol: 0.16 });
@@ -218,19 +234,19 @@ O.opera = {
     [...L, ...R].forEach((el) => pilot(el, null, t));
 
     // ---- V. Jealousy. Feeling: suffocating; his love turns to possession.
-    // Close on José in the dark: his heart races and stumbles, and her flower
-    // turns from red to blue. Mid: he sings her Habanera
-    // upside down and his blue creeps out from him like ink, a cell group per
-    // note. Wide: it has boxed her in, a wall between her and the gold.
+    // Close on José in the dark: his heart races and stumbles, his blue turns
+    // green, then her flower. Mid: he sings her Habanera upside down and the
+    // green creeps out from him like ink, a cell group per note. Wide: it has
+    // boxed her in, a wall between her and the gold. Green is jealousy only.
     k.act('JEALOUSY', t);
     k.room(700, 0.5, t, 6);
     k.shot('close', t, { on: [1, 4] });
     [0, 0.4, 1, 1.3, 1.9, 2.2, 2.6, 2.8].forEach((o) => { k.drum('heartbeat', t + o * B, 0.16, [jose]); });
-    petals.forEach((el, i) => {
-      const at = t + (0.4 + i * 0.7) * B;
-      paint(el, 'blue', at - 0.01);
-      k.note('tenor', SLIDE[i + 2] - 12, at, 0.6 * B, { vol: 0.1, light: el });
-    });
+    // his blue turns green, then her flower beside him
+    pilot(jose, 'green', t + 1 * B);
+    k.note('tenor', SLIDE[2] - 12, t + 1 * B, 1.2 * B, { vol: 0.12, light: jose });
+    paint(petals, 'green', t + 1.9 * B - 0.01, 1);
+    k.note('tenor', SLIDE[4] - 12, t + 1.9 * B, 1.2 * B, { vol: 0.1, light: petals });
     k.say(jose, 'ELLE EST À MOI', t + 1.2 * B, 1.8);
     t += 3.2 * B;
     // the ink: the box round her, nearest him first
@@ -243,8 +259,8 @@ O.opera = {
     inv.forEach((n, i) => {
       const d = SLIDE_D[i] * B * 1.3;
       const g = ink.slice(Math.floor(i * ink.length / 6), Math.floor((i + 1) * ink.length / 6)).map((x) => x.el);
-      paint(g, 'blue', at - 0.01);
-      g.forEach((el) => pilot(el, 'blue', at));
+      paint(g, 'green', at - 0.01);
+      g.forEach((el) => pilot(el, 'green', at));
       k.note('tenor', n, at, d * 0.95, { vol: 0.16, light: [jose, ...g] });
       k.note('bass', n - 12, at, d, { vol: 0.1 });
       if (i === 4) k.shot('wide', at);
@@ -252,34 +268,39 @@ O.opera = {
     });
     t = at + B;
 
-    // ---- VI. The knife. Feeling: dread, then shock. The crowd is back,
-    // cheering the toreador offstage. José walks to her slowly, a cell every
-    // two beats, pleading; she answers NON and glows towards the gold. Close on
-    // the two of them; the cheering cuts to silence. One hit, and her red goes
-    // out: the only time anyone changes size. Wide: José alone, the crowd
-    // still cheering, far off.
+    // ---- VI. The knife. Feeling: shock, then pity for her. The crowd is back,
+    // cheering the toreador offstage. José, still green, steps to her,
+    // pleading; she answers NON and glows towards the gold. Close; the
+    // cheering cuts to silence; a white blade appears between them. The hit:
+    // her red flashes white and the arena light strobes. Then, still close,
+    // she sings the end of her tune slowly and fades. A red curtain falls and
+    // leaves him alone, blue again.
     k.act('THE KNIFE', t);
     ink.forEach(({ el }) => pilot(el, null, t));
     [...L, ...R].forEach((el) => pilot(el, 'sand', t));
     k.shot('mid', t, { on: [3, 4] });
     for (let i = 0; i < 5; i++) { shout(L, 6, t + i * B, 1); shout(R, 8, t + i * B, 1); }
     k.say(R[4], 'TORÉADOR !', t + 0.5 * B, 1.4);
-    const jose2 = cell(2, 4), jose3 = cell(3, 4);
-    [[jose, jose2], [jose2, jose3]].forEach(([from, to], i) => {
-      const at = t + (1 + i * 2) * B;
-      paint(to, 'blue', at - 0.01, 1);
-      k.hop(from, to, at);
-      k.note('tenor', k.deg(['3', '2'][i]), at, 1.8 * B, { vol: 0.14, light: to });
-    });
+    const jose2 = cell(2, 4), jose3 = jose2, blade = cell(3, 4);
+    paint(jose2, 'green', t + B - 0.01, 1);
+    k.hop(jose, jose2, t + B);
+    k.note('tenor', k.deg('3'), t + B, 1.8 * B, { vol: 0.14, light: jose2 });
     k.say(jose2, "CARMEN, JE T'AIME", t + 1.2 * B, 1.6);
     k.note('soprano', k.deg('5'), t + 3.6 * B, B, { vol: 0.15, light: [carmen, esca] });   // she looks to the gold
     k.say(carmen, 'NON !', t + 3.6 * B, 1.2);
     t += 5 * B;
-    k.shot('close', t, { on: [3.5, 4] });
+    // silence, close on the two of them; then the blade, the only white in the piece
+    k.shot('close', t, { on: [3, 4] });
     k.silence(t, 3 * B);
-    k.say(jose3, 'UN COUTEAU !', t + 1.8 * B, 1.2);       // in the silence, we see it
+    paint(blade, 'bulb', t + 1.5 * B - 0.01, 1);
+    pilot(blade, 'bulb', t + 1.5 * B);
+    k.note('soprano', k.deg('5+') + 12, t + 1.5 * B, 1.5 * B, { vol: 0.2, light: blade });   // the glint (muted by the silence, seen not heard)
+    k.say(blade, 'UN COUTEAU !', t + 1.6 * B, 1.3);
     t += 3 * B;
-    // the hit: a strobe of the arena light, under three flashes a second, a snare on each
+    // the hit: the blade goes into her, her red flashes white, the arena light strobes
+    pilot(blade, null, t);
+    paint(carmen, 'bulb', t - 0.01, 1);
+    paint(carmen, 'red', t + B / 2, 1);
     k.shake(t, 6, 0.3);
     k.note('soprano', SLIDE[5], t, 1.5 * B, { vol: 0.14, light: carmen });
     for (let i = 0; i < 4; i++) {
@@ -288,6 +309,10 @@ O.opera = {
       k.drum('snare', t + i * B / 2, 0.2 - i * 0.04, [carmen]);
     }
     t += 2 * B;
+    // pity: still close, she sings the end of her Habanera, slow and soft, and fades out
+    t = sing('soprano', ANSWER, ANSWER_D, t, () => carmen, { vol: 0.09, slow: 1.3 });
+    pilot(carmen, null, t - B);
+    t += 0.5 * B;
     // the curtain: red falls from above, row by row, to her tune falling, and
     // wipes everything away but him
     k.shot('wide', t);
@@ -300,7 +325,8 @@ O.opera = {
       line.forEach((el) => pilot(el, null, at));
     }
     t += 21 * 0.13 + 0.5;
-    // alone
+    // alone, and himself again
+    pilot(jose3, 'blue', t);
     k.note('tenor', k.deg('1-'), t, 3 * B, { vol: 0.12, light: jose3 });
     k.say(jose3, 'CARMEN… ADORÉE', t + 0.2, 2.2);
     t += 3.5 * B;

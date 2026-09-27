@@ -40,8 +40,14 @@ What worked and what didn't, per run. Newest first. One line per finding.
 
 - **Time to wallow (27 Sep, Iain).** Don't loop straight after the tragedy. Leave the audience where an opera audience is at the curtain: a slow lament on the opera's own fate motif over a held bass, a dark long room, the survivor glowing alone, then the big last chords lighting the whole grid, blackout, and silence before the loop. Max operatic feels: the ending earns the most time.
 
+- **Storytelling colours (27 Sep, Iain).** Up to three colours beyond the staging palette, each meaning one thing: green is jealousy (José's blue turns green, then the green creeps out and boxes her in), white is the knife (the only white in the piece). He returns to blue once it's done.
+- **An entrance, shot by shot (27 Sep).** A drum roll while the crowd hushes; mid on his side as he walks in through his own crowd, the people beside him flashing; cut to close as he lands, a fanfare up the chord, his name. Hold the close long enough to read.
+- **Pity after the shock (27 Sep).** After the hit, stay close on her while she sings the end of her own tune slowly and fades. The audience's feeling goes to her before the curtain falls.
+
 ## Avoid
 
+- A close shot that goes by in a flash (27 Sep): if the frame matters, hold it.
+- Tags that carry the plot in words (27 Sep): Iain keeps tags in the opera's language, so the picture must carry the plot without them.
 - Looping straight after the climax (27 Sep): no time to feel it.
 - A hit that's one quick flash (27 Sep): it reads as a glitch, not a death.
 - A big effect standing in for a story beat (27 Sep): the collapsing red rings at the knife read as spectacle, not murder.

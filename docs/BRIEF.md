@@ -10,7 +10,7 @@ A premium handheld game at its most beautiful: Tenori-on, Electroplankton. Every
 
 Underneath, it's sweet. Small round lights with big feelings, a hero you root for, a quiet "HELP!" in the lower third. On the surface, it's austere: black, flat discs, one typeface.
 
-Be ambitious with the grid. The failure mode is timidity: two dots in a sea of grey. Use rings of colour around a character, halos that bloom on a note, a whole row lighting as a chord lands, a rainbow when love wins, embers when it doesn't.
+Be ambitious with the grid. The failure mode is timidity: two dots in a sea of grey. Use rings of colour spreading from a character, crowds that flash as they cheer, a whole row lighting as a chord lands, a rainbow when love wins, embers when it doesn't.
 
 ## The example
 
@@ -19,7 +19,7 @@ Be ambitious with the grid. The failure mode is timidity: two dots in a sea of g
 ## Hard limits
 
 - Flat discs on black. No gradients, no 3D, no drifting grid.
-- A handful of colours, taken from how the opera is traditionally staged: the costumes, sets and lighting audiences know. Carmen's red, a toreador's gold suit of lights, a soldier's blue. Rendered as light, not paint. Name where each one comes from.
+- A handful of colours, taken from how the opera is traditionally staged: the costumes, sets and lighting audiences know. Carmen's red, a toreador's gold suit of lights, a soldier's blue. Rendered as light, not paint. Name where each one comes from. On top of those, up to three storytelling colours for feelings the picture can't otherwise show (Carmen's green for jealousy, white for the knife); each means one thing only.
 - The opera's most recognisable tune, quoted, as the heart of the soundtrack.
 - One lower-third cue per act at most, in the opera's language.
 - It loops: the end is the beginning.
