@@ -4,8 +4,7 @@ In rough priority order. Tick them off in this file or move them to `docs/LOG.md
 
 ## Owed
 
-- **Push to origin.** `main` is many commits ahead of `origin/main`. Ask Iain, then `git push`.
-- **Delete the first Vercel deployment** `dot-opera-bbwgjkx7d` (project `dot-opera`, Deployments tab). Its source contained a `.env.local` with a short-lived Vercel OIDC token that `vercel link` wrote. The file was never served (404), and every later deploy used a clean folder with `.vercelignore`. Iain has to delete it from the dashboard.
+- ~~Push to origin~~ and ~~delete the first Vercel deployment~~: both done 27 Sep. `main` tracks `origin/main`; `dot-opera-bbwgjkx7d` is removed.
 - **Carmen golf pass.** Carmen is signed off at about 3.8 KB gzipped. Aim under 3 KB with nothing visible or audible changing. Candidates: shorten helper names, share the crowd-block and walk code, drop the unused `SLIDE_D`-style duplicates, trim comments (they're stripped anyway; the cost is in code shape).
 - **Tunes written from memory**, flagged `fromMemory: true` in `docs/treatments/carmen.json`: the Habanera answer phrase, the Toréador refrain (in the relative major), the fate motif. Iain hasn't confirmed them by ear. Ask him to listen and correct degrees.
 
