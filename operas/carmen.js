@@ -66,6 +66,7 @@ O.opera = {
     // ---- reset for each loop
     k.paint(W, 'sand');
     k.pilot(jose, null);
+    k.pilot(cell(3, 4), null);
     k.pilot(esca, null);
     k.pilot(carmen, null);
     paint(start, 'red', 0, 1);
@@ -251,24 +252,43 @@ O.opera = {
     });
     t = at + B;
 
-    // ---- VI. The knife (46 to 50): a bar of dark, one beat of the arena, she burns out
+    // ---- VI. The knife. Feeling: dread, then shock. The crowd is back,
+    // cheering the toreador offstage. José walks to her slowly, a cell every
+    // two beats, pleading; she answers NON and glows towards the gold. Close on
+    // the two of them; the cheering cuts to silence. One hit, and her red goes
+    // out: the only time anyone changes size. Wide: José alone, the crowd
+    // still cheering, far off.
     k.act('THE KNIFE', t);
-    k.silence(t, 2 * B);
-    t += 2 * B;
-    k.bg('sand', t);
     ink.forEach(({ el }) => pilot(el, null, t));
+    [...L, ...R].forEach((el) => pilot(el, 'sand', t));
+    k.shot('mid', t, { on: [3, 4] });
+    for (let i = 0; i < 5; i++) { shout(L, 6, t + i * B, 1); shout(R, 8, t + i * B, 1); }
+    k.say(R[4], 'TORÉADOR !', t + 0.5 * B, 1.4);
+    const jose2 = cell(2, 4), jose3 = cell(3, 4);
+    [[jose, jose2], [jose2, jose3]].forEach(([from, to], i) => {
+      const at = t + (1 + i * 2) * B;
+      paint(to, 'blue', at - 0.01, 1);
+      k.hop(from, to, at);
+      k.note('tenor', k.deg(['3', '2'][i]), at, 1.8 * B, { vol: 0.14, light: to });
+    });
+    k.say(jose2, "CARMEN, JE T'AIME", t + 1.2 * B, 1.6);
+    k.note('soprano', k.deg('5'), t + 3.6 * B, B, { vol: 0.15, light: [carmen, esca] });   // she looks to the gold
+    k.say(carmen, 'NON !', t + 3.6 * B, 1.2);
+    t += 5 * B;
+    k.shot('close', t, { on: [3.5, 4] });
+    k.silence(t, 3 * B);
+    t += 3 * B;
+    k.bg('sand', t);
     k.drum('snare', t, 0.2, W);
     k.bg(null, t + B * 0.5);
     k.shake(t, 6, 0.3);
-    t += B;
-    const back = SLIDE.slice().reverse();
-    back.forEach((n, i) => {
-      const r = ring(C, C, 6 - i);
-      paint(r, 'red', t + i * B - 0.01);
-      k.note('soprano', n, t + i * B, B * 0.9, { vol: 0.12, light: [carmen, ...r] });
-    });
-    t += back.length * B;
-    k.scale(carmen, 0, t - 2 * B, 2 * B, 'power2.in');
+    pilot(carmen, null, t);
+    k.note('soprano', SLIDE[5], t, 2 * B, { vol: 0.12, light: carmen });
+    k.scale(carmen, 0, t, 2 * B, 'power2.in');
+    k.shot('wide', t + 2 * B);
+    for (let i = 2; i < 5; i++) { shout(L, 3, t + i * B, 1); shout(R, 4, t + i * B, 1); }
+    t += 5 * B;
+    [...L, ...R].forEach((el) => pilot(el, null, t));
 
     // ---- VII. Libre: rose petals fall all over the grid; the music box plays the slide once more
     k.act('LIBRE', t);
@@ -287,13 +307,14 @@ O.opera = {
         if (i === 2 && j === 1) k.say(el, 'DES PÉTALES…', at + j * 0.22, 1.6);
       }
     }
-    k.note('tenor', k.deg('1'), t, 5 * B, { vol: 0.1, light: jose });
+    k.note('tenor', k.deg('1'), t, 5 * B, { vol: 0.1, light: jose3 });
     t += 6 * B;
     k.scale(jose, 1, t - B, B);
     k.scale(carmen, 1, t - 0.3, 0.3);
     paint(W, 'sand', t - 0.3);
     paint(carmen, 'red', t - 0.3, 1);
     pilot(jose, null, t - 0.3);
+    pilot(jose3, null, t - 0.3);
     paint(jose, 'sand', t - 0.3, 1);
 
     k.end = t;

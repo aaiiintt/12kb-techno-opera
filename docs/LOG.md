@@ -33,8 +33,11 @@ What worked and what didn't, per run. Newest first. One line per finding.
 - **Whose feeling, and where it starts (27 Sep).** For an inner feeling, start close on the one who feels it, with the world dark, then let it leave them in their own colour. Jealousy: José's heart stumbles, her red flower turns to his blue, then his blue creeps out like ink until it boxes her in, a wall between her and the gold.
 - **Objects carry the story (27 Sep).** A gift that changes colour says what's changed between two people without a new symbol.
 
+- **The ending lands by contrast (27 Sep).** Reuse what the audience already knows, slowed or silenced: José's slow walk echoes her Act I walk, the Act IV crowd cheers offstage, then the cheering cuts to silence in a close two-shot before the hit. After it, wide: the crowd is still cheering, far off.
+
 ## Avoid
 
+- A big effect standing in for a story beat (27 Sep): the collapsing red rings at the knife read as spectacle, not murder.
 - A crowd meter that grows and shrinks (27 Sep): the changing size is what reads, not the cheering.
 - A crowd that wanders while the hero walks (27 Sep): her movement disappears into theirs.
 
