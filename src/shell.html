@@ -176,8 +176,11 @@ if (location.search.indexOf('scale') > -1) {
 } else {
   pb.onclick = function (e) {
     e.preventDefault();
-    if (pb.textContent === 'Play') { O.start(); O.load(O.opera); pb.textContent = 'Pause'; }
-    else { O.stop(); pb.textContent = 'Play'; }
+    // first press loads; after that PAUSE holds the picture and the sound where they are
+    var on = pb.textContent === 'Play';
+    if (!O.tl) { O.start(); O.load(O.opera); }
+    else { O.tl.paused = !on; O.suspend(!on); }
+    pb.textContent = on ? 'Pause' : 'Play';
     document.body.classList.toggle('pl', pb.textContent === 'Pause');
     layout();
   };
