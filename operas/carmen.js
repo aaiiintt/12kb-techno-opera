@@ -138,21 +138,29 @@ O.opera = {
       t = Math.max(t, start + 8 * B);
     }
 
-    // ---- III. The flower (22 to 30): a red spark arcs to José, whose blue heart starts beating
+    // ---- III. The flower. Feeling: she chooses him. José stands apart in his
+    // blue, named so we know him; she throws her flower, it lands on him and
+    // blooms (a red cross of petals round his blue), and his heart beats in it.
     k.act('THE FLOWER', t);
-    const arc = [[5, 3], [6, 2], [7, 2], [8, 3], [9, 4], [9, 5], [8, 6]];
+    pilot(jose, 'blue', t);
+    paint(jose, 'blue', t, 1);
+    k.say(jose, 'DON JOSÉ', t + 0.1, 1.6);
+    k.note('tenor', k.deg('1'), t, B, { vol: 0.1, light: jose });
+    t += 1.5 * B;
+    const arc = [[5, 3], [6, 2], [7, 2], [8, 3], [8, 4], [8, 5]];
     arc.forEach(([c, r], i) => {
       const el = cell(c, r);
       paint(el, 'red', t + i * 0.12 - 0.01);
       k.note('arp', k.deg('5+') + i, t + i * 0.12, 0.1, { vol: 0.07, light: el });
     });
-    t += arc.length * 0.12 + 0.2;
-    pilot(jose, 'blue', t);
+    t += arc.length * 0.12;
+    const petals = [[8, 5], [9, 6], [8, 7], [7, 6]].map(([c, r]) => cell(c, r));
+    paint(petals, 'red', t - 0.01);
+    petals.forEach((el) => pilot(el, 'red', t));  // he keeps her flower until she dies
+    k.say(petals[1], 'UNE FLEUR !', t + 0.1, 1.4);
     k.pulse(jose, t);
-    const joseHalo = ring(8, 6, 1);
-    paint(joseHalo, 'blue', t);
     for (let h = 0; h < 6; h++) {
-      k.drum('heartbeat', t + h * B, 0.14, [jose, ...joseHalo]);
+      k.drum('heartbeat', t + h * B, 0.14, [jose, ...petals]);
       k.pulse(jose, t + h * B);
     }
     k.note('tenor', k.deg('3'), t, 4 * B, { vol: 0.13, light: jose });
@@ -215,18 +223,23 @@ O.opera = {
     t += back.length * B;
     k.scale(carmen, 0, t - 2 * B, 2 * B, 'power2.in');
 
-    // ---- VII. Libre (50 to 58): her embers rise off the top; the music box plays the slide once more
+    // ---- VII. Libre: rose petals fall all over the grid; the music box plays the slide once more
     k.act('LIBRE', t);
+    petals.forEach((el) => pilot(el, null, t));
     k.cue('CARMEN...', t + 0.3, 2.4);
-    SLIDE.forEach((n, i) => {
-      const x = C + [0, -2, 2, -1, 1, 0][i], at = t + i * B * 0.75;
-      for (let j = 0; j < 4; j++) {                 // a petal drifting up: four cells, one after another
-        const el = cell(x + (j % 2), C - 1 - i - j * 2);
+    // petals falling everywhere, over the whole grid, not just the stage
+    let ps = 3;
+    const pr = () => (ps = (ps * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 18; i++) {
+      const x = -8 + Math.floor(pr() * 25), y = -10 + Math.floor(pr() * 22), at = t + i * B * 0.3;
+      for (let j = 0; j < 4; j++) {                 // a petal drifting down: four cells, one after another
+        const el = cell(x + (j % 2), y + j);
         if (!el) continue;
-        paint(el, 'red', at + j * 0.18 - 0.01);
-        k.note('arp', n + 12, at + j * 0.18, B * 0.5, { vol: 0.06 - j * 0.01, light: el });
+        paint(el, 'red', at + j * 0.22 - 0.01);
+        k.note('arp', SLIDE[i % 6] + 12, at + j * 0.22, B * 0.5, { vol: 0.05 - j * 0.01, light: el });
+        if (i === 2 && j === 1) k.say(el, 'DES PÉTALES…', at + j * 0.22, 1.6);
       }
-    });
+    }
     k.note('tenor', k.deg('1'), t, 5 * B, { vol: 0.1, light: jose });
     t += 6 * B;
     k.scale(jose, 1, t - B, B);

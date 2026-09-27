@@ -36,6 +36,7 @@ O.P = {
 };
 O.light = (el, name) => {
   const L = O.P[name];
+  if (el._l !== name) { el._was = el._l; el._l = name; }   // remember the last light, so a vacated cell can go back to it
   el.style.setProperty('--h', L[0]);
   el.style.setProperty('--cmax', L[1]);
   el.style.setProperty('--lmax', L[2]);
@@ -192,7 +193,7 @@ function coolCell(el, tl, time) {
   el._pilot = null;
   const start = O.now();
   O.registerLight(el, start, start + 0.4, (t) => Math.max(0, 0.3 * (1 - t / 0.4)));
-  tl.call(() => { if (!pilotEls.has(el)) O.light(el, 'bulb'); }, [], time + 0.4);
+  tl.call(() => { if (!pilotEls.has(el)) O.light(el, el._was || 'bulb'); }, [], time + 0.4);
 }
 
 // Move a character's pilot light from one cell to another: the destination
