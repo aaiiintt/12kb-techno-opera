@@ -10,7 +10,7 @@ A premium handheld game at its most beautiful: Tenori-on, Electroplankton. Every
 
 Underneath, it's sweet and funny. Small round lights with big feelings, a hero you root for, a quiet "HELP!" beside a dot. Full operatic feeling, then one deadpan caption at exactly the wrong moment: José's MERDE ! just after the knife. The tragedy still lands; the wink makes it ours. One or two per opera, not a joke per act. On the surface, it's austere: black, flat discs, one typeface.
 
-Be ambitious with the grid. The failure mode is timidity: two dots in a sea of grey. Use rings of colour spreading from a character, crowds that flash as they cheer, a whole row lighting as a chord lands, a rainbow when love wins, embers when it doesn't.
+An EDM show in a few kilobytes: the grid is an LED wall, and every act has one full-grid move locked to the music (a pulse, a wash, a sweep, a storm, a strobe, a blackout), with stillness around it so it lands. Be ambitious with the grid. The failure mode is timidity: two dots in a sea of grey. Use rings of colour spreading from a character, crowds that flash as they cheer, a whole row lighting as a chord lands, a rainbow when love wins, embers when it doesn't.
 
 ## The example
 

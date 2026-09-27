@@ -36,6 +36,7 @@ For each act, using `docs/TOOLSET.md`:
 | actions | What moves? Which shots (wide, mid, close), cut on which beats? |
 | music | Which theme, which voice, where's the silence, what's the room doing? |
 | emotion | How do those add up to the feeling? |
+| spectacle | What's the one full-grid move, and which musical event is it locked to? Think EDM show: builds, drops, blackouts, stillness between. |
 
 Write it into `docs/treatments/<id>.json` (schema `docs/treatment.schema.json`). Validate with `node -e "JSON.parse(require('fs').readFileSync('docs/treatments/<id>.json'))"`.
 

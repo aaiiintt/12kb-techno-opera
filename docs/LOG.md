@@ -53,6 +53,7 @@ The skill is `.claude/skills/dot-opera/SKILL.md`; treatments are JSON (`docs/tre
 
 - **Emoji pictograms in captions (27 Sep, Iain, via the Barber session).** An emoji at the front of a caption reads across languages before the words do (✂️ FIGARO !, 💌 POSTINO, 💤 ZZZ, 🛑 STOP !). It solves the plot-in-a-foreign-language problem without giving up the original language. One per caption, the same in both halves of the pair, and none where the bare word is funnier.
 - **Bilingual captions with a toggle (27 Sep, Barber session).** Captions are `[english, original]` pairs; the page shows English by default and the EN/IT (or FR) toggle beside the byte badge switches to the original. Carmen's tags were converted.
+- **An EDM show in a few kb (27 Sep, Iain).** Treatments that came out of the first prompt were "very rational and uncreative". What creates feeling on screen is the big move: a storm, big coloured pulses, the whole grid as one instrument locked to the music, builds and drops with stillness between. Every act now names its `spectacle` (one full-grid move and the sound it's locked to) and the treatment names its `arc`. Not a return to effect piles: one move per act, and it *is* the plot beat.
 - **The wink (27 Sep, Iain).** A well-timed MERDE ! just after the knife: big feeling, then one deadpan caption at exactly the wrong moment. One or two per opera.
 
 ## Avoid

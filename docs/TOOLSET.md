@@ -31,6 +31,10 @@ What we can make with dots, sound and captions, grouped the way a treatment asks
 - **Rising and falling.** One dot rising off the top is a soul set free; petals drifting down are mourning. (Libre)
 - **Three shots.** Wide for the world, mid for two people and the space between, close for one feeling. Cut on the beat; hold a close long enough to read.
 
+## The grid as an instrument
+
+Iain, 27 Sep: "this should feel like we're pushing a dynamic modern system to the limit, like an EDM show in a few kb." Every act gets one full-grid move locked to a musical event, with stillness around it so it reads. Proven so far: rings from a singer (L'amour), the strobe (the knife), the curtain (the knife), the last chords lighting everything (Libre), blackout. Drafted in Barber, not yet reviewed: the storm (chromatic rain, thunder, lightning), the wash (a pink wave over the congregation). Still to make: a sweep, a wave, the breathing grid, fire rising, the dawn from black to white.
+
 ## Music
 
 - **The famous tune, quoted,** sung by the character it belongs to. Flag anything written from memory until Iain has heard it.

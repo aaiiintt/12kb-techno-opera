@@ -13,6 +13,7 @@
       "properties": { "root": { "type": "integer", "description": "Semitones above C" }, "mode": { "enum": ["major", "minor"] } }
     },
     "tempo": { "type": "number" },
+    "arc": { "type": "string", "description": "The whole piece as a set: where the builds, drops, breakdowns and blackout fall, in one line" },
     "tune": {
       "type": "object", "required": ["name", "degrees", "beats"],
       "description": "The most recognisable tune, quoted. Scale degrees in k.deg notation.",
@@ -60,6 +61,7 @@
           "actions": { "type": "string", "description": "What moves, and the shots: wide, mid, close" },
           "music": { "type": "string", "description": "Which theme, which voice, tempo, silence" },
           "emotion": { "type": "string", "description": "How the pieces add up to the feeling" },
+          "spectacle": { "type": "string", "description": "The act's one full-grid move and the musical event it's locked to" },
           "captions": { "type": "array", "items": { "anyOf": [ { "type": "string" }, { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 } ] }, "description": "Small tags beside dots: [english, original] pairs (a plain string shows in both), each led by an emoji pictogram where one says it faster than words" },
           "wink": { "type": "string", "description": "The deadpan comic beat, if this act has one (one or two per opera)" },
           "versions": {
