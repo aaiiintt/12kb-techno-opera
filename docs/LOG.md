@@ -2,6 +2,18 @@
 
 What worked and what didn't, per run. Newest first. One line per finding.
 
+## The workflow (agreed 27 Sep)
+
+1. **Scene loop, one act at a time, in chat.** Iain watches the act and steps its frames (`?step`), says what's wrong in his own words and refers to frames by number. I offer one or two concrete ways to do it. He picks. I change the code, check the frame, commit, and send the link back.
+2. **Capture.** Every accepted change adds one line under Techniques (the pattern, when it fits, why). Every rejection adds one under Avoid.
+3. **Prove it transfers.** Carmen, then a very different opera (for example Dido), starting from the technique list.
+4. **Distil after two operas.** A JSON schema (title, key, tempo, lights with sources, tune, acts with name, length, idea, technique and settings, cue), techniques as kit functions, and a skill that goes from an opera's name to treatment, JSON, build and frame check. Any act may carry a few lines of its own code when a moment needs it.
+
+## Techniques
+
+## Avoid
+
+
 ## Run 1: Carmen, thin kit, beauty then golf (27 Sep)
 
 Setup: `docs/BRIEF.md` (358 words), the original opera as the only example, a thin kit instead of the gesture library, one conversation.
