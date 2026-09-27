@@ -12,6 +12,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .t span, .n a { position: fixed; line-height: 1; white-space: nowrap; }
 .b { position: fixed; top: 1.2vmin; right: 2vw; font-size: 12px; opacity: .5; z-index: 20; }
 .n { font-weight: 900; z-index: 25; }
+.mu { position: fixed; inset: 0; z-index: 22; background: rgba(0,0,0,.92); display: none; font-weight: 900; text-transform: uppercase; }
+.mu.on { display: block; }
+.mu a, .mu span { position: fixed; line-height: 1; white-space: nowrap; color: #fff; text-decoration: none; }
+.mu span { opacity: .3; }
 .n a { color: #fff; text-decoration: none; }
 .stage { position: fixed; inset: 0; z-index: 1; display: grid; justify-content: center; align-content: center; overflow: hidden; }
 .world { transform-origin: center; }
@@ -34,7 +38,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
   <body>
     <h1 class="t" id="ti"></h1>
     <span class="b" id="bd">%%BYTES%% B</span>
-    <nav class="n"><a href="index.html">Menu</a><a href="#" id="pb">Play</a></nav>
+    <nav class="n"><a href="#" id="mn">Menu</a><a href="#" id="pb">Play</a></nav>
+    <div class="mu" id="mu"></div>
     <main class="stage">
       <div id="world" class="world"><div id="grid" class="grid"></div></div>
     </main>
@@ -95,12 +100,44 @@ function layout() {
     set(sp, 700, h, g.r[1] + i * step * P);
     sp.style.left = L + 'px';
   });
+  // menu: the series, one opera per row from row two, one-row capitals;
+  // ABOUT two rows above the nav
+  mu.textContent = '';
+  var row = 1, blocks = [];
+  MENU.forEach(function (o) {
+    // a name too wide for the screen wraps onto the next row
+    var e = document.createElement(o[2] ? 'a' : 'span'), line = '', parts = [];
+    if (o[2]) e.href = o[0] + '.html';
+    mu.appendChild(e); set(e, 900, g.D, 0);
+    o[1].split(' ').forEach(function (w) {
+      e.textContent = line ? line + ' ' + w : w;
+      if (line && e.getBoundingClientRect().width > R - L) { parts.push(line); line = w; } else line = e.textContent;
+    });
+    parts.push(line);
+    blocks.push(parts.map(function (t, j) { var x = j ? e.cloneNode() : e; if (j) mu.appendChild(x); x.textContent = t; return x; }));
+  });
+  // if any name wrapped, an empty row between operas so each reads as one
+  var gap = blocks.some(function (b) { return b.length > 1; }) ? 1 : 0;
+  blocks.forEach(function (b) {
+    b.forEach(function (x) { set(x, 900, g.D, g.r[row++]); x.style.left = L + 'px'; });
+    row += gap;
+  });
+  var ab = document.createElement('a'); ab.textContent = 'About'; ab.href = 'about.html'; mu.appendChild(ab);
+  set(ab, 900, g.D, g.r[g.r.length - 4]); ab.style.left = L + 'px';
   // nav: one-row capitals on the second-to-last row, MENU left, PLAY right
   var a = document.querySelectorAll('.n a'), y = g.r[g.r.length - 2];
   a.forEach(function (el) { set(el, 900, g.D, y); });
   a[0].style.left = L + 'px';
   a[1].style.left = (R - a[1].getBoundingClientRect().width) + 'px';
 }
+var MENU = '%%MENU%%';
+mn.onclick = function (e) {
+  e.preventDefault();
+  var on = mu.classList.toggle('on');
+  mn.textContent = on ? 'Close' : 'Menu';
+  ti.style.visibility = on ? 'hidden' : '';
+  layout();
+};
 layout();
 addEventListener('resize', function () { requestAnimationFrame(layout); });
 if (location.search.indexOf('scale') > -1) {

@@ -61,6 +61,9 @@ async function buildShellTemplate() {
   const minified = await js(scriptMatch[1]);
   html = html.replace(scriptMatch[0], '<script>' + minified + '</script>');
   html = html.replace(/\n\s+/g, '\n').replace(/\n+/g, '\n');
+  // The menu lists the whole series; operas not yet made are shown dimmed.
+  const menu = SITE_ORDER.map((o) => [o.id, o.title, fs.existsSync(`operas/${o.id}.js`) ? 1 : 0]);
+  html = html.replace(/["']%%MENU%%["']/, JSON.stringify(menu));
   return html;
 }
 
