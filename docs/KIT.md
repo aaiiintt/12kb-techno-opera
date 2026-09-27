@@ -37,7 +37,7 @@ O.opera = {
 - `k.scale(el, to, t, dur, ease)` / `k.pulse(el, t)` - scale cells in place.
 - `k.camera({ col, row, zoom, dur, ease }, t)`, `k.shake(t, amount, dur)`.
 - `k.shot('wide' | 'mid' | 'close', t, { on: [col, row], dur, ease })` - the three shots; a cut unless `dur` is given. To follow a character in close, call it again at each hop with a short `dur`.
-- `k.cue(text, t, hold)` - one lower-third line.
+- `k.cue(text, t, hold, el)` - an act's name, drawn as a caption (`k.say`) beside `el` (default: the centre cell). There's no other caption style.
 - `k.say(el, text, t, hold)` - a small speech tag beside a cell: a person in the crowd says something.
 - `k.act(name, t)` - record an act marker (name, start second) for the current build. Step mode (`?step`) reads these to label its counter and to jump act to act with shift+arrow.
 

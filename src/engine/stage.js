@@ -209,35 +209,6 @@ O.hop = (tl, time, from, to, dur = 0.6, ease = 'elastic.out(1,0.5)', pop = 1.25)
   if (from && from !== to) tl.call(() => { if (!pilotEls.has(from)) O.light(from, from._was || 'bulb'); }, [], time + 0.4);
 };
 
-// the original cue: a typed lower third, letterboxed in, held, cleared. The
-// only type this stage shows.
-let cueEl;
-// A fresh rebuild (normal loop point, or a step-mode jump to any frame)
-// must start from the same cue state a first load would: hidden, no
-// leftover reveal animation.
-O.resetCue = () => {
-  cueEl = cueEl || document.getElementById('cue');
-  cueEl.getAnimations().forEach((a) => a.cancel());
-  cueEl.style.visibility = 'hidden';
-};
-O.cue = (tl, time, text, hold = 1.6) => {
-  cueEl = cueEl || document.getElementById('cue');
-  const len = Math.max(4, text.length);
-  tl.call(() => {
-    cueEl.textContent = text;
-    cueEl.style.visibility = 'visible';
-    cueEl.getAnimations().forEach((a) => a.cancel());
-    const anim = cueEl.animate({ clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'] }, { duration: len * 55, easing: `steps(${len})`, fill: 'forwards' });
-    // Step mode: this reveal is a native Web Animation, outside the timeline's
-    // own clock - freeze it at the frame's own progress instead of real time.
-    if (O.step != null) { anim.currentTime = Math.max(0, (tl.t - time) * 1000); anim.pause(); }
-  }, [], time);
-  tl.call(() => {
-    if (cueEl.textContent !== text) return;
-    cueEl.getAnimations().forEach((a) => a.cancel());
-    cueEl.style.visibility = 'hidden';
-  }, [], time + len * 0.055 + hold);
-};
 
 // On resize or full screen, rebuild the whole grid to cover the new
 // viewport. Every cell's pilot claim is lost with it (the elements

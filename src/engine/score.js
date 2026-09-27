@@ -52,7 +52,6 @@ function makeKit(tl) {
     },
     shake: (t, amount, dur) => O.shake(tl, t, amount, dur),
 
-    cue: (text, t, hold) => O.cue(tl, t, text, hold),
     // a small speech tag beside a cell: someone in the crowd says something
     say: (el, text, t, hold = 1) => {
       let d;
@@ -73,6 +72,8 @@ function makeKit(tl) {
     },
     act: (name, t) => O.acts.push({ name, t }),
   };
+  // an act's cue is a caption like any other, beside the dot it belongs to
+  k.cue = (text, t, hold = 1.6, el = O.at(CENTER, CENTER)) => k.say(el, text, t, hold);
   return k;
 }
 
@@ -82,7 +83,6 @@ function buildTimeline(opera) {
   tl = gsap.timeline({ onComplete: () => buildTimeline(opera) });
   O.tl = tl;
   O.acts = [];
-  O.resetCue();
   document.querySelectorAll('.say').forEach((d) => d.remove());
   const k = makeKit(tl);
   opera.build(k);

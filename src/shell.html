@@ -44,8 +44,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
   background: oklch(calc(var(--l) * 100%) calc(var(--c) * .7) var(--h,85)); }
 .dot::before { filter: blur(calc(var(--dot-size) * .10)); transform: scale(1.18); opacity: calc(var(--l) * .32); }
 .dot::after { filter: blur(calc(var(--dot-size) * .30)); transform: scale(1.7); opacity: calc(var(--l) * var(--wide,0)); }
-.cue { position: fixed; z-index: 22; color: #fff; text-transform: uppercase; font-weight: 800; background: #000;
-  left: 50%; bottom: 14vh; transform: translateX(-50%); max-width: 92vw; padding: .06em .3em; font-size: clamp(16px, 3.8vw, 48px); letter-spacing: -.03em; white-space: nowrap; visibility: hidden; }
 .say { position: fixed; z-index: 23; background: #000; color: #fff; font-weight: 900; text-transform: uppercase; font-size: clamp(11px, 1.6vw, 18px); line-height: 1; padding: .35em .5em; white-space: nowrap; pointer-events: none; }
 .st { position: fixed; z-index: 26; right: 2vw; bottom: 1.2vh; text-transform: uppercase; font-weight: 900; font-size: clamp(12px, 2vw, 16px); }
     </style>
@@ -59,15 +57,13 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
     <main class="stage">
       <div id="world" class="world"><div id="grid" class="grid"></div></div>
     </main>
-    <div id="cue" class="cue"></div>
     <script src="engine.js"></script>
     <script src="OPERA.js"></script>
     <script>
 document.title = O.opera.title;
-// Type on the grid. The title's capitals span exactly two dot rows (top of
-// row two to the bottom of row three); nav capitals span exactly one row, on
-// the second-to-last row. Left edges sit on the second column, right edges on
-// the second-to-last. A title too wide for one line wraps to the next pair of
+// Type on the grid. The title's capitals span exactly two dot rows (the
+// first two whole rows); nav capitals span exactly one row, on the last whole
+// row. Left edges sit on the first whole column, right edges on the last. A title too wide for one line wraps to the next pair of
 // rows, one empty row between.
 function grid() {
   var r = [], c = [], D = 0;
@@ -97,7 +93,7 @@ function set(el, w, h, y) {
 }
 function layout() {
   var g = grid(); if (g.r.length < 4 || g.c.length < 4) return;
-  var P = g.r[1] - g.r[0], L = g.c[1], R = g.c[g.c.length - 2] + g.D;
+  var P = g.r[1] - g.r[0], L = g.c[0], R = g.c[g.c.length - 1] + g.D;
   // title: two-row capitals, greedy word wrap; if even one word won't fit,
   // one-row capitals, still on the grid
   ti.textContent = '';
@@ -113,11 +109,11 @@ function layout() {
   lines.push(line); ti.removeChild(probe);
   lines.forEach(function (t, i) {
     var sp = document.createElement('span'); sp.textContent = t; ti.appendChild(sp);
-    set(sp, 700, h, g.r[1] + i * step * P);
+    set(sp, 700, h, g.r[0] + i * step * P);
     sp.style.left = L + 'px';
   });
-  // nav: one-row capitals on the second-to-last row, MENU left, PLAY right
-  var a = document.querySelectorAll('.n a'), y = g.r[g.r.length - 2];
+  // nav: one-row capitals on the last whole row, MENU left, PLAY right
+  var a = document.querySelectorAll('.n a'), y = g.r[g.r.length - 1];
   a.forEach(function (el) { set(el, 900, g.D, y); });
   a[0].style.left = L + 'px';
   a[1].style.left = (R - a[1].getBoundingClientRect().width) + 'px';
@@ -129,8 +125,8 @@ function layout() {
   mu.style.bottom = (innerHeight - a[0].getBoundingClientRect().top + P) + 'px';
   mu.style.fontSize = fs + 'px';
   mu.style.maxHeight = (a[0].getBoundingClientRect().top - P - g.r[0]) + 'px';
-  // about text: a plain column from row five down to a row above the buttons
-  var tt = g.r[Math.min(4, g.r.length - 1)];
+  // about text: a plain column from row four down to a row above the buttons
+  var tt = g.r[Math.min(3, g.r.length - 1)];
   tx.style.left = L + 'px';
   tx.style.width = (innerWidth - L - 4) + 'px';
   tx.style.top = tt + 'px';
