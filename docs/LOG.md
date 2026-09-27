@@ -30,6 +30,9 @@ What worked and what didn't, per run. Newest first. One line per finding.
 - **An entrance with grandeur (27 Sep).** A star gets a build-up: the crowd hushes, a drum roll, their colour sweeps in from beyond the edge, and they land on a hit with a shake, a close shot and the cue. Then cut back to wide.
 - **A story spine before the scenes (27 Sep).** Write one beat and one feeling per act first. Effects that don't serve a beat (a comet round the edge, rows sweeping) read as nothing happening.
 
+- **Whose feeling, and where it starts (27 Sep).** For an inner feeling, start close on the one who feels it, with the world dark, then let it leave them in their own colour. Jealousy: José's heart stumbles, her red flower turns to his blue petal by petal, then his blue creeps out like ink until it boxes her in, a wall between her and the gold.
+- **Objects carry the story (27 Sep).** A gift that changes colour says what's changed between two people without a new symbol.
+
 ## Avoid
 
 - A crowd meter that grows and shrinks (27 Sep): the changing size is what reads, not the cheering.

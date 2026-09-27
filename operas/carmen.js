@@ -29,8 +29,6 @@ O.opera = {
           if (Math.round(Math.hypot(c - cx, w - cy)) === r) out.push(cell(c, w));
       return out.filter(Boolean);
     };
-    const col = (c, from = -12, to = 20) => { const o = []; for (let r = from; r <= to; r++) o.push(cell(c, r)); return o.filter(Boolean); };
-    const row = (r, from = -20, to = 28) => { const o = []; for (let c = from; c <= to; c++) o.push(cell(c, r)); return o.filter(Boolean); };
 
     // The tune. Slide: L'amour est un oiseau rebelle. Answer: que nul ne peut apprivoiser.
     const SLIDE = ['1+', '7#', '7', '6#', '6', '5'].map(k.deg);
@@ -98,7 +96,6 @@ O.opera = {
       for (let n = 0; n < 3; n++)
         k.note('arp', CHAT[Math.floor(rnd() * CHAT.length)] + 12, at + rnd() * 0.1, 0.1, { vol: 0.012, light: crowd[Math.floor(rnd() * crowd.length)].el });
     habanera(0.3, Math.ceil((arrive + 0.6) / (2 * B)), null, 0.1);
-    k.pulse(start, 0.3); k.pulse(start, 0.3 + 2 * B);            // she waits, alive
     k.shot('mid', walkStart, { on: PATH[0] });
     PATH.slice(1).forEach(([c, r], i) => {
       const at = walkStart + i * B, from = cell(...PATH[i]), to = cell(c, r);
@@ -219,26 +216,47 @@ O.opera = {
     t = tb + 6 * B;
     [...L, ...R].forEach((el) => pilot(el, null, t));
 
-    // ---- V. Jealousy (38 to 46): José sings her tune back, inverted, minor; his blue walls in
+    // ---- V. Jealousy. Feeling: suffocating; his love turns to possession.
+    // Close on José in the dark: his heart races and stumbles, and her flower
+    // turns from red to blue, petal by petal. Mid: he sings her Habanera
+    // upside down and his blue creeps out from him like ink, a cell group per
+    // note. Wide: it has boxed her in, a wall between her and the gold.
     k.act('JEALOUSY', t);
     k.room(700, 0.5, t, 6);
+    k.shot('close', t, { on: [1, 4] });
+    [0, 0.4, 1, 1.3, 1.9, 2.2, 2.6, 2.8].forEach((o) => { k.drum('heartbeat', t + o * B, 0.16, [jose]); k.pulse(jose, t + o * B); });
+    petals.forEach((el, i) => {
+      const at = t + (0.4 + i * 0.7) * B;
+      paint(el, 'blue', at - 0.01);
+      k.note('tenor', SLIDE[i + 2] - 12, at, 0.6 * B, { vol: 0.1, light: el });
+    });
+    k.say(jose, 'ELLE EST À MOI', t + 1.2 * B, 1.8);
+    t += 3.2 * B;
+    // the ink: the box round her, nearest him first
+    const ink = [];
+    for (let c = 2; c <= 6; c++) for (let r = 1; r <= 7; r++) if (!(c === C && r === C)) ink.push({ el: cell(c, r), d: Math.hypot(c - 1, r - 4) });
+    ink.sort((x, y) => x.d - y.d);
     const inv = k.T.inv()([SLIDE, 'x'.repeat(6)])[0];
+    k.shot('mid', t, { on: [3, 4] });
     let at = t;
     inv.forEach((n, i) => {
       const d = SLIDE_D[i] * B * 1.3;
-      const wall = col(8 - i, -2, 10);
-      paint(wall, 'blue', at - 0.01);
-      k.note('tenor', n, at, d * 0.95, { vol: 0.16, light: [jose, ...wall] });
+      const g = ink.slice(Math.floor(i * ink.length / 6), Math.floor((i + 1) * ink.length / 6)).map((x) => x.el);
+      paint(g, 'blue', at - 0.01);
+      g.forEach((el) => pilot(el, 'blue', at));
+      k.note('tenor', n, at, d * 0.95, { vol: 0.16, light: [jose, ...g] });
       k.note('bass', n - 12, at, d, { vol: 0.1 });
+      if (i === 4) k.shot('wide', at);
       at += d;
     });
-    t = at + 0.3;
+    t = at + B;
 
     // ---- VI. The knife (46 to 50): a bar of dark, one beat of the arena, she burns out
     k.act('THE KNIFE', t);
     k.silence(t, 2 * B);
     t += 2 * B;
     k.bg('sand', t);
+    ink.forEach(({ el }) => pilot(el, null, t));
     k.drum('snare', t, 0.2, W);
     k.bg(null, t + B * 0.5);
     k.shake(t, 6, 0.3);
