@@ -5,7 +5,7 @@ const { minify } = require('terser');
 const CleanCSS = require('clean-css');
 
 const ROOT_LIMIT = 12288;
-const LIMITS = { engine: 12288, opera: 2048, standalone: 14336, index: 2048 };
+const LIMITS = { engine: 12288, opera: 2048, standalone: 14336, index: 4096 };
 const ENGINE_FILES = ['tween', 'synth', 'stage', 'score', 'index'].map((f) => `src/engine/${f}.js`);
 
 // Site order for the index: the eight shipped operas, in programme order.
@@ -73,29 +73,11 @@ async function buildEngine() {
   return js(wrapped);
 }
 
-async function buildIndexPage(operaList, siteTotalGz) {
-  let html = fs.readFileSync('src/site.html', 'utf8');
-
-  const strapKB = Math.ceil(siteTotalGz / 1024);
-  html = html.replace('%%STRAP%%', `EIGHT OPERAS. ONE GRID. UNDER ${strapKB} KB.`);
-
-  const rows = operaList
-    .map(
-      (o, i) =>
-        `<li><a class="op" href="${o.id}.html"><span class="no">${i + 1}</span><span class="ti">${o.title}</span><span class="la">${o.lang}</span><span class="sz">${o.gz} B</span></a></li>`
-    )
-    .join('');
-  html = html.replace('%%LIST%%', rows);
-
-  const dl =
-    'Standalone: ' +
-    operaList.map((o) => `<a href="${o.id}.standalone.html">${o.short}</a>`).join(', ') +
-    ' · <a href="about.html">About</a>';
-  html = html.replace('%%DL%%', dl);
-
-  html = html.replace(/<style>([\s\S]*?)<\/style>/, (m, code) => '<style>' + css(code) + '</style>');
-  html = html.replace(/\n\s+/g, '\n').replace(/\n+/g, '\n');
-  return html;
+// The index page is the shell itself with no opera: same grid,
+// same type, same MENU and PLAY. PLAY goes to the first opera that exists.
+function buildPage(shellTpl, page, title, first, bytes) {
+  const script = `<script>var PAGE=${JSON.stringify(page)},FIRST=${JSON.stringify(first)};O.opera={title:${JSON.stringify(title)},stage:{grid:9},build:function(k){k.end=1}}</script>`;
+  return shellTpl.replace('<script src="OPERA.js"></script>', script).replace('%%BYTES%%', String(bytes));
 }
 
 async function buildNewSite() {
@@ -153,9 +135,10 @@ async function buildNewSite() {
   const siteTotal = engineGz + shellGz + shipped.reduce((sum, o) => sum + operaGzById[o.id], 0);
   console.log(`site total (engine + shell + ${shipped.length} opera${shipped.length === 1 ? '' : 's'}): ${siteTotal} bytes gzipped`);
 
-  const operaList = shipped.map((o) => ({ ...o, gz: operaGzById[o.id] }));
-  const indexHtml = await buildIndexPage(operaList, siteTotal);
+  const first = (shipped[0] || SITE_ORDER[0]).id;
+  const indexHtml = buildPage(shellTpl, 'index', 'DOT OPERAS', first, siteTotal);
   fs.writeFileSync('dist/index.html', indexHtml);
+  fs.copyFileSync('about.html', 'dist/about.html'); // Iain's about page, unchanged
   const indexGz = gzip(indexHtml);
   console.log(`index.html: ${indexHtml.length} bytes, ${indexGz} bytes gzipped, limit ${LIMITS.index}, ${LIMITS.index - indexGz} spare`);
   if (indexGz > LIMITS.index) fail = true;

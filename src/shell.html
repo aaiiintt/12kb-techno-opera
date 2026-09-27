@@ -150,6 +150,11 @@ if (location.search.indexOf('scale') > -1) {
     t += 1000;
   });
   setTimeout(function () { O.voice('soprano', 0, O.now(), 4, { vol: .2 }); }, t);
+} else if (window.PAGE) {
+  // the index: the same chrome, no opera. PLAY goes to the first opera;
+  // the index opens with the menu showing (the list is the programme).
+  pb.href = FIRST + '.html';
+  if (PAGE === 'index') mn.onclick({ preventDefault: function () {} });
 } else if (location.search.indexOf('step') > -1) {
   O.initStep();
 } else {
