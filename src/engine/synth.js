@@ -361,7 +361,10 @@ O.deg = (d) => {
   if (s === '0') return null;
   if (s.endsWith('+')) { oct = 1; s = s.slice(0, -1); }
   else if (s.endsWith('-')) { oct = -1; s = s.slice(0, -1); }
-  return O.opera.root + semitone(+s) + 12 * oct;
+  // '#' or 'b' after the degree raises or lowers it a semitone, for real tunes.
+  const acc = s.endsWith('#') ? 1 : s.endsWith('b') ? -1 : 0;
+  if (acc) s = s.slice(0, -1);
+  return O.opera.root + semitone(+s) + 12 * oct + acc;
 };
 
 const ROMAN = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7 };

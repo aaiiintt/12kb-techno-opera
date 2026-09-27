@@ -13,7 +13,7 @@ These are the core principles. Break a detail if the story needs it; never break
 
 ## 2. Music
 
-- **Use the opera's most recognisable music.** The tune everyone knows, arranged for the house voices, as the hero's theme. Quote its melody and rhythm accurately; simplify its harmony.
+- **Use the opera's most recognisable music.** The tune everyone knows, arranged for the house voices, as the hero's theme. Quote its melody and rhythm accurately; simplify its harmony. Notes are scale degrees; add `#` or `b` for chromatic notes (`7#`), and `+` or `-` for octaves (`1+`, `5-`), in that order: `7#+`.
 - **Store it once, transform it.** The tune is written once. Every other appearance is a transform: transposed, inverted, minor, slowed, fragmented, or sung by a different character.
 - **Four voices, each a character.** Tenor (warm, rough), soprano (formant, with vibrato that arrives late), bass (felt more than heard), arp (music-box shimmer that stands in for the chorus and the chords). Filtered noise for percussion and breath. One room.
 - **Drama is cheap.** Silence before the big moment. A crescendo. A held note. The room opening or closing. Use these before adding anything.
