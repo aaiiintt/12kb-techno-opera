@@ -159,7 +159,9 @@ O.applyStage = (o = {}) => {
 // unchanged by how far the grid now reaches past it.
 O.camera = (tl, time, o = {}) => {
   const { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut' } = o;
-  const z = () => (typeof zoom === 'function' ? zoom() : zoom);   // resolved when the move plays
+  // resolved when the move plays; a page measured before it has a size (a
+  // hidden tab) would give 0 or Infinity and a black stage, so fall back to wide
+  const z = () => { const v = typeof zoom === 'function' ? zoom() : zoom; return v > 0 && v < 1e3 ? v : 1; };
   tl.to(worldEl, {
     x: () => (CENTER - col) * cellSize() * z(),
     y: () => (CENTER - row) * cellSize() * z(),
