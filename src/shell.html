@@ -8,9 +8,10 @@
 :root { --dot-size: clamp(22px, 6.8vmin, 58px); --gap: clamp(4px, 1.2vmin, 12px); --dot-scale: 1; --gap-ratio: 1; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #fff; font-family: Helvetica, Arial, sans-serif; }
 .t, .n { position: fixed; text-transform: uppercase; z-index: 20; }
-.t { top: 0; left: 0; margin: 0; padding: 3vmin 3vw 0; font-size: clamp(28px, 9vw, 90px); line-height: .9; letter-spacing: -.03em; }
+.t { inset: 0; margin: 0; pointer-events: none; font-weight: 700; letter-spacing: -.03em; }
+.t span, .n a { position: fixed; line-height: 1; white-space: nowrap; }
 .b { position: fixed; top: 1.2vmin; right: 2vw; font-size: 12px; opacity: .5; z-index: 20; }
-.n { left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 0 2vw 1.2vh; font-size: clamp(24px, 4vw, 36px); font-weight: 900; z-index: 25; }
+.n { font-weight: 900; z-index: 25; }
 .n a { color: #fff; text-decoration: none; }
 .stage { position: fixed; inset: 0; z-index: 1; display: grid; justify-content: center; align-content: center; overflow: hidden; }
 .world { transform-origin: center; }
@@ -33,7 +34,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
   <body>
     <h1 class="t" id="ti"></h1>
     <span class="b" id="bd">%%BYTES%% B</span>
-    <nav class="n"><a href="index.html">Opera House</a><a href="#" id="pb">Play</a><a href="about.html">Info</a></nav>
+    <nav class="n"><a href="index.html">Menu</a><a href="#" id="pb">Play</a></nav>
     <main class="stage">
       <div id="world" class="world"><div id="grid" class="grid"></div></div>
     </main>
@@ -41,7 +42,67 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
     <script src="engine.js"></script>
     <script src="OPERA.js"></script>
     <script>
-document.title = ti.textContent = O.opera.title;
+document.title = O.opera.title;
+// Type on the grid. The title's capitals span exactly two dot rows (top of
+// row two to the bottom of row three); nav capitals span exactly one row, on
+// the second-to-last row. Left edges sit on the second column, right edges on
+// the second-to-last. A title too wide for one line wraps to the next pair of
+// rows, one empty row between.
+function grid() {
+  var r = [], c = [], D = 0;
+  document.querySelectorAll('#grid .dot').forEach(function (d) {
+    var b = d.getBoundingClientRect();
+    D = b.width;
+    if (b.top >= 0 && b.bottom <= innerHeight) r.push(Math.round(b.top));
+    if (b.left >= 0 && b.right <= innerWidth) c.push(Math.round(b.left));
+  });
+  var u = function (a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; }); };
+  return { r: u(r), c: u(c), D: D };
+}
+var cv = document.createElement('canvas').getContext('2d');
+function metric(w, S) {
+  cv.font = w + ' ' + S + 'px Helvetica, Arial, sans-serif';
+  var m = cv.measureText('H');
+  // with line-height 1 the baseline sits half the leading plus the ascent below the box top
+  return { cap: m.actualBoundingBoxAscent, base: (S - m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2 + m.fontBoundingBoxAscent };
+}
+// place an element so its capitals run from y to y + h
+function set(el, w, h, y) {
+  var S = 100, m = metric(w, S);
+  S = S * h / m.cap; m = metric(w, S);
+  el.style.fontSize = S + 'px';
+  el.style.top = (y - (m.base - m.cap)) + 'px';
+  return S;
+}
+function layout() {
+  var g = grid(); if (g.r.length < 4 || g.c.length < 4) return;
+  var P = g.r[1] - g.r[0], L = g.c[1], R = g.c[g.c.length - 2] + g.D;
+  // title: two-row capitals, greedy word wrap; if even one word won't fit,
+  // one-row capitals, still on the grid
+  ti.textContent = '';
+  var probe = document.createElement('span'); ti.appendChild(probe);
+  var fits = function (h) { set(probe, 700, h, 0); return O.opera.title.split(' ').every(function (w) { probe.textContent = w; return probe.getBoundingClientRect().width <= R - L; }); };
+  var two = 2 * g.D + (P - g.D), h = fits(two) ? two : g.D, step = h === two ? 3 : 2;
+  set(probe, 700, h, 0);
+  var lines = [], line = '';
+  O.opera.title.split(' ').forEach(function (w) {
+    probe.textContent = line ? line + ' ' + w : w;
+    if (line && probe.getBoundingClientRect().width > R - L) { lines.push(line); line = w; } else line = probe.textContent;
+  });
+  lines.push(line); ti.removeChild(probe);
+  lines.forEach(function (t, i) {
+    var sp = document.createElement('span'); sp.textContent = t; ti.appendChild(sp);
+    set(sp, 700, h, g.r[1] + i * step * P);
+    sp.style.left = L + 'px';
+  });
+  // nav: one-row capitals on the second-to-last row, MENU left, PLAY right
+  var a = document.querySelectorAll('.n a'), y = g.r[g.r.length - 2];
+  a.forEach(function (el) { set(el, 900, g.D, y); });
+  a[0].style.left = L + 'px';
+  a[1].style.left = (R - a[1].getBoundingClientRect().width) + 'px';
+}
+layout();
+addEventListener('resize', function () { requestAnimationFrame(layout); });
 if (location.search.indexOf('scale') > -1) {
   O.initAudio();
   var phrase = [0, 4, 7, 12], t = 0;
@@ -60,6 +121,7 @@ if (location.search.indexOf('scale') > -1) {
     e.preventDefault();
     if (pb.textContent === 'Play') { O.start(); O.load(O.opera); pb.textContent = 'Pause'; }
     else { O.stop(); pb.textContent = 'Play'; }
+    layout();
   };
 }
     </script>

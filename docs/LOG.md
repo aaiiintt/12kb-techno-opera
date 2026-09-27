@@ -11,6 +11,7 @@ What worked and what didn't, per run. Newest first. One line per finding.
 
 ## Techniques
 
+- **Type on the grid (27 Sep).** Capitals are measured to the dots: the title's capitals run from the top of dot row two to the bottom of row three; the nav's capitals are exactly one dot tall, on the second-to-last row. Left edges on the second column, right edges on the second-to-last. A title that won't fit wraps onto the next pair of rows with one empty row between; if a single word won't fit, it drops to one-row capitals. Two nav items only: MENU left, PLAY right.
 - **Three shots (27 Sep).** Wide is the whole grid: the world and mass moves, the opening and every new place. Mid is about five cells across: two characters and the space between. Close is two or three cells: one character's feeling, and the camera follows their dot. Cut between sizes on a beat; don't zoom, except one deliberate push-in per opera at the peak. Step one size at a time; jump wide to close only for a shock. The world keeps playing out of shot.
 - **Following through a crowd (27 Sep).** Wide on a busy field, cut to mid as the hero moves, cut to close following the hero's dot as the crowd streams past the edges of frame, cut back to wide when they stop. Filmic, using only the grid.
 
