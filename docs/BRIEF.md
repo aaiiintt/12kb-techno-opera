@@ -8,7 +8,7 @@ You know these operas better than we do. Use that.
 
 A premium handheld game at its most beautiful: Tenori-on, Electroplankton. Every disc is a bulb behind a perfect diffuser, and every one of them earns its place. Colour, glow and rhythm do the work. The music and the light are one system: when something sounds, something lights.
 
-Underneath, it's sweet. Small round lights with big feelings, a hero you root for, a quiet "HELP!" in the lower third. On the surface, it's austere: black, flat discs, one typeface.
+Underneath, it's sweet. Small round lights with big feelings, a hero you root for, a quiet "HELP!" beside a dot. On the surface, it's austere: black, flat discs, one typeface.
 
 Be ambitious with the grid. The failure mode is timidity: two dots in a sea of grey. Use rings of colour spreading from a character, crowds that flash as they cheer, a whole row lighting as a chord lands, a rainbow when love wins, embers when it doesn't.
 
