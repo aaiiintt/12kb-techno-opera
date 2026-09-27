@@ -57,8 +57,8 @@ O.opera = {
     };
 
     const carmen = cell(C, C);
-    const jose = cell(8, 6);
-    chars = [carmen, jose];
+    const jose = cell(1, 4), esca = cell(7, 4);   // the line-up: José, Carmen, Escamillo
+    chars = [carmen, jose, esca];
     const W = k.cells();
 
     // Carmen's walk through the square, from the crowd's edge to the centre
@@ -68,6 +68,7 @@ O.opera = {
     // ---- reset for each loop
     k.paint(W, 'sand');
     k.pilot(jose, null);
+    k.pilot(esca, null);
     k.pilot(carmen, null);
     paint(start, 'red', 0, 1);
     pilot(start, 'red', 0);
@@ -147,17 +148,17 @@ O.opera = {
     k.say(jose, 'DON JOSÉ', t + 0.1, 1.6);
     k.note('tenor', k.deg('1'), t, B, { vol: 0.1, light: jose });
     t += 1.5 * B;
-    const arc = [[5, 3], [6, 2], [7, 2], [8, 3], [8, 4], [8, 5]];
+    const arc = [[3, 3], [3, 2], [2, 2], [1, 2], [1, 3]];
     arc.forEach(([c, r], i) => {
       const el = cell(c, r);
       paint(el, 'red', t + i * 0.12 - 0.01);
       k.note('arp', k.deg('5+') + i, t + i * 0.12, 0.1, { vol: 0.07, light: el });
     });
     t += arc.length * 0.12;
-    const petals = [[8, 5], [9, 6], [8, 7], [7, 6]].map(([c, r]) => cell(c, r));
+    const petals = [[1, 3], [0, 4], [1, 5], [2, 4]].map(([c, r]) => cell(c, r));
     paint(petals, 'red', t - 0.01);
     petals.forEach((el) => pilot(el, 'red', t));  // he keeps her flower until she dies
-    k.say(petals[1], 'UNE FLEUR !', t + 0.1, 1.4);
+    k.say(petals[3], 'UNE FLEUR !', t + 0.1, 1.4);
     k.pulse(jose, t);
     for (let h = 0; h < 6; h++) {
       k.drum('heartbeat', t + h * B, 0.14, [jose, ...petals]);
@@ -166,29 +167,53 @@ O.opera = {
     k.note('tenor', k.deg('3'), t, 4 * B, { vol: 0.13, light: jose });
     t += 6 * B;
 
-    // ---- IV. Toréador (30 to 38): a gold comet races the stage's edge, sparkling
+    // ---- IV. Toréador. Feeling: a star arrives and José is eclipsed. Iain's
+    // sketch: José, Carmen, Escamillo in a line, each with the crowd beside
+    // them as a level meter. At first José's side cheers and Escamillo's
+    // boos; then Escamillo sings the Toréador and the meters swing: his side
+    // fills, José's drains. Carmen shines in the middle, lit by both.
     k.act('TORÉADOR', t);
     k.cue('TORÉADOR!', t + 0.2, 1.4);
-    const edge = [];
-    for (let c = 0; c < 9; c++) edge.push([c, 0]);
-    for (let r = 1; r < 9; r++) edge.push([8, r]);
-    for (let c = 7; c >= 0; c--) edge.push([c, 8]);
-    for (let r = 7; r > 0; r--) edge.push([0, r]);
-    const edgeEls = edge.map(([c, r]) => cell(c, r));
-    paint(edgeEls, 'gold', t);
-    const lap = 8 * B, step = lap / edgeEls.length;
-    edgeEls.forEach((el, i) => {
-      const at = t + i * step;
-      k.note('arp', k.deg(['1+', '3+', '5+'][i % 3]), at, step * 6, { vol: 0.09, light: el });
-      if (i % 2 === 0) {                          // sparkles: the suit of lights
-        const [c, r] = edge[i], s = cell(c + (r === 0 ? 0 : c === 8 ? 1 : -1), r + (r === 0 ? -1 : r === 8 ? 1 : 0));
-        if (s) { paint(s, 'gold', at); k.drum('hat', at + step, 0.05, [s]); }
-      }
+    pilot(esca, 'gold', t);
+    paint(esca, 'gold', t, 1);
+    k.say(esca, 'ESCAMILLO', t + 0.1, 1.4);
+    // the two crowds: three columns each side, filling from the bottom
+    const meter = (c0) => { const m = []; for (let r = 8; r >= 0; r--) m.push([c0, c0 + 1, c0 + 2].map((c) => cell(c, r)).filter(Boolean)); return m; };
+    const L = meter(-3), R = meter(9);
+    let lv = { L: 0, R: 0 };
+    const level = (m, key, n, at) => {                // light the bottom n rows, darken the rest
+      m.forEach((rowEls, i) => rowEls.forEach((el) => pilot(el, i < n ? 'sand' : null, at)));
+      paint(m.flat(), 'sand', at - 0.01);
+      if (n > lv[key]) k.note('arp', k.deg('5+') + n, at, 0.15, { vol: 0.03, light: m[n - 1] });
+      lv[key] = n;
+    };
+    // a cheer or a jeer: the lit part of a meter twinkles
+    const noise = (m, key, at, up) => { for (let j = 0; j < 4; j++) { const rowEls = m[Math.floor(rnd() * Math.max(1, lv[key]))]; if (rowEls) k.note('arp', k.deg(up ? '3+' : '2') + (up ? j : -j), at + j * 0.1, 0.12, { vol: 0.02, light: rowEls }); } };
+    // A: José's side cheers, Escamillo's side boos
+    [[3, 6], [4, 5], [6, 4], [7, 3]].forEach(([l, r], i) => {
+      level(L, 'L', l, t + i * B); level(R, 'R', r, t + i * B);
+      noise(L, 'L', t + i * B, 1); noise(R, 'R', t + i * B + B / 2, 0);
+      k.pulse(jose, t + i * B);
     });
-    sing('tenor', SLIDE, SLIDE_D, t, null, { up: 12, vol: 0.12 });
-    habanera(t, 4, (b, i) => { if (!(i % 2)) return null; const r = row(b * 2 + 1); paint(r, 'sand', t + (b * 2 + HAB[i]) * B - 0.01); return r; }, 0.05);
-    k.scale(jose, 0.7, t, lap);
-    t += lap;
+    k.say(L[6][1], 'BRAVO !', t + 1.5 * B, 1.2);
+    k.say(R[3][1], 'HOU !', t + 2.5 * B, 1.2);
+    // B: Escamillo sings; the crowd swings to him
+    const tb = t + 4 * B;
+    const TOR = ['7', '1+', '7', '5', '5', '5', '4', '5', '6', '5'].map(k.deg);   // Toréador, en garde (from memory, relative major)
+    const TOR_D = [0.75, 0.25, 0.5, 1, 0.5, 0.25, 0.25, 0.5, 0.5, 1.5];
+    sing('tenor', TOR, TOR_D, tb, () => esca, { vol: 0.16 });
+    [[6, 5], [5, 6], [4, 7], [3, 8], [2, 9], [1, 9]].forEach(([l, r], i) => {
+      const at = tb + i * B;
+      level(L, 'L', l, at); level(R, 'R', r, at);
+      noise(R, 'R', at, 1);
+      k.pulse(esca, at);
+      k.note('bass', k.deg(i % 2 ? '5-' : '1-'), at, B * 0.4, { vol: 0.1 });
+    });
+    k.say(R[8][1], 'TORÉADOR !', tb + 3 * B, 1.4);
+    // Carmen shines between them: sparks round her on the offbeats
+    for (let i = 0; i < 20; i++) k.note('arp', k.deg(['1+', '3+', '5+'][i % 3]), t + i * B / 2 + B / 4, 0.15, { vol: 0.03, light: ring(C, C, 1)[i * 3 % 8] });
+    t = tb + 6 * B;
+    [...L, ...R].flat().forEach((el) => pilot(el, null, t));
 
     // ---- V. Jealousy (38 to 46): José sings her tune back, inverted, minor; his blue walls in
     k.act('JEALOUSY', t);

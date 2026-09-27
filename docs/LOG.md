@@ -26,6 +26,9 @@ What worked and what didn't, per run. Newest first. One line per finding.
 - **Objects are shapes, characters are cells (27 Sep).** A character is one dot. A thing they hold is a small shape round it that stays lit, like the flower: a red cross of petals round José's blue, kept until she dies. Never a filled square round a character; it reads as a block, not a person.
 - **Vacated cells go back (27 Sep).** When a character moves on, the cell returns to the light it had before, not to white. Stray white cells read as something happening.
 
+- **The crowd as a meter (27 Sep, from Iain's sketch).** Rivals in a line, each with a block of crowd beside them that fills from the bottom when it cheers and drains when it boos. The swing of the meters tells the contest; a tag on each block says which way it's going (BRAVO !, HOU !, TORÉADOR !).
+- **A story spine before the scenes (27 Sep).** Write one beat and one feeling per act first. Effects that don't serve a beat (a comet round the edge, rows sweeping) read as nothing happening.
+
 ## Avoid
 
 - A crowd that wanders while the hero walks (27 Sep): her movement disappears into theirs.
