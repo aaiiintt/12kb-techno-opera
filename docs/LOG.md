@@ -11,11 +11,19 @@ What worked and what didn't, per run. Newest first. One line per finding.
 
 ## Techniques
 
+- **Feeling first (27 Sep).** Every act starts from what the audience should feel, and every choice (shot, how many other dots, what they do, glow, music) serves it. Every review states the feeling and how the scene achieves it. Starting mappings, from Iain:
+  - Lonely: wide, the character alone in the centre, no one around.
+  - Busy or overwhelmed: wide, lots of dots jostling around them, the music crowded.
+  - Intimate: close, two people, soft glow around them.
+- **Motion reads against stillness (27 Sep).** If everything moves, nothing does. To show someone moving through a crowd, the crowd holds still and reacts to them as they pass.
+
 - **Type on the grid (27 Sep).** Capitals are measured to the dots: the title's capitals run from the top of dot row two to the bottom of row three; the nav's capitals are exactly one dot tall, on the second-to-last row. Left edges on the second column, right edges on the second-to-last. A title that won't fit wraps onto the next pair of rows with one empty row between; if a single word won't fit, it drops to one-row capitals. Two nav items only: MENU left, PLAY right; PLAY toggles PAUSE, MENU toggles CLOSE. The menu is an overlay that breaks the grid on purpose: plain type in one column, DOT OPERAS as the brand, the series as a bulleted list (unmade operas dimmed), then ABOUT, sitting a row above the buttons and growing upward, opening at the bottom nearest the thumb. The buttons never move.
 - **Three shots (27 Sep).** Wide is the whole grid: the world and mass moves, the opening and every new place. Mid is about five cells across: two characters and the space between. Close is two or three cells: one character's feeling, and the camera follows their dot. Cut between sizes on a beat; don't zoom, except one deliberate push-in per opera at the peak. Step one size at a time; jump wide to close only for a shock. The world keeps playing out of shot.
 - **Following through a crowd (27 Sep).** Wide on a busy field, cut to mid as the hero moves, cut to close following the hero's dot as the crowd streams past the edges of frame, cut back to wide when they stop. Filmic, using only the grid.
 
 ## Avoid
+
+- A crowd that wanders while the hero walks (27 Sep): her movement disappears into theirs.
 
 - Moving the buttons to fit a layout (27 Sep). MENU and PLAY stay put; everything else adapts around them.
 - Forcing overlay menus onto the dot grid (27 Sep): it produced column splits and dropped headings. Navigation breaks the grid; the stage keeps it.
