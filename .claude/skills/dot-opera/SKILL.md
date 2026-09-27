@@ -32,6 +32,7 @@ For each act, using `docs/TOOLSET.md`, work out:
 - **actions:** what moves, and the shots
 - **music:** which theme, which voice, where the silence is
 - **emotion:** how those add up to the feeling
+- **captions:** `[english, original]` pairs, each led by an emoji pictogram where one says it faster than words (✂️ 💌 🛑); one style only; sparse
 - **wink:** across the whole opera, one or two deadpan, knowing moments (a word in the opera's language at exactly the wrong time) that make it ours without undercutting the feeling. Carmen's is José's MERDE ! just after the knife.
 
 Write it all into `docs/treatments/<id>.json` (schema: `docs/treatment.schema.json`).

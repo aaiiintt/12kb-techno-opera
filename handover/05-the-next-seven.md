@@ -180,6 +180,8 @@ Every opera: 5 to 7 acts, about 60 to 90 s, one to three characters as single do
 
 **Wink candidates.** "FIGARO! FIGARO! FIGARO!" from three different dots at once. Bartolo's "?" as the disguised Count walks past him again.
 
+**Status.** A draft exists (`operas/barber.js`, `docs/treatments/barber.json`, parallel session, 27 Sep) with a cast roll-call opening, Figaro as a Nokia snake through the crowd, a sleeping guard, a lightning ladder and a pink wedding wave, and emoji-led bilingual captions throughout. Review it act by act with Iain before building on it.
+
 **Watch for.** Comedy needs the same feeling-first discipline: every act still has one feeling. Patter is rhythm, so the arp voice can carry the words.
 
 ---

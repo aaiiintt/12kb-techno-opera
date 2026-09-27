@@ -32,13 +32,13 @@ O.opera = {
 - `k.drum(kind, t, vol, els)` - `kick`/`snare`/`hat`/`heartbeat`.
 - `k.room(cutoff, feedback, t, dur)` - the reverb send.
 - `k.swell(to, t, dur)` / `k.silence(t, dur)` - crescendo / hard drop.
-- `k.pilot(el, lightName)` - mark a cell as a character's resting light.
+- `k.pilot(el or els, lightName)` - mark a cell (or an array of cells) as a character's resting light; `null` clears it.
 - `k.hop(from, to, t)` - move that pilot light, with ember and elastic pop.
 - `k.scale(el, to, t, dur, ease)` / `k.pulse(el, t)` - scale cells in place.
 - `k.camera({ col, row, zoom, dur, ease }, t)`, `k.shake(t, amount, dur)`.
 - `k.shot('wide' | 'mid' | 'close', t, { on: [col, row], dur, ease })` - the three shots; a cut unless `dur` is given. To follow a character in close, call it again at each hop with a short `dur`.
 - `k.cue(text, t, hold, el)` - an act's name, drawn as a caption (`k.say`) beside `el` (default: the centre cell). There's no other caption style.
-- `k.say(el, text, t, hold)` - a small speech tag beside a cell: a person in the crowd says something.
+- `k.say(el, text, t, hold)` - a small speech tag beside a cell. `text` is a string or an `[english, original]` pair; the page shows English unless the corner toggle (`O.setLang('orig')`) is on. Lead with an emoji pictogram where it helps. Tags are cleared at each `k.act`.
 - `k.act(name, t)` - record an act marker (name, start second) for the current build. Step mode (`?step`) reads these to label its counter and to jump act to act with shift+arrow.
 
 ## Declared lights

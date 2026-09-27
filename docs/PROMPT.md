@@ -13,7 +13,7 @@ You are writing the brief for a **Dot Opera**: **{{OPERA}}**, retold in about a 
 - **Colours come from how the opera is traditionally staged** (costumes, sets, lighting audiences know): Carmen's red dress, the dragoon's blue, the toreador's suit of lights, Seville's sand. Name the source of each. On top, **up to three story colours**, each meaning exactly one thing (green was jealousy; white was the knife).
 - **The crowd is the set.** Dim resting lights that stand still, murmur, flash when they cheer, turn to look, cheer offstage. A place is its people and one colour.
 - **Three shots**: wide (the whole grid), mid (about five cells: two people and the space between), close (two or three cells: one feeling; the camera follows the dot). Cut on the beat.
-- **Captions**: small white-on-black tags beside a dot, in the opera's language, in a knowing register (QUI EST-ELLE ?, ELLE EST À MOI, UN COUTEAU !). Names on first entrance. Each act's name is a caption beside its hero. Sparse. The picture must tell the story to someone who doesn't read the language.
+- **Captions**: small white-on-black tags beside a dot, in a knowing register, written as a pair `["ENGLISH", "ORIGINAL"]` (the page shows English by default and has a toggle to the opera's language). **Lead with an emoji pictogram where one says it faster than words**: ✂️ FIGARO !, 💌 FOR LINDORO !, 🤫 LEAVE IT TO ME !, 💤 ZZZ, 🛑 STOP !, 🪜 THE LADDER !, ❤️. The emoji is the silent-film gesture; the words are the title card. Names on first entrance. Each act's name is a caption beside its hero. Sparse: the picture must still tell the story with the captions covered.
 - **Sound**: four voices (soprano, tenor, bass, arp), noise drums, one reverb room. The famous tune is quoted, sung by the character it belongs to. Silence is the cheapest drama.
 - **Light is the voice**: a dot lights with the note that sings it. Everything visible has a sound and everything sung has a light.
 
@@ -22,7 +22,7 @@ You are writing the brief for a **Dot Opera**: **{{OPERA}}**, retold in about a 
 - **Like a demake designer.** Keep the one thing everyone remembers (the tune, the flower, the statue), and cut anything that can't be read at 9×9. If a plot point needs a paragraph, it isn't in.
 - **Like a pixel artist.** A character is a colour and a position. A change of heart is a palette swap. Readable at a glance or not at all.
 - **Like a comic adapter.** One image per beat. The panel is a moment; the gutter does the work between them. Every act has a money panel: describe it.
-- **Like a silent-film director.** Emotion is gesture, light and music; a title card only where the picture can't say it. Chaplin's rule: tragedy in close-up, comedy in long shot.
+- **Like a silent-film director.** Emotion is gesture, light and music; a title card only where the picture can't say it, and a pictogram before a sentence. Chaplin's rule: tragedy in close-up, comedy in long shot.
 - **Like a lighting designer.** Colour is character, brightness is voice, the cue sheet is the score.
 - **Feeling first.** Before any picture, say what the audience should feel. Then the picture that makes them feel it. Every choice serves that feeling.
 - **The ending earns the most time.** Leave the audience where an opera audience is at the curtain: a lament or apotheosis, the last chords, blackout, silence. Then it loops.
@@ -38,7 +38,7 @@ Two parts, nothing else.
 
 **Part 1, the pitch, in under 120 words:** the story in a line; the feeling of the whole; the tune and who sings it; the colours and where they come from; the wink.
 
-**Part 2, the brief as JSON**, exactly this shape. 6 to 10 acts. Act names in the opera's language. Degrees in the notation shown (`1` to `7` in the key's own scale, `#`/`b` to alter, `+`/`-` an octave up or down); beats as fractions of a beat at the tempo. Mark every tune `"fromMemory": true`; a human checks it by ear.
+**Part 2, the brief as JSON**, exactly this shape. 6 to 10 acts. Act names in the opera's language. Degrees in the notation shown (`1` to `7` in the key's own scale, `#`/`b` to alter, `+`/`-` an octave up or down); beats as fractions of a beat at the tempo. Mark every tune `"fromMemory": true`; a human checks it by ear. Every caption is a `[english, original]` pair; put the same emoji at the front of both.
 
 ```json
 {
@@ -64,7 +64,7 @@ Two parts, nothing else.
       "actions": "She walks a cell per beat; the people beside her brighten and swell as she passes. Wide, mid as she starts, close following her, wide as she stops.",
       "music": "Habanera bass; a murmur of tiny notes; a soprano note per step.",
       "emotion": "Only she moves, so she's all the eye can follow; the crowd turning to look says she's magnetic.",
-      "captions": ["QUI EST-ELLE ?", "OH LÀ LÀ !", "CARMEN !"],
+      "captions": [["WHO IS SHE ?", "QUI EST-ELLE ?"], ["OH LÀ LÀ !", "OH LÀ LÀ !"], ["👀 CARMEN !", "👀 CARMEN !"]],
       "wink": "",
       "versions": [
         { "label": "the crowd turns to look", "idea": "..." },

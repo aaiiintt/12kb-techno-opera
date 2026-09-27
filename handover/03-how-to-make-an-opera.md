@@ -73,7 +73,7 @@ Conventions that matter (details in 04):
 - `paint(els, name, t, force)` and `pilot(el, name, t)` are opera-side wrappers that schedule via `T.call`, because the kit's own `k.paint` and `k.pilot` act immediately.
 - The reset at the top of `build` runs every loop: repaint the world, clear every character's pilot (including cells they moved to), set the wide shot at 0.
 - Use a seeded random (`rnd`) so step mode is stable.
-- Every caption is `k.say(el, text, t, hold)`; the act's name is `k.cue(text, t, hold, el)` which is the same thing beside the hero.
+- Every caption is `k.say(el, ['ENGLISH', 'ORIGINAL'], t, hold)`, led by an emoji pictogram where it helps (`'✂️ FIGARO !'`); the act's name is `k.cue(text, t, hold, el)`, the same thing beside the hero. Tags clear at each `k.act`.
 
 Build with `npm run build` and fix any gate failure before going on.
 

@@ -10,6 +10,9 @@ In rough priority order. Tick them off in this file or move them to `docs/LOG.md
 
 ## Should fix
 
+- **Parallel sessions.** On 27 Sep two sessions worked on the repo at once, and a `git add -A` in one swept the other's uncommitted Barber work into an unrelated commit (`9e059ff`). Before committing, run `git status` and stage only your own files. Check with Iain whether another session is live.
+- **Barber is 24 B under its gate** and unreviewed. Its first act (a roll call of the cast) and the Nokia-snake Figaro need Iain's eye; the golf pass on it is owed before anything is added.
+
 - **Captions off screen on phones.** Crowd tags on the far edges of the Act IV blocks (`R[4]`, `L[13]`) target cells that don't exist on a narrow grid, so `k.say` skips them. Move those tags to cells inside the stage or pick the speaker from cells that exist (`.filter(Boolean)`).
 - **Step-mode first load with every light off.** Reproduce, then check whether `startLightLoop` runs before the page is visible and whether `tickLights` needs a `visibilitychange` kick.
 - **The About line "one hundredth of a second of a YouTube video"** will go stale as operas are added. Ask Iain whether to recompute it in the build or reword.

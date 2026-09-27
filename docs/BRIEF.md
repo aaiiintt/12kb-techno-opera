@@ -21,7 +21,7 @@ Be ambitious with the grid. The failure mode is timidity: two dots in a sea of g
 - Flat discs on black. No gradients, no 3D, no drifting grid.
 - A handful of colours, taken from how the opera is traditionally staged: the costumes, sets and lighting audiences know. Carmen's red, a toreador's gold suit of lights, a soldier's blue. Rendered as light, not paint. Name where each one comes from. On top of those, up to three storytelling colours for feelings the picture can't otherwise show (Carmen's green for jealousy, white for the knife); each means one thing only.
 - The opera's most recognisable tune, quoted, as the heart of the soundtrack.
-- One caption style only: small white-on-black tags beside the dot they belong to, in the opera's language. An act's name is one of these, beside its hero, never a separate lower third.
+- One caption style only: small white-on-black tags beside the dot they belong to, English by default with a toggle to the opera's language, led by an emoji pictogram where one says it faster than words (✂️ FIGARO !, 💌, 🛑). An act's name is one of these, beside its hero, never a separate lower third.
 - It loops: the end is the beginning.
 - Small. Report the gzipped size.
 

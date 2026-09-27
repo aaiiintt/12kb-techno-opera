@@ -7,7 +7,9 @@ As of 27 September 2026, end of the Carmen session.
 - **A shared engine** (`src/engine/`, built to `dist/engine.js`, about 8.3 KB gzipped): synth voices, the grid of discs, lights driven by audio envelopes, a timeline, a camera, captions, step mode.
 - **A shell** (`src/shell.html`, about 3 KB gzipped): the page chrome. Title on the grid, MENU and PLAY, the menu overlay, the about page, the fade while playing, pause.
 - **One finished opera:** `operas/carmen.js` (about 3.8 KB gzipped, an 88 s loop, seven acts). Its treatment is `docs/treatments/carmen.json`.
+- **A draft of Il barbiere di Siviglia:** `operas/barber.js` and `docs/treatments/barber.json`, made in a parallel session on 27 Sep. It introduced emoji pictograms in captions, bilingual captions with an EN/IT toggle, and `O.pilot` on arrays. It builds (24 B under the 4 KB gate) but hasn't been through the act-by-act review with Iain. Treat it as a draft, and expect it to change.
 - **A kit demo:** `operas/hello.js`. Proves the kit, not art. Never ships.
+- **A headless Chrome smoke test:** `test-browser.mjs`, from the same parallel session.
 - **The live site:** https://dot-opera.vercel.app (Vercel project `dot-opera`, team `iaintaits-projects`). Index with the menu open, About, Carmen.
 - **The original 12KB Techno Opera** still lives at the repo root (`index.html`, `about.html`, built from `src/index.src.html` and `src/tween.js`). It is the reference and must keep building under 12,288 B gzipped. Don't touch it.
 
@@ -66,8 +68,8 @@ O.duration  // loop length in seconds
 
 | Thing | Gate (gzipped) | Now |
 | --- | --- | --- |
-| engine.js | 12,288 | ~8,320 |
-| each opera | 4,096 | Carmen ~3,800 |
+| engine.js | 12,288 | ~8,550 |
+| each opera | 4,096 | Carmen ~3,900, Barber ~4,070 |
 | each standalone page | 16,384 | Carmen ~14,300 |
 | index.html | 4,096 | ~3,100 |
 | original index.html (root) | 12,288 | ~12,275 (13 B spare; don't touch) |

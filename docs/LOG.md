@@ -51,13 +51,15 @@ The skill is `.claude/skills/dot-opera/SKILL.md`; treatments are JSON (`docs/tre
 - **A stab is a flash on her, not an object (27 Sep).** They stand side by side; UN COUTEAU ! in the silence; she flashes white and red, white and red. A separate white dot between them read as big and odd.
 - **Characters join the no-repaint list when they enter (27 Sep).** A character's cell is protected from mass paints only once they're on stage; before that it's part of the scene, or it shows up as a rogue dot in someone else's rings.
 
+- **Emoji pictograms in captions (27 Sep, Iain, via the Barber session).** An emoji at the front of a caption reads across languages before the words do (✂️ FIGARO !, 💌 POSTINO, 💤 ZZZ, 🛑 STOP !). It solves the plot-in-a-foreign-language problem without giving up the original language. One per caption, the same in both halves of the pair, and none where the bare word is funnier.
+- **Bilingual captions with a toggle (27 Sep, Barber session).** Captions are `[english, original]` pairs; the page shows English by default and the EN/IT (or FR) toggle beside the byte badge switches to the original. Carmen's tags were converted.
 - **The wink (27 Sep, Iain).** A well-timed MERDE ! just after the knife: big feeling, then one deadpan caption at exactly the wrong moment. One or two per opera.
 
 ## Avoid
 
 - Two caption treatments (27 Sep): the lower-third cue and the speech tags looked like two systems.
 - A close shot that goes by in a flash (27 Sep): if the frame matters, hold it.
-- Tags that carry the plot in words (27 Sep): Iain keeps tags in the opera's language, so the picture must carry the plot without them.
+- Tags that carry the plot in words alone (27 Sep): the picture must carry the plot with the captions covered. Since the Barber session, captions are English by default with a toggle and an emoji pictogram, which is the fix.
 - Looping straight after the climax (27 Sep): no time to feel it.
 - A hit that's one quick flash (27 Sep): it reads as a glitch, not a death.
 - A big effect standing in for a story beat (27 Sep): the collapsing red rings at the knife read as spectacle, not murder.
