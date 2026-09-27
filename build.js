@@ -138,8 +138,12 @@ async function buildNewSite() {
   const first = (shipped[0] || SITE_ORDER[0]).id;
   const indexHtml = buildPage(shellTpl, 'index', 'DOT OPERAS', first, siteTotal);
   fs.writeFileSync('dist/index.html', indexHtml);
-  // About: Iain's words, lifted verbatim from about.html, in the new chrome
-  const aboutText = /<div class="about-text">([\s\S]*?)<\/div>\s*<\/main>/.exec(fs.readFileSync('about.html', 'utf8'))[1].replace(/\s+/g, ' ').trim();
+  // About: the text lives in src/about.html; the sizes are filled in here so they stay true
+  const kb = (n) => (n / 1024).toFixed(1);
+  const aboutText = fs.readFileSync('src/about.html', 'utf8').replace(/\n/g, '')
+    .replace('%%ENGINE%%', kb(engineGz)).replace('%%SHELL%%', kb(shellGz))
+    .replace('%%OPERAS%%', shipped.map((o) => `${o.title}: ${kb(operaGzById[o.id])} KB<br>`).join(''))
+    .replace('%%TOTAL%%', kb(siteTotal));
   fs.writeFileSync('dist/about.html', buildPage(shellTpl, 'about', 'ABOUT', first, siteTotal, aboutText));
   const indexGz = gzip(indexHtml);
   console.log(`index.html: ${indexHtml.length} bytes, ${indexGz} bytes gzipped, limit ${LIMITS.index}, ${LIMITS.index - indexGz} spare`);
