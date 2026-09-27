@@ -11,6 +11,9 @@ What worked and what didn't, per run. Newest first. One line per finding.
 
 ## Techniques
 
+- **Three shots (27 Sep).** Wide is the whole grid: the world and mass moves, the opening and every new place. Mid is about five cells across: two characters and the space between. Close is two or three cells: one character's feeling, and the camera follows their dot. Cut between sizes on a beat; don't zoom, except one deliberate push-in per opera at the peak. Step one size at a time; jump wide to close only for a shock. The world keeps playing out of shot.
+- **Following through a crowd (27 Sep).** Wide on a busy field, cut to mid as the hero moves, cut to close following the hero's dot as the crowd streams past the edges of frame, cut back to wide when they stop. Filmic, using only the grid.
+
 ## Avoid
 
 
