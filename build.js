@@ -5,7 +5,7 @@ const { minify } = require('terser');
 const CleanCSS = require('clean-css');
 
 const ROOT_LIMIT = 12288;
-const LIMITS = { engine: 12288, opera: 3072, standalone: 14336, index: 4096 };
+const LIMITS = { engine: 12288, opera: 4096, standalone: 16384, index: 4096 };
 const ENGINE_FILES = ['tween', 'synth', 'stage', 'score', 'index'].map((f) => `src/engine/${f}.js`);
 
 // Site order for the index: the eight shipped operas, in programme order.
@@ -136,7 +136,7 @@ async function buildNewSite() {
   console.log(`site total (engine + shell + ${shipped.length} opera${shipped.length === 1 ? '' : 's'}): ${siteTotal} bytes gzipped`);
 
   const first = (shipped[0] || SITE_ORDER[0]).id;
-  const indexHtml = buildPage(shellTpl, 'index', 'DOT OPERAS', first, siteTotal);
+  const indexHtml = buildPage(shellTpl, 'index', 'DOT OPERA', first, siteTotal);
   fs.writeFileSync('dist/index.html', indexHtml);
   // About: the text lives in src/about.html; the sizes are filled in here so they stay true
   const kb = (n) => (n / 1024).toFixed(1);

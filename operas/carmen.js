@@ -138,28 +138,28 @@ O.opera = {
 
     // ---- III. The flower. Feeling: she chooses him. José stands apart in his
     // blue, named so we know him; she throws her flower, it lands on him and
-    // blooms (a red cross of petals round his blue), and his heart beats in it.
+    // stays beside him as one red dot, and his heart beats with it.
     k.act('THE FLOWER', t);
     pilot(jose, 'blue', t);
     paint(jose, 'blue', t, 1);
     k.say(jose, 'DON JOSÉ', t + 0.1, 1.6);
     k.note('tenor', k.deg('1'), t, B, { vol: 0.1, light: jose });
     t += 1.5 * B;
-    const arc = [[3, 3], [3, 2], [2, 2], [1, 2], [1, 3]];
+    const arc = [[3, 3], [3, 2], [2, 2], [2, 3]];
     arc.forEach(([c, r], i) => {
       const el = cell(c, r);
       paint(el, 'red', t + i * 0.12 - 0.01);
       k.note('arp', k.deg('5+') + i, t + i * 0.12, 0.1, { vol: 0.07, light: el });
     });
     t += arc.length * 0.12;
-    const petals = [[1, 3], [0, 4], [1, 5], [2, 4]].map(([c, r]) => cell(c, r));
+    const petals = [cell(2, 4)];                     // the flower: one red dot beside him
     paint(petals, 'red', t - 0.01);
     petals.forEach((el) => pilot(el, 'red', t));  // he keeps her flower until she dies
-    k.say(petals[3], 'UNE FLEUR !', t + 0.1, 1.4);
-    k.pulse(jose, t);
+    k.say(petals[0], 'UNE FLEUR !', t + 0.1, 1.4);
+   
     for (let h = 0; h < 6; h++) {
       k.drum('heartbeat', t + h * B, 0.14, [jose, ...petals]);
-      k.pulse(jose, t + h * B);
+     
     }
     k.note('tenor', k.deg('3'), t, 4 * B, { vol: 0.13, light: jose });
     t += 6 * B;
@@ -177,7 +177,7 @@ O.opera = {
     // n people in a block shout during one beat: high and bright to cheer, low to jeer
     const shout = (m, n, at, cheer) => { for (let j = 0; j < n; j++) k.note('arp', k.deg(cheer ? ['3+', '5+', '1+'][j % 3] : '1-') + (cheer ? 12 : 0), at + rnd() * B, 0.14, { vol: cheer ? 0.025 : 0.03, light: m[Math.floor(rnd() * m.length)] }); };
     // A: José's side cheers him, the other side grumbles
-    for (let i = 0; i < 3; i++) { shout(L, 10, t + i * B, 1); shout(R, 2, t + i * B, 0); k.pulse(jose, t + i * B); }
+    for (let i = 0; i < 3; i++) { shout(L, 10, t + i * B, 1); shout(R, 2, t + i * B, 0); }
     k.say(L[13], 'BRAVO !', t + 0.5 * B, 1.2);
     k.say(R[22], 'HOU !', t + 1.5 * B, 1.2);
     t += 3 * B;
@@ -207,7 +207,7 @@ O.opera = {
       const at = tb + i * B;
       shout(R, 6 + i * 3, at, 1);
       shout(L, Math.max(0, 5 - i), at, 1);
-      k.pulse(esca, at);
+     
       k.note('bass', k.deg(i % 2 ? '5-' : '1-'), at, B * 0.4, { vol: 0.1 });
     }
     k.say(R[4], 'TORÉADOR !', tb + 3 * B, 1.4);
@@ -218,13 +218,13 @@ O.opera = {
 
     // ---- V. Jealousy. Feeling: suffocating; his love turns to possession.
     // Close on José in the dark: his heart races and stumbles, and her flower
-    // turns from red to blue, petal by petal. Mid: he sings her Habanera
+    // turns from red to blue. Mid: he sings her Habanera
     // upside down and his blue creeps out from him like ink, a cell group per
     // note. Wide: it has boxed her in, a wall between her and the gold.
     k.act('JEALOUSY', t);
     k.room(700, 0.5, t, 6);
     k.shot('close', t, { on: [1, 4] });
-    [0, 0.4, 1, 1.3, 1.9, 2.2, 2.6, 2.8].forEach((o) => { k.drum('heartbeat', t + o * B, 0.16, [jose]); k.pulse(jose, t + o * B); });
+    [0, 0.4, 1, 1.3, 1.9, 2.2, 2.6, 2.8].forEach((o) => { k.drum('heartbeat', t + o * B, 0.16, [jose]); });
     petals.forEach((el, i) => {
       const at = t + (0.4 + i * 0.7) * B;
       paint(el, 'blue', at - 0.01);

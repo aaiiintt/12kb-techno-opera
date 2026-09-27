@@ -135,7 +135,7 @@ function layout() {
 }
 var MENU = '%%MENU%%';
 // the menu's content never changes, so build it once
-mu.innerHTML = '<b>Dot Operas</b>' + MENU.map(function (o) {
+mu.innerHTML = '<b>Dot Opera</b>' + MENU.map(function (o) {
   return o[2] ? '<a href="' + o[0] + '.html">\u2022 ' + o[1] + '</a>' : '<span>\u2022 ' + o[1] + '</span>';
 }).join('') + '<a class="ab" href="about.html">About</a>';
 mn.onclick = function (e) {

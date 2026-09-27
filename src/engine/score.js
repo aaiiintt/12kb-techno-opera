@@ -38,7 +38,7 @@ function makeKit(tl) {
     }),
 
     pilot: O.pilot,
-    hop: (from, to, t) => O.hop(tl, t, from, to),
+    hop: (from, to, t, pop = 1) => O.hop(tl, t, from, to, undefined, undefined, pop),   // no pop by default: characters don't grow
 
     scale: (els, to, t, dur = 0.5, ease) => tl.to(els, { scale: to, duration: dur, ease }, t),
     pulse: (els, t) => tl.to(els, { scale: 1.15, duration: 0.15, yoyo: true, repeat: 1 }, t),
