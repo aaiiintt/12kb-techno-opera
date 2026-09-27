@@ -21,6 +21,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .mu span { opacity: .3; }
 .mu b { font-size: 1.6em; font-weight: 700; letter-spacing: -.03em; line-height: 1; margin-bottom: .45em; }
 .mu .ab { margin-top: .9em; }
+.tx { position: fixed; z-index: 19; display: none; font-weight: 900; line-height: 1.15; overflow-y: auto; scrollbar-width: none; }
+.tx::-webkit-scrollbar { display: none; }
+.tx::before { content: ''; position: fixed; inset: 0; z-index: -1; background: rgba(0,0,0,.8); }
+.tx p { margin: 0 0 1em; }
+.tx a { color: #fff; }
 .n a { color: #fff; text-decoration: none; }
 .stage { position: fixed; inset: 0; z-index: 1; display: grid; justify-content: center; align-content: center; overflow: hidden; }
 .world { transform-origin: center; }
@@ -45,6 +50,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
     <span class="b" id="bd">%%BYTES%% B</span>
     <nav class="n"><a href="#" id="mn">Menu</a><a href="#" id="pb">Play</a></nav>
     <div class="mu" id="mu"></div>
+    <div class="tx" id="tx"></div>
     <main class="stage">
       <div id="world" class="world"><div id="grid" class="grid"></div></div>
     </main>
@@ -118,6 +124,13 @@ function layout() {
   mu.style.bottom = (innerHeight - a[0].getBoundingClientRect().top + P) + 'px';
   mu.style.fontSize = fs + 'px';
   mu.style.maxHeight = (a[0].getBoundingClientRect().top - P - g.r[0]) + 'px';
+  // about text: a plain column from row five down to a row above the buttons
+  var tt = g.r[Math.min(4, g.r.length - 1)];
+  tx.style.left = L + 'px';
+  tx.style.width = (innerWidth - L - 4) + 'px';
+  tx.style.top = tt + 'px';
+  tx.style.fontSize = Math.max(14, fs * .55) + 'px';
+  tx.style.maxHeight = (a[0].getBoundingClientRect().top - P - tt) + 'px';
 }
 var MENU = '%%MENU%%';
 // the menu's content never changes, so build it once
@@ -155,6 +168,7 @@ if (location.search.indexOf('scale') > -1) {
   // the index opens with the menu showing (the list is the programme).
   pb.href = FIRST + '.html';
   if (PAGE === 'index') mn.onclick({ preventDefault: function () {} });
+  if (PAGE === 'about') { tx.innerHTML = TEXT; tx.style.display = 'block'; }
 } else if (location.search.indexOf('step') > -1) {
   O.initStep();
 } else {

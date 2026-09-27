@@ -75,8 +75,8 @@ async function buildEngine() {
 
 // The index page is the shell itself with no opera: same grid,
 // same type, same MENU and PLAY. PLAY goes to the first opera that exists.
-function buildPage(shellTpl, page, title, first, bytes) {
-  const script = `<script>var PAGE=${JSON.stringify(page)},FIRST=${JSON.stringify(first)};O.opera={title:${JSON.stringify(title)},stage:{grid:9},build:function(k){k.end=1}}</script>`;
+function buildPage(shellTpl, page, title, first, bytes, text = '') {
+  const script = `<script>var PAGE=${JSON.stringify(page)},FIRST=${JSON.stringify(first)},TEXT=${JSON.stringify(text)};O.opera={title:${JSON.stringify(title)},stage:{grid:9},build:function(k){k.end=1}}</script>`;
   return shellTpl.replace('<script src="OPERA.js"></script>', script).replace('%%BYTES%%', String(bytes));
 }
 
@@ -138,7 +138,9 @@ async function buildNewSite() {
   const first = (shipped[0] || SITE_ORDER[0]).id;
   const indexHtml = buildPage(shellTpl, 'index', 'DOT OPERAS', first, siteTotal);
   fs.writeFileSync('dist/index.html', indexHtml);
-  fs.copyFileSync('about.html', 'dist/about.html'); // Iain's about page, unchanged
+  // About: Iain's words, lifted verbatim from about.html, in the new chrome
+  const aboutText = /<div class="about-text">([\s\S]*?)<\/div>\s*<\/main>/.exec(fs.readFileSync('about.html', 'utf8'))[1].replace(/\s+/g, ' ').trim();
+  fs.writeFileSync('dist/about.html', buildPage(shellTpl, 'about', 'ABOUT', first, siteTotal, aboutText));
   const indexGz = gzip(indexHtml);
   console.log(`index.html: ${indexHtml.length} bytes, ${indexGz} bytes gzipped, limit ${LIMITS.index}, ${LIMITS.index - indexGz} spare`);
   if (indexGz > LIMITS.index) fail = true;
