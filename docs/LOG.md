@@ -62,6 +62,7 @@ The skill is `.claude/skills/dot-opera/SKILL.md`; treatments are JSON (`docs/tre
 - A hit that's one quick flash (27 Sep): it reads as a glitch, not a death.
 - A big effect standing in for a story beat (27 Sep): the collapsing red rings at the knife read as spectacle, not murder.
 - A crowd meter that grows and shrinks (27 Sep): the changing size is what reads, not the cheering.
+- BOF. from the crowd as José first appears (27 Sep): a wink for the sake of a wink. MERDE ! works because it's the character, at the worst moment; one is enough.
 - A crowd that wanders while the hero walks (27 Sep): her movement disappears into theirs.
 
 - Moving the buttons to fit a layout (27 Sep). MENU and PLAY stay put; everything else adapts around them.

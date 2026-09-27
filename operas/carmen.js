@@ -146,15 +146,9 @@ O.opera = {
     T.call(() => chars.push(jose), [], t);
     pilot(jose, 'blue', t);
     paint(jose, 'blue', t, 1);
-    k.say(jose, 'DON JOSÉ', t + 0.1, 1.1);
+    k.say(jose, 'DON JOSÉ', t + 0.1, 1.6);
     k.note('tenor', k.deg('1'), t, B, { vol: 0.1, light: jose });
-    // the first wink: somebody in the dark is not impressed
-    const bof = cell(0, 6);
-    paint(bof, 'sand', t - 0.01, 1);
-    k.note('arp', k.deg('5-'), t + 1.3 * B, 0.3, { vol: 0.05, light: bof });
-    k.note('arp', k.deg('4-'), t + 1.6 * B, 0.5, { vol: 0.04, light: bof });
-    k.say(bof, 'BOF.', t + 1.3 * B, 1.1);
-    t += 2.6 * B;
+    t += 1.5 * B;
     const arc = [[3, 3], [3, 2], [2, 2], [2, 3]];
     arc.forEach(([c, r], i) => {
       const el = cell(c, r);
