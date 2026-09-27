@@ -351,10 +351,10 @@ O.opera = {
     last(t, B);
     last(t + 1.5 * B, 4 * B);
     t += 5.5 * B;
-    // blackout, and a long silence before the square fills again
+    // blackout: the last chord and the room ring out untouched, then a long
+    // silence before the square fills again (no k.silence: it would cut the tail)
     pilot(jose3, null, t);
-    k.silence(t, 3 * B);
-    t += 3 * B;
+    t += 2.5 + 3 * B;
     k.scale(jose, 1, t - B, B);
     k.scale(carmen, 1, t - 0.3, 0.3);
     paint(W, 'sand', t - 0.3);
