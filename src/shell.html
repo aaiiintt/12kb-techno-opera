@@ -27,6 +27,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color:
 .tx p { margin: 0 0 1em; }
 .tx a { color: #fff; }
 .n a { color: #fff; text-decoration: none; }
+/* while the opera plays, the name and MENU fall back so the stage leads */
+#ti, #mn { transition: opacity 1.2s; }
+.pl #ti, .pl #mn { opacity: .2; }
+.pl #mn:hover, .pl.mo #mn { opacity: 1; }
 .stage { position: fixed; inset: 0; z-index: 1; display: grid; justify-content: center; align-content: center; overflow: hidden; }
 .world { transform-origin: center; }
 .grid { position: relative; display: grid; gap: calc(var(--gap) * var(--gap-ratio)); justify-content: center; align-content: center; }
@@ -141,6 +145,7 @@ mu.innerHTML = '<b>Dot Opera</b>' + MENU.map(function (o) {
 mn.onclick = function (e) {
   e.preventDefault();
   var on = mu.classList.toggle('on');
+  document.body.classList.toggle('mo', on);
   mn.textContent = on ? 'Close' : 'Menu';
   ti.style.visibility = on ? 'hidden' : '';
   layout();
@@ -177,6 +182,7 @@ if (location.search.indexOf('scale') > -1) {
     e.preventDefault();
     if (pb.textContent === 'Play') { O.start(); O.load(O.opera); pb.textContent = 'Pause'; }
     else { O.stop(); pb.textContent = 'Play'; }
+    document.body.classList.toggle('pl', pb.textContent === 'Pause');
     layout();
   };
 }
