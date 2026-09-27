@@ -46,3 +46,4 @@ Build `operas/<id>.js`, one act at a time, from the chosen versions. Then review
 - Log every accepted change as a technique in `docs/LOG.md`, every rejection under Avoid. If it's reusable, add it to `docs/TOOLSET.md`.
 
 Report the gzipped size on every build (`npm run build`; opera gate 4 KB). Look great first, then as small as it can be.
+- Handover for the next agent: `handover/README.md`.
