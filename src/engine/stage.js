@@ -158,10 +158,11 @@ O.applyStage = (o = {}) => {
 // unchanged by how far the grid now reaches past it.
 O.camera = (tl, time, o = {}) => {
   const { col = CENTER, row = CENTER, zoom = 1, dur = 1.6, ease = 'power2.inOut' } = o;
+  const z = () => (typeof zoom === 'function' ? zoom() : zoom);   // resolved when the move plays
   tl.to(worldEl, {
-    x: () => (CENTER - col) * cellSize() * zoom,
-    y: () => (CENTER - row) * cellSize() * zoom,
-    scale: zoom,
+    x: () => (CENTER - col) * cellSize() * z(),
+    y: () => (CENTER - row) * cellSize() * z(),
+    scale: z,
     duration: dur,
     ease,
   }, time);

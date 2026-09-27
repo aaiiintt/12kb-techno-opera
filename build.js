@@ -5,7 +5,7 @@ const { minify } = require('terser');
 const CleanCSS = require('clean-css');
 
 const ROOT_LIMIT = 12288;
-const LIMITS = { engine: 12288, opera: 2048, standalone: 14336, index: 4096 };
+const LIMITS = { engine: 12288, opera: 3072, standalone: 14336, index: 4096 };
 const ENGINE_FILES = ['tween', 'synth', 'stage', 'score', 'index'].map((f) => `src/engine/${f}.js`);
 
 // Site order for the index: the eight shipped operas, in programme order.

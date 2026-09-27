@@ -44,6 +44,12 @@ function makeKit(tl) {
     pulse: (els, t) => tl.to(els, { scale: 1.15, duration: 0.15, yoyo: true, repeat: 1 }, t),
 
     camera: (o, t) => O.camera(tl, t, o),
+    // Three shots. Wide: the whole grid. Mid: about five cells across the
+    // screen's shorter side. Close: about two and a half. A cut by default.
+    shot: (size, t, o = {}) => {
+      const [col, row] = o.on || [CENTER, CENTER], n = { mid: 5, close: 2.5 }[size];
+      O.camera(tl, t, { col, row, zoom: n ? () => Math.min(innerWidth, innerHeight) / (n * cellSize()) : 1, dur: o.dur || 0.001, ease: o.ease || 'power2.inOut' });
+    },
     shake: (t, amount, dur) => O.shake(tl, t, amount, dur),
 
     cue: (text, t, hold) => O.cue(tl, t, text, hold),
