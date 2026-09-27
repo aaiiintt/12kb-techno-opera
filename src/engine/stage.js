@@ -193,7 +193,6 @@ function coolCell(el, tl, time) {
   el._pilot = null;
   const start = O.now();
   O.registerLight(el, start, start + 0.4, (t) => Math.max(0, 0.3 * (1 - t / 0.4)));
-  tl.call(() => { if (!pilotEls.has(el)) O.light(el, el._was || 'bulb'); }, [], time + 0.4);
 }
 
 // Move a character's pilot light from one cell to another: the destination
@@ -206,6 +205,8 @@ O.hop = (tl, time, from, to, dur = 0.6, ease = 'elastic.out(1,0.5)', pop = 1.25)
     if (from && from !== to) coolCell(from, tl, time);
     if (to && name) O.pilot(to, name);
   }, [], time);
+  // scheduled now, not from inside the call above, so a step-mode jump fires it in order
+  if (from && from !== to) tl.call(() => { if (!pilotEls.has(from)) O.light(from, from._was || 'bulb'); }, [], time + 0.4);
 };
 
 // the original cue: a typed lower third, letterboxed in, held, cleared. The

@@ -277,37 +277,60 @@ O.opera = {
     t += 5 * B;
     k.shot('close', t, { on: [3.5, 4] });
     k.silence(t, 3 * B);
+    k.say(jose3, 'UN COUTEAU !', t + 1.8 * B, 1.2);       // in the silence, we see it
     t += 3 * B;
-    k.bg('sand', t);
-    k.drum('snare', t, 0.2, W);
-    k.bg(null, t + B * 0.5);
+    // the hit: a strobe of the arena light, under three flashes a second, a snare on each
     k.shake(t, 6, 0.3);
-    pilot(carmen, null, t);
-    k.note('soprano', SLIDE[5], t, 2 * B, { vol: 0.12, light: carmen });
-    k.scale(carmen, 0, t, 2 * B, 'power2.in');
-    k.shot('wide', t + 2 * B);
-    for (let i = 2; i < 5; i++) { shout(L, 3, t + i * B, 1); shout(R, 4, t + i * B, 1); }
-    t += 5 * B;
-    [...L, ...R].forEach((el) => pilot(el, null, t));
+    k.note('soprano', SLIDE[5], t, 1.5 * B, { vol: 0.14, light: carmen });
+    for (let i = 0; i < 4; i++) {
+      k.bg('sand', t + i * B / 2);
+      k.bg(null, t + i * B / 2 + B / 8);
+      k.drum('snare', t + i * B / 2, 0.2 - i * 0.04, [carmen]);
+    }
+    t += 2 * B;
+    // the curtain: red falls from above, row by row, to her tune falling, and
+    // wipes everything away but him
+    k.shot('wide', t);
+    sing('soprano', SLIDE, SLIDE_D, t, null, { vol: 0.12 });
+    for (let r = -6; r <= 14; r++) {
+      const at = t + (r + 6) * 0.13, line = [];
+      for (let c = -12; c <= 20; c++) { const el = cell(c, r); if (el && el !== jose3) line.push(el); }
+      paint(line, 'red', at - 0.01, 1);
+      k.note('arp', k.deg('1') - r, at, 0.5, { vol: 0.012, light: line });
+      line.forEach((el) => pilot(el, null, at));
+    }
+    t += 21 * 0.13 + 0.5;
+    // alone
+    k.note('tenor', k.deg('1-'), t, 3 * B, { vol: 0.12, light: jose3 });
+    k.say(jose3, 'CARMEN… ADORÉE', t + 0.2, 2.2);
+    t += 3.5 * B;
 
-    // ---- VII. Libre: rose petals fall all over the grid; the music box plays the slide once more
+    // ---- VII. Libre. Feeling: grief, then release. From the dark, one red
+    // dot rises from where she fell, up and off the top: she's free. Then rose
+    // petals drift down over the whole grid to the music box, and the square
+    // warms back to sand for the loop.
     k.act('LIBRE', t);
-    petals.forEach((el) => pilot(el, null, t));
     k.cue('CARMEN...', t + 0.3, 2.4);
+    for (let r = 4; r >= -8; r--) {
+      const el = cell(C, r), at = t + (4 - r) * 0.16;
+      paint(el, 'red', at - 0.01, 1);
+      k.note('arp', k.deg('5') + (4 - r), at, 0.4, { vol: 0.05, light: el });
+    }
+    t += 13 * 0.16 + 0.3;
     // petals falling everywhere, over the whole grid, not just the stage
     let ps = 3;
     const pr = () => (ps = (ps * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 18; i++) {
-      const x = -8 + Math.floor(pr() * 25), y = -10 + Math.floor(pr() * 22), at = t + i * B * 0.3;
+    for (let i = 0; i < 14; i++) {
+      const x = -8 + Math.floor(pr() * 25), y = -10 + Math.floor(pr() * 22), at = t + i * B * 0.35;
       for (let j = 0; j < 4; j++) {                 // a petal drifting down: four cells, one after another
         const el = cell(x + (j % 2), y + j);
-        if (!el) continue;
+        if (!el || el === jose3) continue;
         paint(el, 'red', at + j * 0.22 - 0.01);
         k.note('arp', SLIDE[i % 6] + 12, at + j * 0.22, B * 0.5, { vol: 0.05 - j * 0.01, light: el });
         if (i === 2 && j === 1) k.say(el, 'DES PÉTALES…', at + j * 0.22, 1.6);
       }
     }
-    k.note('tenor', k.deg('1'), t, 5 * B, { vol: 0.1, light: jose3 });
+    k.note('tenor', k.deg('1'), t, 5 * B, { vol: 0.08, light: jose3 });
     t += 6 * B;
     k.scale(jose, 1, t - B, B);
     k.scale(carmen, 1, t - 0.3, 0.3);

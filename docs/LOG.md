@@ -35,8 +35,12 @@ What worked and what didn't, per run. Newest first. One line per finding.
 
 - **The ending lands by contrast (27 Sep).** Reuse what the audience already knows, slowed or silenced: José's slow walk echoes her Act I walk, the Act IV crowd cheers offstage, then the cheering cuts to silence in a close two-shot before the hit. After it, wide: the crowd is still cheering, far off.
 
+- **A hit needs time to land (27 Sep, Iain).** A single fast flash reads as a glitch. Name it in the silence before (UN COUTEAU !), strobe the arena light over two beats (under three flashes a second), then a red curtain falls row by row to her tune falling, wiping everyone away but him. He's left alone: CARMEN… ADORÉE.
+- **The release after the loss (27 Sep).** One red dot rises from where she fell, up and off the top, then petals drift down over the whole grid to the music box.
+
 ## Avoid
 
+- A hit that's one quick flash (27 Sep): it reads as a glitch, not a death.
 - A big effect standing in for a story beat (27 Sep): the collapsing red rings at the knife read as spectacle, not murder.
 - A crowd meter that grows and shrinks (27 Sep): the changing size is what reads, not the cheering.
 - A crowd that wanders while the hero walks (27 Sep): her movement disappears into theirs.
