@@ -27,6 +27,4 @@ Be ambitious with the grid. The failure mode is timidity: two dots in a sea of g
 
 ## How to work
 
-1. **Treatment.** Write half a page: the acts, the hero, the tune (as notes), and for each act first the feeling the audience should have, then the one visual idea that makes them feel it (the shot, the other dots, the light, the music). Stop and show it.
-2. **Build.** Write it.
-3. **Look.** Open it with `?gate=` and the seconds that matter; it plays muted and freezes at each. Look at every frame as if you were Iain. Fix what's timid or ugly. Report the size and what you changed.
+Use the `dot-opera` skill (`.claude/skills/dot-opera/SKILL.md`): acts, then what happens and the feeling, then how the toolset recreates the set, characters, actions, music and emotion, then three versions per act and a pick, then refine frame by frame with Iain.

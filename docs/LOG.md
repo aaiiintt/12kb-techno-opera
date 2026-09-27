@@ -2,12 +2,15 @@
 
 What worked and what didn't, per run. Newest first. One line per finding.
 
-## The workflow (agreed 27 Sep)
+## The workflow (Iain, 27 Sep)
 
-1. **Scene loop, one act at a time, in chat.** Iain watches the act and steps its frames (`?step`), says what's wrong in his own words and refers to frames by number. I offer one or two concrete ways to do it. He picks. I change the code, check the frame, commit, and send the link back.
-2. **Capture.** Every accepted change adds one line under Techniques (the pattern, when it fits, why). Every rejection adds one under Avoid.
-3. **Prove it transfers.** Carmen, then a very different opera (for example Dido), starting from the technique list.
-4. **Distil after two operas.** A JSON schema (title, key, tempo, lights with sources, tune, acts with name, length, idea, technique and settings, cue), techniques as kit functions, and a skill that goes from an opera's name to treatment, JSON, build and frame check. Any act may carry a few lines of its own code when a moment needs it.
+1. Break the opera into key acts that tell a simple story.
+2. For each act, what happens and what it makes the audience feel.
+3. Look at the toolset (`docs/TOOLSET.md`) and work out how to recreate the set, characters, actions, music and emotion of the act.
+4. Propose three versions, pick one.
+5. Refine: act by act in chat, frame numbers, one or two fixes, Iain picks, commit, link. Log techniques here and add reusable ones to the toolset.
+
+The skill is `.claude/skills/dot-opera/SKILL.md`; treatments are JSON (`docs/treatment.schema.json`).
 
 ## Techniques
 

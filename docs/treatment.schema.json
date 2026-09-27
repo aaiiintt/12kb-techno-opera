@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dot Opera treatment",
+  "description": "One file per opera, docs/treatments/<id>.json. Written in Iain's order: acts, then what happens and the feeling, then how the toolset makes it, then three versions and a pick. The opera itself is code (operas/<id>.js); this is what the code must deliver.",
+  "type": "object",
+  "required": ["id", "title", "lang", "key", "tempo", "tune", "colours", "characters", "acts"],
+  "properties": {
+    "id": { "type": "string", "description": "File name: operas/<id>.js" },
+    "title": { "type": "string", "description": "As staged, in capitals: CARMEN" },
+    "lang": { "type": "string", "description": "The opera's language. Every caption is in it." },
+    "key": {
+      "type": "object", "required": ["root", "mode"],
+      "properties": { "root": { "type": "integer", "description": "Semitones above C" }, "mode": { "enum": ["major", "minor"] } }
+    },
+    "tempo": { "type": "number" },
+    "tune": {
+      "type": "object", "required": ["name", "degrees", "beats"],
+      "description": "The most recognisable tune, quoted. Scale degrees in k.deg notation.",
+      "properties": {
+        "name": { "type": "string" },
+        "degrees": { "type": "array", "items": { "type": "string" } },
+        "beats": { "type": "array", "items": { "type": "number" } },
+        "fromMemory": { "type": "boolean", "description": "True until Iain has checked it by ear" }
+      }
+    },
+    "motifs": {
+      "type": "array", "description": "Other quoted themes (a fate motif, a march)",
+      "items": { "type": "object", "properties": { "name": { "type": "string" }, "degrees": { "type": "array", "items": { "type": "string" } }, "beats": { "type": "array", "items": { "type": "number" } }, "fromMemory": { "type": "boolean" } } }
+    },
+    "colours": {
+      "type": "array",
+      "description": "Staging colours with their source, plus at most three story colours, each meaning one thing.",
+      "items": {
+        "type": "object", "required": ["name", "css", "means", "kind"],
+        "properties": {
+          "name": { "type": "string" }, "css": { "type": "string" },
+          "means": { "type": "string" },
+          "kind": { "enum": ["staging", "story"] },
+          "source": { "type": "string", "description": "Where audiences know it from (costume, set, lighting)" }
+        }
+      }
+    },
+    "characters": {
+      "type": "array", "description": "Each one is a single dot.",
+      "items": {
+        "type": "object", "required": ["name", "colour", "cell"],
+        "properties": { "name": { "type": "string" }, "colour": { "type": "string" }, "cell": { "type": "array", "items": { "type": "integer" }, "minItems": 2, "maxItems": 2 }, "voice": { "enum": ["soprano", "tenor", "bass", "arp"] }, "enters": { "type": "string", "description": "Act name" } }
+      }
+    },
+    "acts": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "required": ["name", "happens", "feeling", "set", "characters", "actions", "music", "emotion"],
+        "properties": {
+          "name": { "type": "string", "description": "In the opera's language; also the act's caption" },
+          "happens": { "type": "string", "description": "One sentence of plot" },
+          "feeling": { "type": "string", "description": "What the audience should feel, in a few words" },
+          "set": { "type": "string", "description": "The place, as light: the crowd, the colour of the world" },
+          "characters": { "type": "string", "description": "Who's on stage, where, and who's lit" },
+          "actions": { "type": "string", "description": "What moves, and the shots: wide, mid, close" },
+          "music": { "type": "string", "description": "Which theme, which voice, tempo, silence" },
+          "emotion": { "type": "string", "description": "How the pieces add up to the feeling" },
+          "captions": { "type": "array", "items": { "type": "string" }, "description": "Small tags beside dots, in the opera's language" },
+          "versions": {
+            "type": "array", "minItems": 3, "maxItems": 3,
+            "items": { "type": "object", "required": ["label", "idea"], "properties": { "label": { "type": "string" }, "idea": { "type": "string" } } }
+          },
+          "chosen": { "type": "string", "description": "Label of the version Iain picked" },
+          "notes": { "type": "array", "items": { "type": "string" }, "description": "Refinements from review, frame by frame" }
+        }
+      }
+    }
+  }
+}

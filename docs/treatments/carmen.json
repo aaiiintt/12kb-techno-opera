@@ -1,0 +1,129 @@
+{
+  "id": "carmen",
+  "title": "CARMEN",
+  "lang": "fr",
+  "key": { "root": 2, "mode": "minor" },
+  "tempo": 72,
+  "tune": {
+    "name": "Habanera: L'amour est un oiseau rebelle",
+    "degrees": ["1+", "7#", "7", "6#", "6", "5"],
+    "beats": [0.75, 0.25, 0.5, 0.5, 0.75, 1.25],
+    "fromMemory": false
+  },
+  "motifs": [
+    { "name": "Habanera answer: que nul ne peut apprivoiser", "degrees": ["5", "4", "5", "6", "5", "4", "3"], "beats": [0.5, 0.25, 0.25, 0.5, 0.5, 0.5, 1.5], "fromMemory": true },
+    { "name": "Toréador, en garde (relative major)", "degrees": ["7", "1+", "7", "5", "5", "5", "4", "5", "6", "5"], "beats": [0.75, 0.25, 0.5, 1, 0.5, 0.25, 0.25, 0.5, 0.5, 1.5], "fromMemory": true },
+    { "name": "Fate", "degrees": ["5", "6", "7#", "1+", "1+", "7", "6", "5"], "beats": [1.5, 1.5, 1.5, 2.5, 1.5, 1.5, 1.5, 3.5], "fromMemory": true }
+  ],
+  "colours": [
+    { "name": "red", "css": "#d4152f", "means": "Carmen, and her flower", "kind": "staging", "source": "her dress, the flower" },
+    { "name": "blue", "css": "#3d6fe0", "means": "José", "kind": "staging", "source": "the dragoon's uniform" },
+    { "name": "gold", "css": "#f4b93a", "means": "Escamillo", "kind": "staging", "source": "the suit of lights" },
+    { "name": "sand", "css": "#e8c894", "means": "Seville, the crowd", "kind": "staging", "source": "sun on the square, the arena" },
+    { "name": "green", "css": "#62c43a", "means": "jealousy", "kind": "story" },
+    { "name": "bulb", "css": "white", "means": "the knife", "kind": "story" }
+  ],
+  "characters": [
+    { "name": "Carmen", "colour": "red", "cell": [4, 4], "voice": "soprano", "enters": "SEVILLE" },
+    { "name": "José", "colour": "blue", "cell": [1, 4], "voice": "tenor", "enters": "THE FLOWER" },
+    { "name": "Escamillo", "colour": "gold", "cell": [7, 4], "voice": "tenor", "enters": "TORÉADOR" }
+  ],
+  "acts": [
+    {
+      "name": "SEVILLE",
+      "happens": "Carmen crosses the crowded square to its centre.",
+      "feeling": "She draws every eye.",
+      "set": "Half the grid is dim sand people, standing still and murmuring.",
+      "characters": "Carmen alone, red, starting at the crowd's edge.",
+      "actions": "She walks a cell per beat; the people beside her brighten and swell as she passes. Wide, mid as she starts, close following her, wide as she stops.",
+      "music": "Habanera bass; a murmur of tiny notes from random people; a soprano note per step.",
+      "emotion": "Only she moves, so she's all the eye can follow; the crowd turning to look says she's magnetic.",
+      "captions": ["QUI EST-ELLE ?", "OH LÀ LÀ !", "CARMEN !"],
+      "chosen": "the crowd turns to look"
+    },
+    {
+      "name": "L'AMOUR",
+      "happens": "She sings the Habanera to everyone.",
+      "feeling": "Her love spreads everywhere.",
+      "set": "The square sways on the bass, every other cell.",
+      "characters": "Carmen at the centre.",
+      "actions": "Each semitone of the slide lights a ring of red further out from her.",
+      "music": "The Habanera, twice, soprano, with the answer phrase.",
+      "emotion": "The tune is the picture: her voice literally spreads over the crowd.",
+      "captions": ["L'AMOUR"]
+    },
+    {
+      "name": "THE FLOWER",
+      "happens": "She throws her flower to José.",
+      "feeling": "She chooses him.",
+      "set": "The crowd has gone dark.",
+      "characters": "José appears alone in blue, named.",
+      "actions": "A red spark arcs from her to him and stays beside him as one red dot; his heart beats.",
+      "music": "A rising arpeggio for the throw; heartbeat drum; a held tenor note.",
+      "emotion": "An object that stays says the choice lasts.",
+      "captions": ["DON JOSÉ", "UNE FLEUR !"]
+    },
+    {
+      "name": "TORÉADOR",
+      "happens": "Escamillo arrives and the crowd switches to him.",
+      "feeling": "A star arrives and José is eclipsed.",
+      "set": "Two fixed blocks of crowd, one each side, from Iain's sketch.",
+      "characters": "José, Carmen and Escamillo in a line.",
+      "actions": "José's side cheers (flashing), Escamillo's boos. Drum roll; mid as Escamillo walks in through his crowd; close as he lands with a fanfare; wide as his side goes wild and José's falls quiet.",
+      "music": "Snare roll, a fanfare up the chord, then the Toréador tune over a march bass.",
+      "emotion": "The crowd's cheering is the scoreboard; the entrance gives him grandeur.",
+      "captions": ["BRAVO !", "HOU !", "ESCAMILLO !", "TORÉADOR !"],
+      "versions": [
+        { "label": "he crosses, she follows", "idea": "He walks to the centre, the crowd glows for him, she hops beside him." },
+        { "label": "two magnets", "idea": "The crowd tips towards him ring by ring until she goes too." },
+        { "label": "the crowd as two blocks", "idea": "Iain's sketch: rivals in a line, crowds either side flashing as they cheer." }
+      ],
+      "chosen": "the crowd as two blocks"
+    },
+    {
+      "name": "JEALOUSY",
+      "happens": "José's love turns into possession.",
+      "feeling": "Suffocating.",
+      "set": "The world goes dark; only him.",
+      "characters": "José, then Carmen boxed in, the gold outside.",
+      "actions": "Close on José: his heart stumbles, his blue turns green, then her flower. Mid: green creeps out from him a group per note. Wide: she's boxed in.",
+      "music": "Heartbeat; her Habanera sung upside down by him; the room closes in.",
+      "emotion": "Starting close on him says whose feeling it is; the green leaving him says where it comes from.",
+      "captions": ["ELLE EST À MOI"],
+      "versions": [
+        { "label": "the flower turns blue", "idea": "His blue ink boxes her in." },
+        { "label": "green-eyed monster", "idea": "A new green light for jealousy only." },
+        { "label": "green ink from José", "idea": "His blue turns green, then the green boxes her in." }
+      ],
+      "chosen": "green ink from José"
+    },
+    {
+      "name": "THE KNIFE",
+      "happens": "She refuses him and he kills her.",
+      "feeling": "Shock, then pity for her.",
+      "set": "The crowd back, cheering offstage.",
+      "characters": "José steps up to her; they end side by side.",
+      "actions": "Mid on the walk; close and silent; UN COUTEAU !; she flashes white and red; still close as she fades; wide as a red curtain falls and leaves him alone, blue again.",
+      "music": "Cheering, three beats of silence, snares on the flashes, her answer phrase slowed, the slide falling with the curtain.",
+      "emotion": "Silence before the hit, then time on her fading, so the pity lands on her.",
+      "captions": ["TORÉADOR !", "CARMEN, JE T'AIME", "NON !", "UN COUTEAU !", "CARMEN… ADORÉE"],
+      "versions": [
+        { "label": "the last walk", "idea": "He walks to her while the crowd cheers offstage; silence; the hit." },
+        { "label": "the rings", "idea": "Collapsing red rings from his position." },
+        { "label": "a white blade", "idea": "A white dot between them; rejected as big and odd, replaced by her flashing." }
+      ],
+      "chosen": "the last walk"
+    },
+    {
+      "name": "LIBRE",
+      "happens": "She's free; the curtain comes down.",
+      "feeling": "Grief, then catharsis.",
+      "set": "Dark.",
+      "characters": "José alone.",
+      "actions": "One red dot rises from where she fell and off the top; petals drift down slowly; two last chords light the whole grid red; blackout; silence.",
+      "music": "The fate motif, slow and low over a held D; a long dark room; fortissimo final chords that ring out.",
+      "emotion": "The ending gets the most time: room to wallow before the loop.",
+      "captions": ["CARMEN...", "DES PÉTALES…"]
+    }
+  ]
+}
