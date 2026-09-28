@@ -1,0 +1,6 @@
+{
+  "title": "HELLO",
+  "plugins": ["postProcess"],
+  "sources": ["game.js"],
+  "gate": 65536
+}

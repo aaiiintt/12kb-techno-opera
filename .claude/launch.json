@@ -1,1 +1,1 @@
-{"version":"0.0.1","configurations":[{"name":"opera","runtimeExecutable":"python3","runtimeArgs":["-m","http.server","4173","--directory","dist"],"port":4173}]}
+{"version":"0.0.1","configurations":[{"name":"opera","runtimeExecutable":"python3","runtimeArgs":["-m","http.server","4173","--directory","dist"],"port":4173},{"name":"arcade","runtimeExecutable":"python3","runtimeArgs":["-m","http.server","4174","--directory","arcade"],"port":4174}]}

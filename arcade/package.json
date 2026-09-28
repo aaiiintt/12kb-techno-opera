@@ -1,0 +1,14 @@
+{
+  "name": "dot-opera-arcade",
+  "private": true,
+  "description": "Playable mini operas on LittleJS. A fork of Dot Opera.",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/smoke.mjs",
+    "serve": "python3 -m http.server 4174"
+  },
+  "devDependencies": {
+    "littlejsengine": "1.19.3",
+    "terser": "^5"
+  }
+}
