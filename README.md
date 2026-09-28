@@ -4,6 +4,11 @@ A short opera in seven acts, performed by 81 dots and sung by oscillators. The w
 
 For scale, 12 KB is about one hundredth of a second of a YouTube video.
 
+## Forks
+
+- **Dot Opera** (`operas/`, `src/engine/`): a series of famous operas, each about a minute, on the same grid. See `handover/README.md`.
+- **Dot Opera Arcade** (`arcade/`): the operas as playable mini games on LittleJS. See `arcade/README.md`.
+
 ## Constraints
 
 The project follows these rules:
