@@ -77,7 +77,10 @@ PX.bake = () => {
 // from the bottom, unaffected by the camera. The runner draws the HUD this way
 // (the fuse, the command card, captions) so a close shot scales the scene, not the type.
 PX.screen = false;
-const pxPos = (x, y, w, h) => PX.screen ? vec2(x + w / 2, PX.H - y - h / 2) : vec2(x + w / 2, y + h / 2);
+// The engine's screenToWorld adds half a pixel (it reads screen coordinates as pixel centres), so a
+// screen-space quad lands half a pixel off the grid and every texel smears over two pixels. Subtract
+// it back, so HUD type and tags sit on whole pixels like the world-space sprites do.
+const pxPos = (x, y, w, h) => PX.screen ? vec2(x + w / 2 - 0.5, PX.H - y - h / 2 - 0.5) : vec2(x + w / 2, y + h / 2);
 
 // draw a sprite with its bottom-left corner at (x, y), optional tint, flip and scale
 PX.draw = (s, x, y, o = {}) => {
