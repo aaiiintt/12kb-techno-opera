@@ -38,13 +38,14 @@ const COLS = ['curtain', 'command', 'action', 'outcome', 'outcome late'];
 const errorsAll = [];
 
 async function run(mode) {
-  const page = await browser.newPage({ viewport: { width: 1024, height: 576 } });
+  // 512x288 (2x the canvas) keeps SwiftShader screenshots cheap; the sheets are 384 wide anyway
+  const page = await browser.newPage({ viewport: { width: 512, height: 288 } });
   page.on('pageerror', (e) => errorsAll.push(`${mode} pageerror: ${e.message}`));
   page.on('console', (msg) => msg.type() === 'error' && errorsAll.push(`${mode} console: ${msg.text()}`));
   const force = Array(6).fill(mode === 'win' ? 'w' : 'l').join(',');
   await page.goto(`http://127.0.0.1:${port}/dist/${id}.html?force=${force}`);
   await page.waitForTimeout(600);
-  await page.mouse.click(512, 288);
+  await page.mouse.click(256, 144);
   await page.keyboard.press('Space');
   const frames = {};   // `${act}-${col}` -> file
   const state = async () => page.evaluate(() => window.__mg || {});
