@@ -50,7 +50,8 @@ function barberSprites() {
   SP.billet = PX.sprite(['ggggggg', 'g.....g', 'g.ggg.g', 'g.....g', 'ggggggg'], { g: COL.gold });
   SP.paper = PX.sprite(['wwwwwwwww', 'wllwlllww', 'wwwwwwwww', 'wlllwllww', 'wwwwwwwww', 'wllwlllww', 'wwwwwwwww'], { w: COL.cream, l: '#8a7a70' });
   SP.foam = PX.sprite(['.ww.', 'wwww', 'wwww', '.ww.'], { w: COL.foam });
-  SP.brush = PX.sprite(['.ww.', 'wwww', 'wwww', '.bb.', '.bb.', '.bb.'], { w: COL.foam, b: COL.wood });
+  SP.brush = PX.sprite(['.ddd.', 'dwwwd', 'dwwwd', '.ddd.', '..b..', '..b..', '..b..'], { w: COL.foam, d: COL.woodD, b: COL.wood });
+  SP.hand = PX.sprite(['sss', 'sss'], { s: COL.skin });
   SP.key = PX.sprite(['.kk.....', 'k..kkkkk', '.kk..k.k'], { k: COL.gold });
   SP.pen = PX.sprite(['...w', '..ww', '.gg.', 'gg..'], { w: COL.white, g: COL.gold });
   SP.ladder = PX.sprite(Array.from({ length: 24 }, (_, i) => i % 4 === 1 ? 'wwwwww' : 'w....w'), { w: COL.wood });
@@ -68,7 +69,7 @@ const bubbles = (x, y, n = 10, w = 16) => fx(x, y, COL.white, COL.sky, n, { tile
 // the verdict in the first frames: a white flash for a win, a thud of dark for a loss, and a shake
 const verdict = (m) => {
   if (m.phase !== OUT || m.act.toy) return;
-  if (m.won && m.t < 0.3) PX.rect(0, 0, 256, 144, c(COL.white, 0.8 - m.t * 2.6));
+  if (m.won && m.t < 0.09) PX.rect(0, 0, 256, 144, c(COL.white, 0.55 * (1 - m.t / 0.09)));
   if (!m.won && m.t < 0.5) PX.rect(0, 0, 256, 144, c(COL.bg, 0.6 - m.t * 1.2));
 };
 const shaking = (m) => { if (m.shake > 0) { m.shake -= timeDelta * 2.5; setCameraPos(cameraPos.add(vec2(rand(-2, 2), rand(-2, 2)).scale(m.shake))); } };
@@ -262,7 +263,7 @@ MG.opera({
     // The lesson: Don Alonso (Almaviva again) follows the gold key along the harpsichord while
     // Rosina sings; wrong notes stir Bartolo. Either way he is snoring when they fix midnight.
     { name: 'ACT II · THE MUSIC ROOM', aria: 'THE LESSON', command: 'TUNE!', bpm: 155, beats: 16, verb: 'follow the key', shot: 'mid', focus: () => [122, 50],
-      init(m) { m.hx = 66; m.k = 2; m.inT = 0; m.tot = 0.01; m.lb = -1; m.wake = 0; m.ok = false; },
+      init(m) { m.hx = 66; m.k = 2; m.inT = 0; m.tot = 0.01; m.lb = -1; m.wake = 0; m.ok = false; m.pl = 0; },
       update(m) {
         MG.walk(m, 'hx', 80, 62, 139);
         const bi = Math.floor(m.beat);
@@ -270,11 +271,11 @@ MG.opera({
         m.ok = Math.abs(m.hx - (62 + m.k * 10 + 4.5)) < 5.5;
         m.tot += timeDelta; if (m.ok) m.inT += timeDelta;
         if (bi !== m.lb) {
-          m.lb = bi;
+          m.lb = bi; m.pl = 1;
           if (m.ok) { S.voice('arp', S.deg(['1', '2', '3', '4', '5', '6', '7', '1+'][m.k]) + 12, S.now(), 0.15, { vol: 0.05 }); fx(146, GROUND + 22, COL.rose, COL.white, 1, { tile: SP.note, s: 6, e: 5, v: 0.5, g: -0.3, cone: 0.5, life: 1.2 }); }
           else if (bi > 0) { m.wake = 1; S.voice('bass', S.deg('7-'), S.now(), 0.2, { vol: 0.13, grit: true }); }
         }
-        m.wake = Math.max(0, m.wake - timeDelta * 2.5);
+        m.wake = Math.max(0, m.wake - timeDelta * 2.5); m.pl = Math.max(0, m.pl - timeDelta * 6);
         m.timeoutWins = m.inT / m.tot > 0.5;
       },
       updateOutcome(m) { if (!m.won && !m.bonked && m.t > 0.05) { m.bonked = 1; m.shake = 0.8; fx(178, GROUND + 26, COL.white, COL.white, 16, { v: 1.4, cone: 0.8 }); } },
@@ -292,16 +293,16 @@ MG.opera({
         else PX.draw(SP.zz, 178, GROUND + 32 + MG.bounce() * 3, { color: c(COL.dim) });
         // Alonso behind the harpsichord, his hand on a key; the gold key is the note she needs
         const hx = out ? 62 + m.k * 10 + 4.5 : m.hx;
-        CAST.draw(SP.alonzo, hx - 6, GROUND + 14);
-        PX.rect(58, GROUND, 86, 14, c(COL.woodD)); PX.rect(60, GROUND + 2, 82, 2, c(COL.wood));
+        CAST.draw(SP.alonzo, hx - 6, GROUND + 20, { pose: 'idle' });
+        PX.rect(58, GROUND, 86, 20, c(COL.woodD)); PX.rect(60, GROUND + 2, 82, 2, c(COL.wood));
         for (let i = 0; i < 8; i++) {
           const target = i === m.k && m.phase !== MG.phase.CURTAIN;
-          PX.rect(62 + i * 10, GROUND + 14, 9, 6, c(target ? (m.ok ? COL.white : COL.gold) : COL.cream, target ? 1 : 0.55));
+          PX.rect(62 + i * 10, GROUND + 20, 9, 6, c(target ? (m.ok ? COL.white : COL.gold) : COL.cream, target ? 1 : 0.55));
         }
-        if (m.phase === ACTION) PX.rect(62 + m.k * 10 + 3, GROUND + 22 + Math.round(MG.bounce() * 3), 3, 3, c(COL.gold));
-        PX.rect(hx - 3, GROUND + 16, 6, 3, c(COL.skin));
+        if (m.phase === ACTION) PX.rect(62 + m.k * 10 + 3, GROUND + 30 + Math.round(MG.bounce() * 3), 3, 3, c(COL.gold));
+        PX.draw(SP.hand, 62 + clamp(Math.round((hx - 66.5) / 10), 0, 7) * 10 + 3, GROUND + 26 + Math.round(m.pl * 2), { scale: 1 });
         CAST.draw(SP.rosina, 146, GROUND);
-        if (out && t > 1.4) shout('MIDNIGHT!', 104, GROUND + 44, COL.gold);
+        if (out && t > 1.4) shout('MIDNIGHT!', 104, GROUND + 50, COL.gold);
         verdict(m);
       },
       outcome: (m) => m.won ? ['BARTOLO SNORES. THE ELOPEMENT IS SET: MIDNIGHT.'] : ['BARTOLO LEAPS, THEN DOZES. MIDNIGHT IS SET ANYWAY.'],
@@ -323,7 +324,7 @@ MG.opera({
       update(m) {
         if (m.press) {
           m.sw = 1; m.n++;
-          if (m.foam.length < 16) m.foam.push([randInt(-12, 10), randInt(-2, 14)]);
+          if (m.foam.length < 10) m.foam.push([randInt(-12, 10), randInt(-2, 14)]);
           bubbles(130, GROUND + 34, 8, 20);
           fx(118, GROUND + 34, COL.white, COL.foam, 8, { v: 1.2, ang: -1.2, cone: 1, life: 0.6, s: 4, e: 1 });
           S.voice('pulse', S.deg(LARGO[m.n % LARGO.length]) + 12, S.now(), 0.12, { vol: 0.08 });
@@ -341,17 +342,18 @@ MG.opera({
         PX.rect(114, GROUND, 38, 44, c(COL.woodD)); PX.rect(110, GROUND + 10, 46, 6, c(COL.crimson));
         PX.rect(118, GROUND + 6, 30, 20, c(COL.white));
         PX.draw(SP.face, 121, GROUND + 24);
-        const foam = out ? Array.from({ length: 15 }, (_, i) => [(i % 5) * 5 - 12, (i / 5 | 0) * 5 - 2]) : m.foam;
+        const foam = out ? [[-12, 8], [-7, 12], [-2, 14], [3, 12], [8, 8], [-12, 2], [8, 2], [-6, -2], [2, -2], [-4, 14], [-9, 5], [5, 5]] : m.foam;
         for (const [dx, dy] of foam) PX.draw(SP.foam, 129 + dx, GROUND + 24 + dy);
+        PX.rect(127, GROUND + 34, 2, 2, c(COL.eye)); PX.rect(137, GROUND + 34, 2, 2, c(COL.eye)); PX.rect(129, GROUND + 28, 8, 2, c(COL.crimson));   // eyes and mouth stay clear of the foam
         // the lather bowl on its stool
         PX.rect(158, GROUND, 4, 12, c(COL.wood)); PX.rect(154, GROUND + 12, 20, 6, c(COL.slate)); PX.rect(156, GROUND + 18, 16, 2, c(COL.foam));
         // Figaro, dancing to the patter, the brush swinging to the face with each press
         const hop = Math.round(MG.bounce() * 2);
-        CAST.draw(SP.figaro, 82, GROUND + hop, { scale: 3, pose: out ? 'hold' : 'walk' });   // he dances the patter; after, the key held up
-        if (!out) PX.draw(SP.brush, 100 + m.sw * 14, GROUND + 24 + hop - m.sw * 4, { angle: 0.5 - m.sw * 1.2 });
+        CAST.draw(SP.figaro, 94, GROUND + hop, { pose: out ? 'hold' : 'walk' });   // he dances the patter; after, the key held up
+        if (!out) PX.draw(SP.brush, 106 + m.sw * 12, GROUND + 14 + hop - m.sw * 2, { angle: 0.5 - m.sw * 1.2 });
         else {
-          PX.draw(SP.key, 88, GROUND + 40 + Math.sin(t * 6) * 2, { scale: 3 });
-          if (t > 0.8) shout('FIGARO QUA!', 64, GROUND + 56, COL.gold);
+          PX.draw(SP.key, 92, GROUND + 24 + Math.sin(t * 6) * 2);
+          if (t > 0.8) shout('FIGARO QUA!', 64, GROUND + 40, COL.gold);
           if (t > 1.2) shout('MMF!', 150, GROUND + 50);
         }
       },
@@ -395,28 +397,28 @@ MG.opera({
         PX.rect(158, GROUND - 2, 16, 2, c(COL.gold, m.on ? 1 : 0.7));
         // the ladder: upright in his hands, leaning on the rail on the mark, flat on him on the slapstick side
         let la = m.on || out ? 0.1 : clamp(m.wind * 0.004, -0.15, 0.15);
-        if (out && !m.won && t < 1.2) la = -1.45 * ease(t / 0.4);
+        if (out && !m.won && t < 1.3) la = t < 1 ? -1.45 * ease(t / 0.4) : -1.45 + 1.55 * ease((t - 1) / 0.3);
         tipped(SP.ladder, foot, GROUND, la);
         // Rosina: on the balcony, down the ladder as he holds it, into his arms (or onto him)
         let rx = 185, ry = GROUND + 36;
         if (!out) { if (m.climb > 0) { rx = foot - 7; ry = GROUND + 36 * (1 - m.climb); } }
         else if (m.won) { rx = 166 - 7 + (154 - 159) * ease(t / 0.4); ry = GROUND + (1 - m.climb) * 36 * (1 - ease(t / 0.4)) + Math.sin(ease(t / 0.4) * PI) * 8; }
-        else if (t < 1.2) { rx = 185 + (150 - 185) * ease((t - 0.3) / 0.45); ry = GROUND + 36 * (1 - ease((t - 0.3) / 0.45)); }
+        else if (t < 1) { rx = 185 + (150 - 185) * ease((t - 0.3) / 0.45); ry = GROUND + 36 * (1 - ease((t - 0.3) / 0.45)); }
         else { rx = 154; ry = GROUND; }
-        const heap = out && !m.won && t > 0.4 && t < 1.2;
+        const heap = out && !m.won && t > 0.4 && t < 1;
         const ax = out ? 138 : m.x;
         if (heap) { CAST.draw(SP.almaviva, ax - 4, GROUND, { pose: 'fall' }); CAST.draw(SP.rosina, rx, t > 0.75 ? GROUND + 10 : Math.max(GROUND + 6, ry), t > 0.75 ? { pose: 'fall', angle: PI } : { pose: 'jump' }); }
-        else { CAST.draw(SP.almaviva, ax, GROUND); CAST.draw(SP.rosina, rx, ry, { pose: out ? (t < 0.4 || !m.won && t < 1.2 ? 'jump' : 0) : m.climb > 0 ? 'hold' : 0 }); }
+        else { CAST.draw(SP.almaviva, ax, GROUND); CAST.draw(SP.rosina, rx, ry, { pose: out ? (t < 0.4 || !m.won && t < 1.3 ? 'jump' : 0) : m.climb > 0 ? 'hold' : 0 }); }
         if (m.phase === ACTION) {
           // the gusts, as streaks: which way the storm is shoving
           for (let i = 0; i < 6; i++) PX.rect((i * 43 + Math.round(m.t * m.wind * 3)) % 128 + 86, GROUND + 30 + (i * 17) % 50, 7, 1, c(COL.sky, 0.5));
         }
         if (out) {
-          CAST.draw(SP.figaro, 104, GROUND);
           if (t > 1.6) PX.draw(SP.heart, 146, GROUND + 28 + MG.bounce() * 2, { color: c(COL.rose) });
-          if (t > 1.2) PX.draw(SP.pen, 118, GROUND + 14, { scale: 2 });
-          if (t > 1.4) shout('E IL CONTO?', 90, GROUND + 34, COL.gold);
+          if (t > 1.2) PX.draw(SP.pen, 187, GROUND + 14, { scale: 2 });
+          if (t > 1.4) shout('E IL CONTO?', 164, GROUND + 26, COL.gold);
         }
+        CAST.draw(SP.figaro, foot + 8, GROUND, { pose: 'idle' });   // he steadies the ladder's foot
         verdict(m);
       },
       outcome: (m) => m.won ? ['DOWN THE LADDER, INTO HIS ARMS. MARRIED!'] : ['THE LADDER FALLS. SHE JUMPS. MARRIED ANYWAY!'],
