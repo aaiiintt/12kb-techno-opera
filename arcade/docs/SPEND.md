@@ -6,5 +6,7 @@ Budget: $70 for the redesign pass, set 29 Sep. Tokens are estimates: the harness
 | --- | --- | --- | --- | --- |
 | 28 Sep | Fable (this session) | research, runner, synth port, three operas, shots | ~600k in (mostly cached context), ~60k out | ~$13 (uncertain: cached reads are billed at a fraction) |
 | 29 Sep | Fable | gallery harness, toy acts, plan, ledgers | ~150k in, ~15k out | ~$3 |
+| 29 Sep | Fable | music check: fetching and reading eight scores, tunes.js, MUSIC.md | ~120k in (score images are ~1.5k tokens each), ~12k out | ~$3 |
+| 29 Sep | Opus 5.5 x3 (background) | art and gameplay pass, one agent per opera, at least three gallery iterations each | pending | pending |
 
-Running total: about $16 before the delegated passes. Lines are added as agents finish.
+Running total: about $19 before the delegated passes. Lines are added as agents finish.
