@@ -126,6 +126,7 @@ function mgStartAct(i) {
   m.win = () => { if (!m.done && play && forced !== 'l') { m.done = true; m.won = true; } };
   m.lose = () => { if (!m.done && play && forced !== 'w') { m.done = true; m.won = false; } };
   m.W = PX.W; m.H = PX.H;
+  m.t = 0; m.beat = 0; m.frac = 0;   // a render can come before the first update
   act.init?.(m);
   mgPhaseLen = 0;
   mgPhaseStart = S.now() + 0.05;
@@ -163,7 +164,7 @@ function mgScheduleBars(now) {
 
 function mgNext() {
   if (mgActIndex + 1 < mgOpera.acts.length) mgStartAct(mgActIndex + 1);
-  else { mgPhase = MG_RESULT; mgPhaseStart = S.now(); mgPhaseLen = 0; m.phase = MG_RESULT; mgOpera.music?.result?.(S.now(), mgBravos); }
+  else { engineObjectsDestroy(); mgPhase = MG_RESULT; mgPhaseStart = S.now(); mgPhaseLen = 0; m.phase = MG_RESULT; mgOpera.music?.result?.(S.now(), mgBravos); }
 }
 
 function mgUpdate() {
