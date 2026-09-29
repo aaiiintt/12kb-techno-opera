@@ -22,21 +22,15 @@ const ACTION = MG.phase.ACTION, OUTCOME = MG.phase.OUTCOME;
 
 function carmenSprites() {
   setGravity(vec2(0, -0.06));  // per frame: confetti and petals fall, damping gives them a gentle drift
-  const body = (h, f, b, l) => PX.sprite([
-    '..hh..', '.hhhh.', '.ffff.', '.ffff.', '..ff..', '.bbbb.', 'bbbbbb', 'b.bb.b', '..bb..', '.ll.ll', '.ll.ll',
-  ], { h, f, b, l });
-  const dress = (h, f, r, rows = ['.hfffh.', '.hfffh.', '..fff..']) => PX.sprite([
-    '..hhh..', '.hhhhh.', ...rows, '..rrr..', '.rrrrr.', '.rrrrr.', 'rrrrrrr', 'rrrrrrr', '.f...f.',
-  ], { h, f, r });
-  SP.jose = body(COL.night, COL.skin, COL.blue, COL.dark);
-  SP.joseShadow = body(COL.dark, COL.dark, COL.dark, COL.dark);
-  SP.zuniga = body(COL.gold, COL.skin, COL.night, COL.dark);
-  SP.esca = body(COL.dark, COL.skin, COL.gold, COL.gold);
-  SP.carmen = dress(COL.dark, COL.skin, COL.red);
-  SP.carmenBack = dress(COL.dark, COL.skin, COL.red, ['.hhhhh.', '.hhhhh.', '..hhh..']);
-  SP.carmenWhite = dress(COL.dark, COL.white, COL.white);
-  // José on one knee, the flower held out
-  SP.kneel = PX.sprite(['..hh....', '.hhhh...', '.ffff...', '.ffff...', '..ff....', '.bbbbbff', 'bbbbb...', '.bbllll.', '.ll...l.'], { h: COL.night, f: COL.skin, b: COL.blue, l: COL.dark });
+  // the cast, animated (lib/cast.js): José kneels in the tavern, Escamillo jumps and is tossed, Carmen falls
+  const d = COL.dark;
+  SP.jose = CAST.body({ h: COL.night, f: COL.skin, b: COL.blue, l: d });
+  SP.joseShadow = CAST.body({ h: d, f: d, b: d, l: d, e: d, m: d });
+  SP.zuniga = CAST.body({ h: COL.gold, f: COL.skin, b: COL.night, l: d });
+  SP.esca = CAST.body({ h: d, f: COL.skin, b: COL.gold, l: COL.gold });
+  SP.carmen = CAST.dress({ h: d, f: COL.skin, r: COL.red, l: d });
+  SP.carmenBack = CAST.dress({ h: d, f: d, r: COL.red, e: d, m: d });   // her back: all hair
+  SP.carmenWhite = CAST.dress({ h: d, f: COL.white, r: COL.white, l: d });
   const flower = (p, y, g) => PX.sprite(['.p.p.', 'ppppp', '.pyp.', 'ppppp', '.pgp.', '..g..', '..g..'], { p, y, g });
   SP.flower = flower(COL.pink, COL.gold, COL.green);
   SP.flowerDead = flower('#6a5058', '#7a6a5a', '#5a5a3a');
@@ -74,8 +68,9 @@ const backdrop = (colour) => PX.rect(0, GROUND, 256, 144 - GROUND, c(colour));
 const say = (text, x, y, colour = COL.ink) => MG.say(text, x, y, colour, COL.dark);
 // a sprite with a one-pixel rim in one colour: the thing to look at
 const glow = (s, x, y, col, a = 1, o = {}) => {
-  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) PX.draw(s, x + dx, y + dy, { ...o, color: c('#000000', a), add: c(col, 0) });
-  PX.draw(s, x, y, o);
+  const draw = s.idle ? CAST.draw : PX.draw;
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) draw(s, x + dx, y + dy, { ...o, color: c('#000000', a), add: c(col, 0) });
+  draw(s, x, y, o);
 };
 // a puff of tinted squares (untextured particles): n of them from x, y at speed px per frame
 const puff = (x, y, cols, n = 12, speed = 1.5, o = {}) => new ParticleEmitter(vec2(x, y), o.angle || 0, o.size ?? 2, 0.05, n * 20, o.cone ?? PI, undefined,
@@ -136,11 +131,11 @@ const ACTS = [
       PX.rect(84, GROUND + 38, 88, 82, c('#241a2c'));
       PX.rect(110, GROUND + 50, 36, 40, c('#8a5a42'));
       PX.rect(106, GROUND + 48, 44, 2, c(COL.dim));
-      PX.draw(SP.carmen, 121, GROUND + 50);
+      CAST.draw(SP.carmen, 121, GROUND + 50);
       if (m.phase < ACTION) PX.draw(SP.flower, 133, GROUND + 60);
       const k = m.lit;
       const bob = out(m) ? Math.round(MG.bounce() * 2) : 0;
-      PX.draw(SP.jose, m.x, GROUND + m.y + bob, { flip: m.facing < 0, add: new Color(k * 0.5, k * 0.25, k * 0.35, 0) });
+      CAST.draw(SP.jose, m.x, GROUND + m.y + bob, { pose: m.y > 0 ? 'jump' : 0, flip: m.facing < 0, add: new Color(k * 0.5, k * 0.25, k * 0.35, 0) });
       if (out(m)) {
         // the flower itself drifts down last, into his hand
         const f = Math.min(1, m.t / 0.9);
@@ -182,13 +177,13 @@ const ACTS = [
       backdrop('#2c3358');
       stageFloor(COL.dim);
       PX.rect(192, GROUND, 40, 72, c(COL.dark));                // the guardroom door, Zuniga in it
-      PX.draw(SP.zuniga, 206, GROUND);
+      CAST.draw(SP.zuniga, 206, GROUND);
       const o = out(m), gone = o && m.t > m.go;
       const cx = gone ? 108 + (m.t - m.go) * 190 : 108 + (o && !m.won ? Math.round(Math.sin(m.t * 40)) : 0);
       // José falls back when she shoves him
-      if (gone) PX.draw(SP.jose, 80, GROUND - 5, { angle: -PI / 2 });
-      else PX.draw(SP.jose, 88 + Math.round(m.jig * 2), GROUND);
-      PX.draw(SP.carmen, cx, GROUND);
+      if (gone) CAST.draw(SP.jose, 80, GROUND, { pose: 'fall' });
+      else CAST.draw(SP.jose, 88 + Math.round(m.jig * 2), GROUND, { pose: 'idle' });
+      CAST.draw(SP.carmen, cx, GROUND);
       // the rope: coils round her, one gone for each third of the knot
       if (!o || (!m.won && !gone)) {
         const n = o ? 3 : Math.max(1, 3 - Math.floor(m.knot * 3));
@@ -231,14 +226,14 @@ const ACTS = [
       PX.rect(150, GROUND + 60, 6, 3, c(COL.gold));             // a lamp, and its warm pool
       stageFloor(COL.wood);
       const o = out(m);
-      PX.draw(SP.kneel, 100, GROUND);
+      CAST.draw(SP.jose, 100, GROUND, { pose: 'kneel' });
       // the flower: dry, and blooming over it as he holds it out
       const droop = o && !m.won && !m.turned;
       const fx = 110, fy = GROUND + 6;
       if (m.phase === ACTION) glow(SP.flowerDead, fx, fy, COL.pink, m.hold ? 0.6 + 0.4 * MG.bounce() : 0.35);
       PX.draw(SP.flowerDead, fx, fy - (droop ? 2 : 0), { angle: droop ? 0.5 : 0 });
       PX.draw(SP.flower, fx, fy - (droop ? 2 : 0), { color: c(COL.white, m.bloom), angle: droop ? 0.5 : 0 });
-      PX.draw(m.turned ? SP.carmen : SP.carmenBack, 138, GROUND);
+      CAST.draw(m.turned ? SP.carmen : SP.carmenBack, 138, GROUND);
       if (m.turned) PX.draw(SP.heart, 126, GROUND + 30 + Math.round(MG.bounce() * 2));
       if (o && m.t > 1.7) say('LÀ-BAS !', 150, GROUND + 30);
     },
@@ -273,7 +268,7 @@ const ACTS = [
       backdrop('#23304a');
       PX.rect(0, GROUND, 256, 30, c('#1a2238'));               // the mountains, far off, still
       stageFloor(COL.dim);
-      PX.draw(SP.carmen, 72, GROUND);
+      CAST.draw(SP.carmen, 72, GROUND);
       PX.rect(94, GROUND, 80, 12, c(COL.wood));                // the table
       PX.rect(94, GROUND + 11, 80, 1, c('#8a5a3a'));
       for (let i = 0; i < 3; i++) {
@@ -350,9 +345,9 @@ const ACTS = [
       if (m.bull) PX.draw(SP.bull, m.bull.x, GROUND, { flip: m.bull.dir < 0 });
       // tossed: up, over, down, and up again
       const tt = o && !m.won ? Math.max(0, m.t) : 9;
-      if (tt < 0.8) PX.draw(SP.esca, m.x, GROUND + Math.sin(tt / 0.8 * PI) * 40, { angle: tt * 9 });
-      else if (tt < m.up) PX.draw(SP.esca, m.x, GROUND - 5, { angle: PI / 2 });
-      else glow(SP.esca, m.x, GROUND + (o ? Math.round(MG.bounce() * 2) : m.y), COL.white, o ? 0.5 : 0);
+      if (tt < 0.8) CAST.draw(SP.esca, m.x, GROUND + Math.sin(tt / 0.8 * PI) * 40, { pose: 'jump', angle: tt * 9 });
+      else if (tt < m.up) CAST.draw(SP.esca, m.x, GROUND, { pose: 'fall' });
+      else glow(SP.esca, m.x, GROUND + (o ? Math.round(MG.bounce() * 2) : m.y), COL.white, o ? 0.5 : 0, { pose: m.y > 0 ? 'jump' : roar ? 'hold' : 0 });
       if (m.ole > 0.3) say('OLÉ !', m.x + 16, GROUND + 30, COL.gold);
       if (roar && m.t > m.up + 0.2) say('OLÉ !', m.x + 16, GROUND + 30, COL.gold);
     },
@@ -399,9 +394,9 @@ const ACTS = [
       PX.rect(0, GROUND + 62, 256, 60, c('#2a1418'));           // the arena wall
       stageFloor(COL.sand);
       const o = out(m), fallen = o && m.t > 1.6;
-      if (fallen) PX.draw(SP.carmenWhite, m.cx + 4, GROUND - 4, { angle: -PI / 2 });
-      else PX.draw(SP.carmen, m.cx, GROUND, { flip: true });
-      PX.draw(SP.jose, m.jx, GROUND, { color: m.phase === ACTION && m.near ? c(COL.green) : WHITE });
+      if (fallen) CAST.draw(SP.carmenWhite, m.cx + 4, GROUND, { pose: 'fall' });
+      else CAST.draw(SP.carmen, m.cx, GROUND, { flip: true, pose: o && m.won && m.t < 0.5 ? 'hold' : 0 });
+      CAST.draw(SP.jose, m.jx, GROUND, { color: m.phase === ACTION && m.near ? c(COL.green) : WHITE });
       if (!o) {
         const y = GROUND + 14 + (m.near ? Math.round(MG.bounce() * 3) : 0);
         if (m.near) glow(SP.ring, m.cx - 8, y, COL.white);
@@ -433,7 +428,7 @@ MG.opera({
     : bravos === 0 ? ['CARMEN IS DEAD.', 'YOU DID NOTHING RIGHT. SAME ENDING.']
     : ['CARMEN IS DEAD.', 'IT WAS NEVER UP TO YOU.'],
   music: { result: (t, n) => { S.setRoom(3600, 0.5, 1, t); for (let i = 0; i < 4; i++) S.arp(['i', 'VI', 'III', 'VII'][i], 0.9, 25, t + i, { vol: 0.07, octave: 1 }); S.voice('soprano', S.deg('5+'), t + 4, 2.4, { vol: 0.12 }); } },
-  renderTitle: () => { stageFloor(COL.sand); PX.draw(SP.carmen, 121, GROUND); PX.draw(SP.flower, 110, GROUND + 30 + MG.bounce(timeReal) * 4); },
-  renderResult: () => { stageFloor(COL.dark); PX.draw(SP.jose, 100, GROUND); PX.draw(SP.carmenWhite, 130, GROUND - 4, { angle: -PI / 2 }); },
+  renderTitle: () => { stageFloor(COL.sand); CAST.draw(SP.carmen, 121, GROUND); PX.draw(SP.flower, 110, GROUND + 30 + MG.bounce(timeReal) * 4); },
+  renderResult: () => { stageFloor(COL.dark); CAST.draw(SP.jose, 100, GROUND); CAST.draw(SP.carmenWhite, 130, GROUND, { pose: 'fall' }); },
   acts: ACTS,
 });

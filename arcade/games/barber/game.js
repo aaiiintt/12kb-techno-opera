@@ -29,14 +29,14 @@ const ease = (t) => clamp(t, 0, 1);
 
 function barberSprites() {
   setGravity(vec2(0, -0.04));      // confetti falls, bubbles (negative gravity scale) rise
-  const body = (h, f, b, l) => PX.sprite(['..hh..', '.hhhh.', '.ffff.', '.effe.', '..ff..', '.bbbb.', 'bbbbbb', 'b.bb.b', '..bb..', '.ll.ll', '.ll.ll'], { h, f, b, l, e: COL.eye });
-  const dress = (h, f, r) => PX.sprite(['..hhh..', '.hhhhh.', '.hfffh.', '.hefeh.', '..fff..', '..rrr..', '.rrrrr.', '.rrrrr.', 'rrrrrrr', 'rrrrrrr', '.f...f.'], { h, f, r, e: COL.eye });
+  // the cast, animated (lib/cast.js)
+  const body = (h, f, b, l, T) => CAST.body({ h, f, b, l, e: COL.eye }, T);
   SP.almaviva = body(COL.hair, COL.skin, COL.sky, COL.boot);
   SP.soldier = body(COL.crimson, COL.skin, COL.crimson, COL.boot);       // Almaviva's drunken officer disguise
-  SP.alonzo = PX.sprite(['..hh..', '.hhhh.', '.ffff.', '.effe.', '.wwww.', '.bbbb.', 'bbbbbb', 'b.bb.b', '..bb..', '.bbbb.', '.bbbb.'], { h: COL.hair, f: COL.skin, w: COL.white, b: COL.slate, e: COL.eye });   // Don Alonso, the music master
-  SP.figaro = PX.sprite(['..hh..', '.hhhh.', '.ffff.', '.effe.', '..ff..', '.sgsg.', 'sgsgsg', 's.gs.g', '..sg..', '.ll.ll', '.ll.ll'], { h: COL.hair, f: COL.skin, s: COL.cream, g: COL.green, l: COL.wood, e: COL.eye });
+  SP.alonzo = body(COL.hair, COL.skin, COL.slate, COL.slate);            // Don Alonso, the music master, in his robe
+  SP.figaro = CAST.body({ h: COL.hair, f: COL.skin, b: COL.green, s: COL.cream, g: COL.green, l: COL.wood, e: COL.eye }, ['.sgsg.', 'sgsgsg', 'f.gs.f', '..sg..']);
   SP.bartolo = body(COL.white, COL.skin, COL.coat, COL.boot);            // white wig
-  SP.rosina = dress(COL.hair, COL.skin, COL.rose);
+  SP.rosina = CAST.dress({ h: COL.hair, f: COL.skin, r: COL.rose, e: COL.eye, l: COL.boot });
   SP.face = PX.sprite([
     '..wwwwwwww..', '.wwwwwwwwww.', 'wwffffffffww', 'wwffffffffww', '.fffffffffff', '.ffeffffeff.', '.ffffffffff.', '.fffffffffff', '..ffmmmmff..', '...ffffff...', '....ffff....',
   ], { w: COL.white, f: COL.skin, e: COL.eye, m: COL.crimson });
@@ -103,8 +103,8 @@ MG.opera({
     : n === 0 ? ['MARRIED ANYWAY. IT IS A COMEDY.']
     : ['MARRIED ANYWAY. BARTOLO KEEPS THE LADDER.'],
   music: { result: (t) => { S.setRoom(3600, 0.5, 1, t); for (let i = 0; i < 4; i++) S.arp(['I', 'IV', 'V', 'I'][i], 0.6, 25, t + i * 0.6, { vol: 0.07, octave: 1 }); sing('tenor', ['5', '3', '1'], [0.25, 0.25, 1.5], t + 2.4, 0.5, { vol: 0.14 }); } },
-  renderTitle: () => { MG.floor(COL.floor, COL.line); PX.rect(200, GROUND, 56, 120, c(COL.wall)); windowLit(212, GROUND + 60, 1); PX.draw(SP.rosina, 221, GROUND + 60); PX.draw(SP.figaro, 40, GROUND); PX.draw(SP.almaviva, 150, GROUND); PX.draw(SP.guitar, 158, GROUND + 6); },
-  renderResult: () => { MG.floor(COL.floor, COL.line); PX.draw(SP.almaviva, 112, GROUND); PX.draw(SP.rosina, 128, GROUND); PX.draw(SP.heart, 122, GROUND + 22, { scale: 1, color: c(COL.rose) }); PX.draw(SP.figaro, 64, GROUND); PX.draw(SP.bartolo, 190, GROUND); PX.draw(SP.ladder, 222, GROUND); },
+  renderTitle: () => { MG.floor(COL.floor, COL.line); PX.rect(200, GROUND, 56, 120, c(COL.wall)); windowLit(212, GROUND + 60, 1); CAST.draw(SP.rosina, 221, GROUND + 60); CAST.draw(SP.figaro, 40, GROUND); CAST.draw(SP.almaviva, 150, GROUND); PX.draw(SP.guitar, 158, GROUND + 6); },
+  renderResult: () => { MG.floor(COL.floor, COL.line); CAST.draw(SP.almaviva, 112, GROUND); CAST.draw(SP.rosina, 128, GROUND); PX.draw(SP.heart, 122, GROUND + 22, { scale: 1, color: c(COL.rose) }); CAST.draw(SP.figaro, 64, GROUND); CAST.draw(SP.bartolo, 190, GROUND); PX.draw(SP.ladder, 222, GROUND); },
 
   acts: [
     // ---------------------------------------------------------------- I
@@ -122,7 +122,7 @@ MG.opera({
           } else { m.bad = 1; m.hits = Math.max(0, m.hits - 1); S.voice('bass', S.deg('1-') + 1, S.now(), 0.2, { vol: 0.14, grit: true, slide: -2 }); }
         }
       },
-      updateOutcome(m) { if (!m.won && !m.bonked && m.t > 0.35) { m.bonked = 1; bonk(m, 138, GROUND + 24); } },
+      updateOutcome(m) { if (!m.won && !m.bonked && m.t > 0.35) { m.bonked = 1; bonk(m, 138, GROUND + 24); CAST.hit(SP.almaviva); } },
       onOutcome(m) { if (m.won) { yay(); hearts(212, GROUND + 50, 10); fx(212, GROUND + 50, COL.glow, COL.white, 30, { v: 1.8 }); } else boo(); },
       render(m) {
         shaking(m);
@@ -131,10 +131,10 @@ MG.opera({
         PX.rect(180, GROUND, 76, 120, c(COL.wall));
         MG.floor(COL.floor, COL.line);
         windowLit(196, GROUND + 26, out ? 1 : Math.min(1, m.hits / 6));
-        PX.draw(SP.rosina, 205, GROUND + 26);
+        CAST.draw(SP.rosina, 205, GROUND + 26);
         // Almaviva; on the slapstick side the note bonks him and he reels
         const reel = out && !m.won && m.t > 0.35 && m.t < 1.3;
-        PX.draw(SP.almaviva, 128, GROUND, { angle: reel ? 0.35 * Math.sin(m.t * 14) : 0 });
+        CAST.draw(SP.almaviva, 128, GROUND, { angle: reel ? 0.35 * Math.sin(m.t * 14) : 0 });
         PX.draw(SP.guitar, 136, GROUND + 6);
         if (m.phase === ACTION) {
           // the beat: a big gold note, and a ring that closes on it exactly on the beat
@@ -193,12 +193,12 @@ MG.opera({
         // Bartolo in his armchair behind the paper; the paper drops when he looks
         const look = out || m.looking;
         PX.rect(66, GROUND, 30, 28, c(COL.crimson)); PX.rect(66, GROUND, 30, 12, c(COL.woodD));
-        PX.draw(SP.bartolo, 75, GROUND + 6);
+        CAST.draw(SP.bartolo, 75, GROUND + 6);
         PX.draw(SP.paper, 73 + (m.warn ? rand(-1, 1) : 0), look ? GROUND + 8 : GROUND + 16);
         if (m.phase === ACTION && m.looking) PX.text('!', 84, GROUND + 32, c(COL.tragic), { scale: 3 });
         // Rosina and the letter on the floor
         const jump = out && !m.won && t < 0.6 ? 6 : 0;
-        PX.draw(SP.rosina, 108 + m.kick * 2, GROUND + jump);
+        CAST.draw(SP.rosina, 108 + m.kick * 2, GROUND + jump, { pose: jump ? 'jump' : 0 });
         const gone = out && (m.won ? t > 0.15 : t > 0.45);
         if (!gone) PX.draw(SP.letter, out ? m.lx + (164 - m.lx) * ease((t - (m.won ? 0 : 0.3)) / 0.15) : m.lx, GROUND);
         if (out) {
@@ -235,11 +235,11 @@ MG.opera({
         const out = m.phase === OUT, t = m.t;
         room();
         PX.rect(150, GROUND, 30, 50, c(COL.night)); PX.rect(148, GROUND + 50, 34, 3, c(COL.woodD));   // Bartolo's doorway
-        PX.draw(SP.bartolo, 159, GROUND, { flip: true });
+        CAST.draw(SP.bartolo, 159, GROUND, { flip: true });
         // the officer: tipped by the sway during the act; on the floor and back up on the slapstick side
         let a = m.a;
         if (out) a = m.won ? 0 : t < 0.3 ? m.a + (Math.sign(m.a || 1) * PI / 2 - m.a) * t / 0.3 : t < 1.3 ? Math.sign(m.a || 1) * PI / 2 : 0;
-        tipped(SP.soldier, 112, GROUND, a);
+        tipped(CAST.frame(SP.soldier, Math.abs(a) > 1.2 ? 'fall' : 'hold', time), 112, GROUND, a);   // the billet held high; flat out, arms flung
         // the billet, the gold thing: held high while he sways, then on Bartolo's chest
         const k = out ? ease((t - (m.won ? 0 : 0.4)) / 0.4) : 0;
         const hx = 112 + Math.sin(a) * 30 - 7, hy = GROUND + Math.cos(a) * 30 - 5;
@@ -286,13 +286,13 @@ MG.opera({
         // Bartolo in the armchair, asleep; a wrong note jolts him, and on the slapstick side he leaps
         PX.rect(162, GROUND, 30, 26, c(COL.crimson)); PX.rect(162, GROUND, 30, 10, c(COL.woodD));
         const leap = out && !m.won && t < 0.9 ? Math.sin(ease(t / 0.9) * PI) * 22 : 0;
-        PX.draw(SP.bartolo, 171, GROUND + 6 + leap + (m.wake > 0.5 ? 2 : 0));
+        CAST.draw(SP.bartolo, 171, GROUND + 6 + leap + (m.wake > 0.5 ? 2 : 0), { pose: leap > 0 ? 'jump' : 'idle' });
         if (leap > 0) shout('CHE VOCE!', 140, GROUND + 54, COL.tragic);
         else if (m.wake > 0.3 && m.phase === ACTION) PX.text('!', 176, GROUND + 32, c(COL.tragic), { scale: 3 });
         else PX.draw(SP.zz, 178, GROUND + 32 + MG.bounce() * 3, { color: c(COL.dim) });
         // Alonso behind the harpsichord, his hand on a key; the gold key is the note she needs
         const hx = out ? 62 + m.k * 10 + 4.5 : m.hx;
-        PX.draw(SP.alonzo, hx - 6, GROUND + 14);
+        CAST.draw(SP.alonzo, hx - 6, GROUND + 14);
         PX.rect(58, GROUND, 86, 14, c(COL.woodD)); PX.rect(60, GROUND + 2, 82, 2, c(COL.wood));
         for (let i = 0; i < 8; i++) {
           const target = i === m.k && m.phase !== MG.phase.CURTAIN;
@@ -300,7 +300,7 @@ MG.opera({
         }
         if (m.phase === ACTION) PX.rect(62 + m.k * 10 + 3, GROUND + 22 + Math.round(MG.bounce() * 3), 3, 3, c(COL.gold));
         PX.rect(hx - 3, GROUND + 16, 6, 3, c(COL.skin));
-        PX.draw(SP.rosina, 146, GROUND);
+        CAST.draw(SP.rosina, 146, GROUND);
         if (out && t > 1.4) shout('MIDNIGHT!', 104, GROUND + 44, COL.gold);
         verdict(m);
       },
@@ -326,7 +326,7 @@ MG.opera({
           if (m.foam.length < 16) m.foam.push([randInt(-12, 10), randInt(-2, 14)]);
           bubbles(130, GROUND + 34, 8, 20);
           fx(118, GROUND + 34, COL.white, COL.foam, 8, { v: 1.2, ang: -1.2, cone: 1, life: 0.6, s: 4, e: 1 });
-          S.voice('pulse', S.deg(LARGO[m.n % 16]) + 12, S.now(), 0.12, { vol: 0.08 });
+          S.voice('pulse', S.deg(LARGO[m.n % LARGO.length]) + 12, S.now(), 0.12, { vol: 0.08 });
           S.drum('hat', S.now(), 0.12);
           if (m.n % 8 === 0) { hearts(100, GROUND + 50, 3); S.voice('tenor', S.deg('5'), S.now(), 0.3, { vol: 0.1 }); }
         }
@@ -347,7 +347,7 @@ MG.opera({
         PX.rect(158, GROUND, 4, 12, c(COL.wood)); PX.rect(154, GROUND + 12, 20, 6, c(COL.slate)); PX.rect(156, GROUND + 18, 16, 2, c(COL.foam));
         // Figaro, dancing to the patter, the brush swinging to the face with each press
         const hop = Math.round(MG.bounce() * 2);
-        PX.draw(SP.figaro, 82, GROUND + hop, { scale: 3 });
+        CAST.draw(SP.figaro, 82, GROUND + hop, { scale: 3, pose: out ? 'hold' : 'walk' });   // he dances the patter; after, the key held up
         if (!out) PX.draw(SP.brush, 100 + m.sw * 14, GROUND + 24 + hop - m.sw * 4, { angle: 0.5 - m.sw * 1.2 });
         else {
           PX.draw(SP.key, 88, GROUND + 40 + Math.sin(t * 6) * 2, { scale: 3 });
@@ -379,7 +379,7 @@ MG.opera({
       },
       updateOutcome(m) {
         if (m.won) return;
-        if (!m.b1 && m.t > 0.4) { m.b1 = 1; bonk(m, 140, GROUND + 22); }
+        if (!m.b1 && m.t > 0.4) { m.b1 = 1; bonk(m, 140, GROUND + 22); CAST.hit(SP.almaviva); }
         if (!m.b2 && m.t > 0.75) { m.b2 = 1; bonk(m, 146, GROUND + 10); }
       },
       onOutcome(m) { if (m.won) { yay(); confetti(150, GROUND + 70, 80); hearts(148, GROUND + 28, 10); } else boo(); },
@@ -405,14 +405,14 @@ MG.opera({
         else { rx = 154; ry = GROUND; }
         const heap = out && !m.won && t > 0.4 && t < 1.2;
         const ax = out ? 138 : m.x;
-        if (heap) { PX.draw(SP.almaviva, ax - 4, GROUND - 4, { angle: -PI / 2 }); PX.draw(SP.rosina, rx, GROUND + 6 > ry ? GROUND + 6 : ry, { angle: t > 0.75 ? PI / 2 : 0 }); }
-        else { PX.draw(SP.almaviva, ax, GROUND); PX.draw(SP.rosina, rx, ry); }
+        if (heap) { CAST.draw(SP.almaviva, ax - 4, GROUND, { pose: 'fall' }); CAST.draw(SP.rosina, rx, t > 0.75 ? GROUND + 10 : Math.max(GROUND + 6, ry), t > 0.75 ? { pose: 'fall', angle: PI } : { pose: 'jump' }); }
+        else { CAST.draw(SP.almaviva, ax, GROUND); CAST.draw(SP.rosina, rx, ry, { pose: out ? (t < 0.4 || !m.won && t < 1.2 ? 'jump' : 0) : m.climb > 0 ? 'hold' : 0 }); }
         if (m.phase === ACTION) {
           // the gusts, as streaks: which way the storm is shoving
           for (let i = 0; i < 6; i++) PX.rect((i * 43 + Math.round(m.t * m.wind * 3)) % 128 + 86, GROUND + 30 + (i * 17) % 50, 7, 1, c(COL.sky, 0.5));
         }
         if (out) {
-          PX.draw(SP.figaro, 104, GROUND);
+          CAST.draw(SP.figaro, 104, GROUND);
           if (t > 1.6) PX.draw(SP.heart, 146, GROUND + 28 + MG.bounce() * 2, { color: c(COL.rose) });
           if (t > 1.2) PX.draw(SP.pen, 118, GROUND + 14, { scale: 2 });
           if (t > 1.4) shout('E IL CONTO?', 90, GROUND + 34, COL.gold);

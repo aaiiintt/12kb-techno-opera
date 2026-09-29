@@ -31,14 +31,15 @@ const isAct = (m) => m.phase === MG.phase.ACTION;
 
 function traviataSprites() {
   setGravity(vec2(0, -0.05));                 // for the particles: confetti falls, bubbles use negative gravity
-  const body = (h, f, b, l, s = COL.white) => PX.sprite(['..hh..', '.hhhh.', '.ffff.', '.ffff.', '..ff..', '.bssb.', 'bbssbb', 'b.bb.b', '..bb..', '.ll.ll', '.ll.ll'], { h, f, b, l, s });
-  const dress = (h, f, r, k) => PX.sprite(['..hhh..', '.hhhhh.', '.hfffh.', '.hfffh.', '..fff..', '..rkr..', '.rrrrr.', '.rrrrr.', 'rrrrrrr', 'rrrrrrr', '.f...f.'], { h, f, r, k });
+  // the cast, animated (lib/cast.js)
+  const body = (h, f, b, l, s = COL.white, e = COL.dark) => CAST.body({ h, f, b, l, s, e, m: e === COL.dark ? undefined : e });
+  const dress = (h, f, r, k) => CAST.dress({ h, f, r, k, e: COL.dark });
   SP.violetta = dress(COL.hair, COL.skin, COL.white, COL.camellia);
   SP.violettaPale = dress(COL.hair, '#e8c4bc', COL.pale, COL.camellia);
   SP.alfredo = body(COL.hair, COL.skin, COL.suit, '#1e2650');
   SP.germont = body('#e0e0e8', COL.skin, COL.grey, '#4a4a5a');
   const g = '#3a1624';
-  SP.guest = body(g, g, g, g, g);
+  SP.guest = body(g, g, g, g, g, g);
   SP.coupe = PX.sprite(['wyyyw', '.wyw.', '..w..', '..w..', '.www.'], { w: '#dfe6f5', y: COL.gold });
   SP.camellia = PX.sprite(['.r.r.', 'rrrrr', 'rrprr', 'rrrrr', '.r.r.'], { r: COL.camellia, p: '#ffd0da' });
   SP.camelliaW = PX.sprite(['.r.r.', 'rrrrr', 'rrprr', 'rrrrr', '.r.r.'], { r: COL.white, p: COL.gold });
@@ -108,15 +109,15 @@ const room = (wall, floorCol, px = 64, pw = 128) => {
 const salon = (guests = true) => {
   room('#240a14', '#3d1020');
   for (let i = 0; i < 7; i++) PX.rect(8 + i * 40, GROUND + 1, 2, 110, c('#2e0e1a'));      // wall panels, static
-  if (guests) for (const x of [52, 70, 186, 204]) PX.draw(SP.guest, x, GROUND + 2);
+  if (guests) for (const x of [52, 70, 186, 204]) CAST.draw(SP.guest, x, GROUND + 2, { t: time + x / 7 });
 };
 const BRINDISI = TUNES.brindisi.notes.slice(0, 17), BRINDISI_D = TUNES.brindisi.durs.slice(0, 17);   // 3/8, an eighth is one game beat; checked
 const CLINK_X = 126, CLINK_Y = GROUND + 26;
 const deathroom = () => { room('#140d24', '#221638', 96, 64); };
 // the bed at x, with a pillow at its left end
 const bed = (x) => { PX.rect(x, GROUND, 44, 8, c('#3a2656')); PX.rect(x, GROUND + 8, 44, 3, c(COL.violet)); PX.rect(x + 2, GROUND + 10, 10, 4, c(COL.pale)); PX.rect(x - 2, GROUND, 3, 18, c('#3a2656')); };
-// Violetta lying on a bed at x, head on the pillow
-const lying = (x, col) => PX.draw(SP.violettaPale, x + 8, GROUND + 3, { angle: -PI / 2, color: col });
+// Violetta lying on a bed at x, head on the pillow, breathing (t: 0 when she has stopped)
+const lying = (x, col, t) => CAST.draw(SP.violettaPale, x + 8, GROUND + 3, { angle: -PI / 2, color: col, pose: 'idle', t });
 
 MG.opera({
   title: 'LA TRAVIATA',
@@ -128,8 +129,8 @@ MG.opera({
     : n === 0 ? ['VIOLETTA DIES. PARIS GOES BACK TO THE PARTY.']
     : ['VIOLETTA DIES. THE LETTER CAME TOO LATE.'],
   music: { result: (t) => { S.key(10, 'major'); S.setRoom(3600, 0.55, 1, t); for (let i = 0; i < 4; i++) S.arp(['I', 'vi', 'IV', 'I'][i], 0.9, 25, t + i, { vol: 0.06, octave: 1 }); S.voice('soprano', S.deg('3+'), t + 4, 3, { vol: 0.11 }); } },
-  renderTitle: () => { salon(false); PX.draw(SP.alfredo, 106, GROUND); PX.draw(SP.violetta, 136, GROUND); PX.draw(SP.coupe, 118, GROUND + 18 + MG.bounce(timeReal) * 2); PX.draw(SP.coupe, 128, GROUND + 18 + MG.bounce(timeReal) * 2); },
-  renderResult: () => { deathroom(); bed(96); lying(96); PX.draw(SP.alfredo, 150, GROUND); PX.draw(SP.germont, 174, GROUND, { flip: true }); PX.draw(SP.portrait, 150, GROUND + 12); },
+  renderTitle: () => { salon(false); CAST.draw(SP.alfredo, 106, GROUND); CAST.draw(SP.violetta, 136, GROUND); PX.draw(SP.coupe, 118, GROUND + 18 + MG.bounce(timeReal) * 2); PX.draw(SP.coupe, 128, GROUND + 18 + MG.bounce(timeReal) * 2); },
+  renderResult: () => { deathroom(); bed(96); lying(96, WHITE, 0); CAST.draw(SP.alfredo, 150, GROUND); CAST.draw(SP.germont, 174, GROUND, { flip: true }); PX.draw(SP.portrait, 150, GROUND + 12); },
 
   acts: [
     // ---------------------------------------------------------------- I
@@ -148,7 +149,7 @@ MG.opera({
             if (m.clinks >= 3) m.win();
           } else {
             // off the beat: she coughs, and a heart goes out
-            m.clinks = Math.max(0, m.clinks - 1); S.drum('breath', S.now(), 0.3);
+            m.clinks = Math.max(0, m.clinks - 1); S.drum('breath', S.now(), 0.3); CAST.hit(SP.violetta);
             puff(152, GROUND + 19, ['#8a7a8a'], { a: PI / 2, cone: 0.6, v: 0.8, life: 0.6, g: -0.2, time: 0.05, rate: 200 });
           }
         }
@@ -160,7 +161,7 @@ MG.opera({
           puff(CLINK_X, CLINK_Y, [COL.camellia, COL.gold], { v: 2.6, life: 2, fade: 1, rate: 700, time: 0.08 });
         } else puff(CLINK_X + 12, CLINK_Y - 6, [COL.gold], { a: PI, cone: 0.5, v: 0.8, g: 1, life: 0.8, rate: 250, time: 0.1 });   // the champagne spills
       },
-      after(m) { if (m.age > 1.3 && !m.coughed) { m.coughed = 1; S.drum('breath', S.now(), 0.3); puff(152, GROUND + 19, ['#8a7a8a'], { a: PI / 2, cone: 0.6, v: 0.8, life: 0.8, g: -0.2, time: 0.1, rate: 200 }); } },
+      after(m) { if (m.age > 1.3 && !m.coughed) { m.coughed = 1; S.drum('breath', S.now(), 0.3); CAST.hit(SP.violetta); puff(152, GROUND + 19, ['#8a7a8a'], { a: PI / 2, cone: 0.6, v: 0.8, life: 0.8, g: -0.2, time: 0.1, rate: 200 }); } },
       render(m) {
         shake(m);
         salon();
@@ -174,8 +175,8 @@ MG.opera({
         // the arms that hold the glasses up
         limb(106, GROUND + 11, CLINK_X - 7 - sep, CLINK_Y - 8 + lift, c(COL.suit));
         limb(146, GROUND + 11, CLINK_X + sep + 5, CLINK_Y - 8 + lift, c(COL.pale));
-        PX.draw(SP.alfredo, 96, GROUND);
-        PX.draw(SP.violetta, 146, GROUND - (cough ? 1 : 0), { flip: true });
+        CAST.draw(SP.alfredo, 96, GROUND);
+        CAST.draw(SP.violetta, 146, GROUND - (cough ? 1 : 0), { flip: true });
         PX.draw(SP.coupe, CLINK_X - 10 - sep, CLINK_Y - 8 + lift);
         PX.draw(SP.coupe, CLINK_X + sep, CLINK_Y - 8 + lift, { angle: out && !m.won && m.age < 0.6 ? 0.5 : 0 });
         if (isAct(m)) {
@@ -239,8 +240,8 @@ MG.opera({
           if (v >= 1) PX.draw(i % 2 ? SP.camelliaW : SP.camellia, x, y);
           else if (v > 0.4) PX.draw(SP.bud, x + 2, y + 2);
         }
-        PX.draw(SP.alfredo, 70, GROUND);
-        PX.draw(SP.violetta, 92, GROUND);
+        CAST.draw(SP.alfredo, 70, GROUND);
+        CAST.draw(SP.violetta, 92, GROUND);
         // her bouquet, growing
         for (let i = 0; i < Math.min(m.snips, 7); i++) PX.draw(i % 2 ? SP.camelliaW : SP.camellia, 100 + (i % 3) * 4, GROUND + 8 + Math.floor(i / 3) * 4, { scale: 1 });
         // the scissors hover over the next blossom, on the beat
@@ -252,7 +253,7 @@ MG.opera({
         const bt = m.t + (isOut(m) ? 20 : 0);
         PX.draw(SP.bee, 142 + Math.sin(bt * 1.7) * 26, GROUND + 38 + Math.sin(bt * 3.1) * 6, { flip: Math.cos(bt * 1.7) < 0 });
         if (isOut(m)) {
-          PX.draw(SP.germont, m.gx, GROUND, { flip: true });
+          CAST.draw(SP.germont, m.gx, GROUND, { flip: true });
           if (m.age > 1.2) say('SIGNORA.', 150, GROUND + 40, COL.grey);
         }
       },
@@ -301,8 +302,8 @@ MG.opera({
         const n = Math.round(18 * m.sign), wave = [0, 1, 2, 1, 0, 1, 2, 2, 1, 0];
         for (let i = 0; i < n; i++) PX.rect(119 + i, GROUND + 17 + wave[i % 10], 1, 1, c(COL.ink2));
         if (done && m.sealed) PX.rect(134, GROUND + 16, 4, 4, c(COL.camellia));
-        PX.draw(SP.violetta, 84, GROUND);
-        PX.draw(SP.germont, m.gx, GROUND, { flip: true });
+        CAST.draw(SP.violetta, 84, GROUND);
+        CAST.draw(SP.germont, m.gx, GROUND, { flip: true });
         // the pen: at the tip of the signature while it is being written, in the inkwell once it is done
         if (done && m.sealed) PX.draw(SP.quill, 145, GROUND + 19);
         else PX.draw(SP.quill, 118 + n, GROUND + 17 + (m.hold && isAct(m) ? Math.round(rand(0, 1)) : 0));
@@ -354,8 +355,8 @@ MG.opera({
         // the gaming table
         PX.rect(104, GROUND + 12, 48, 3, c(COL.green));
         PX.rect(106, GROUND, 44, 12, c('#1a0c14'));
-        PX.draw(SP.alfredo, 76, GROUND);
-        PX.draw(SP.violetta, 168, GROUND, { flip: true });
+        CAST.draw(SP.alfredo, 76, GROUND, { pose: m.purseY > GROUND ? 'hold' : 'idle' });   // the purse over his head
+        CAST.draw(SP.violetta, 168, GROUND, { flip: true });
         // the pile at her feet
         for (let i = 0; i < m.landed; i++) PX.draw(SP.coin, 160 + (i % 5) * 4, GROUND + Math.floor(i / 5) * 3);
         for (const k of m.coins) PX.draw(SP.coin, k.x, k.y);
@@ -469,11 +470,11 @@ MG.opera({
         deathroom();
         const out = isOut(m), lay = out && m.age > 1.8;
         bed(80);
-        if (lay) lying(80, c('#ffffff', 0.85));
-        else { PX.draw(SP.violettaPale, 108, GROUND + 6); PX.rect(78, GROUND + 6, 46, 6, c(COL.violet)); }
+        if (lay) lying(80, c('#ffffff', 0.85), 0);
+        else { CAST.draw(SP.violettaPale, 108, GROUND + 6); PX.rect(78, GROUND + 6, 46, 6, c(COL.violet)); }
         limb(157, GROUND + 11, 151, GROUND + 17, c(COL.suit));
-        PX.draw(SP.alfredo, 156, GROUND, { flip: true });
-        PX.draw(SP.germont, 182, GROUND, { flip: true });
+        CAST.draw(SP.alfredo, 156, GROUND, { flip: true });
+        CAST.draw(SP.germont, 182, GROUND, { flip: true });
         // his open hand, the target, bobbing on the beat until it holds the portrait
         const hx = 122 + Math.round(m.reach * 22);
         let px = hx, py = GROUND + 20;

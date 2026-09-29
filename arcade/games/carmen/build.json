@@ -1,5 +1,5 @@
 {
   "title": "CARMEN",
-  "sources": ["../../lib/synth.js", "../../lib/tunes.js", "../../lib/pixels.js", "../../lib/microgame.js", "game.js"],
+  "sources": ["../../lib/synth.js", "../../lib/tunes.js", "../../lib/pixels.js", "../../lib/cast.js", "../../lib/microgame.js", "game.js"],
   "gate": 65536
 }

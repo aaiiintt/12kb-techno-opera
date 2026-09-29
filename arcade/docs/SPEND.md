@@ -12,4 +12,6 @@ Budget: $70 for the redesign pass, set 29 Sep. Tokens are estimates: the harness
 | 29 Sep | Opus 5.5, Carmen agent | six acts redesigned, five gallery loops | 255k (reported) | ~$6.1 |
 | 29 Sep | Fable | wiring the tunes, runner fixes from the agents' requests, review of all sheets, ledgers | ~200k in, ~15k out | ~$4 |
 
-Agent lines are priced at an assumed 85% input / 15% output split of the reported total. Running total: about $41 of $70.
+| 29 Sep | Opus 5.5, cast agent | lib/cast.js (idle, walk, jump, kneel, fall, hold; eyes; squash) adopted in all three operas; found and fixed a crash in the shave toy | 222k (reported) | ~$5.3 |
+
+Agent lines are priced at an assumed 85% input / 15% output split of the reported total. Running total: about $47 of $70.
