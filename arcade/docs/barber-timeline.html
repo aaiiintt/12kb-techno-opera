@@ -1,0 +1,214 @@
+<title>Barber Timeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* layout: one reading column; a vertical timeline whose beats alternate WATCH (letterboxed, quiet) and PLAY (fuse bar, bright) */
+:root {
+  --bg: #f6efe6; --fg: #1e1620; --muted: #6d5e66; --line: #d9cbc0; --panel: #fbf7f1;
+  --red: #c4122c; --gold: #d99a1e; --blue: #2f5fcf; --green: #4f9d2e; --sand: #e4cfa4;
+  --watch-bg: #e9e1d8; --play-bg: #fff8ec;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #100b12; --fg: #f1e7dc; --muted: #a2909a; --line: #35293a; --panel: #1a1320;
+  --red: #ff3b58; --gold: #f4b93a; --blue: #6f9bff; --green: #62c43a; --sand: #7a6a52;
+  --watch-bg: #171120; --play-bg: #1f1620; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #100b12; --fg: #f1e7dc; --muted: #a2909a; --line: #35293a; --panel: #1a1320;
+  --red: #ff3b58; --gold: #f4b93a; --blue: #6f9bff; --green: #62c43a; --sand: #7a6a52;
+  --watch-bg: #171120; --play-bg: #1f1620; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.5; padding-inline: 16px; padding-block: 24px 64px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+h1 { font-family: var(--display); font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.1; margin: 0 0 4px; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 1rem; letter-spacing: .04em; margin: 40px 0 12px; text-transform: uppercase; }
+h3 { font-size: 1.05rem; margin: 0; }
+p { margin: 0 0 12px; max-width: 65ch; }
+.eyebrow { font-family: var(--display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); font-size: 1.05rem; }
+.rules { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.rules li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+.rules b { font-family: var(--display); font-size: .8rem; color: var(--red); padding-top: 3px; }
+
+/* the grammar: two kinds of beat */
+.grammar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 0; }
+@media (max-width: 560px) { .grammar { grid-template-columns: 1fr; } }
+.kind { border: 1px solid var(--line); padding: 14px 16px; }
+.kind.watch { background: var(--watch-bg); }
+.kind.play { background: var(--play-bg); }
+.kind .eyebrow { color: var(--fg); }
+.kind ul { margin: 8px 0 0; padding-left: 18px; }
+.kind li { margin: 2px 0; }
+.screen { position: relative; aspect-ratio: 16/9; max-width: 100%; background: #14101a; margin: 10px 0 8px; overflow: hidden; border: 1px solid var(--line); }
+.screen .bar { position: absolute; left: 0; right: 0; height: 14%; background: #000; }
+.screen .bar.top { top: 0 } .screen .bar.bot { bottom: 0 }
+.screen .fuse { position: absolute; top: 4%; left: 3%; right: 3%; height: 5%; background: linear-gradient(90deg, #f4e9d8 62%, #3a2d3f 62%); }
+.screen .fig { position: absolute; bottom: 22%; width: 7%; height: 26%; background: var(--blue); }
+.screen .fig.c { background: var(--red); left: 62%; }
+.screen .fig.j { left: 30%; }
+.screen .cap { position: absolute; left: 0; right: 0; bottom: 16%; text-align: center; font-family: var(--display); font-size: .55rem; color: #f4e9d8; letter-spacing: .05em; }
+.screen .verb { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); background: #f4e9d8; color: #14101a; font-family: var(--display); font-weight: 700; font-size: .8rem; padding: 3px 8px; }
+.screen .hint { position: absolute; left: 50%; top: 52%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: .5rem; color: #f4b93a; }
+
+/* input icons */
+.icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0 0; }
+@media (max-width: 560px) { .icons { grid-template-columns: repeat(2, 1fr); } }
+.icon { border: 1px solid var(--line); background: var(--panel); padding: 12px; display: grid; gap: 6px; justify-items: center; text-align: center; font-size: .85rem; }
+.icon svg { width: 56px; height: 56px; display: block; }
+.icon .name { font-family: var(--display); font-size: .75rem; }
+.icon .key { color: var(--muted); font-size: .78rem; }
+@keyframes tap { 0%, 100% { transform: translateY(0) } 45% { transform: translateY(6px) } }
+@keyframes ring { 0% { r: 6; opacity: .9 } 100% { r: 16; opacity: 0 } }
+@keyframes mash { 0%, 100% { transform: translateY(0) } 25% { transform: translateY(5px) } 50% { transform: translateY(0) } 75% { transform: translateY(5px) } }
+@keyframes drag { 0%, 100% { transform: translateX(-10px) } 50% { transform: translateX(10px) } }
+@keyframes holdfill { 0% { stroke-dashoffset: 88 } 70%, 100% { stroke-dashoffset: 0 } }
+.finger { animation: tap 1.2s ease-in-out infinite; transform-origin: center; }
+.finger.m { animation: mash .6s ease-in-out infinite; }
+.finger.d { animation: drag 1.6s ease-in-out infinite; }
+.finger.h { animation: none; }
+.ripple { animation: ring 1.2s ease-out infinite; }
+.holdarc { stroke-dasharray: 88; animation: holdfill 1.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .finger, .ripple, .holdarc { animation: none; } }
+
+/* the timeline */
+.tl { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.beat { display: grid; grid-template-columns: 64px 1fr; gap: 12px; border: 1px solid var(--line); padding: 12px 14px; }
+.beat.watch { background: var(--watch-bg); }
+.beat.play { background: var(--play-bg); border-left: 4px solid var(--red); }
+.beat.toy { background: var(--play-bg); border-left: 4px solid var(--gold); }
+.beat .t { font-family: var(--display); font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.beat .t b { display: block; color: var(--fg); font-size: .75rem; }
+.beat h3 span { font-family: var(--display); font-size: .7rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.beat dl { display: grid; grid-template-columns: 84px 1fr; gap: 3px 10px; margin: 8px 0 0; font-size: .92rem; }
+.beat dt { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+.beat dd { margin: 0; min-width: 0; }
+.cap { font-family: var(--display); font-size: .72rem; letter-spacing: .03em; }
+.tag { display: inline-block; background: #14101a; color: #f4e9d8; padding: 1px 6px; font-family: var(--display); font-size: .65rem; margin: 1px 2px 1px 0; }
+.instr { display: inline-flex; align-items: center; gap: 8px; background: #f4e9d8; color: #14101a; font-family: var(--display); font-weight: 700; font-size: .78rem; padding: 3px 8px; }
+.instr svg { width: 18px; height: 18px; }
+.win { color: var(--gold); } .lose { color: var(--red); }
+.q { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: q; }
+.q li { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; display: grid; grid-template-columns: 30px 1fr; gap: 10px; }
+.q li::before { counter-increment: q; content: counter(q); font-family: var(--display); color: var(--red); }
+.q .rec { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+.sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 0; }
+@media (max-width: 560px) { .sum { grid-template-columns: 1fr; } }
+.sum div { border: 1px solid var(--line); background: var(--panel); padding: 10px 12px; font-size: .9rem; }
+.sum b { display: block; font-family: var(--display); font-size: 1.1rem; }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Dot Opera Arcade · plan for approval · 29 Sep</div>
+  <h1>Il barbiere, beat by beat</h1>
+  <p class="lede">The same grammar as Carmen: five games, one toy, seven scenes, the story told between the games in plain words. Nothing here is built yet. Approve it or change it and it gets built on the same runner.</p>
+
+  <h2>The grammar</h2>
+  <p>The same as Carmen's approved timeline: WATCH beats are cutscenes (bars in, one typed caption, no fuse); PLAY beats have the fuse, a verb, an instruction line and an animated icon; a TOY has no fuse and no verdict. Losing never changes the story: both outcomes end on one tableau and the second caption line states the same fact. The last thing the player does is a game; the ending is watched. Five games, one toy, under two minutes.</p>
+
+  <h2>Four inputs, four pictograms</h2>
+  <p>Only these four, so a player learns them in the first opera and never again. Touch and mouse are the same gesture. The keyboard is a courtesy, shown small on desktop.</p>
+  <div class="icons">
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="34" r="6" fill="none" stroke="var(--gold)" stroke-width="2" class="ripple"/><rect class="finger" x="24" y="12" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">TAP</div>
+      <div>once, or when the thing glows</div>
+      <div class="key">Space · click</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="34" r="6" fill="none" stroke="var(--gold)" stroke-width="2" class="ripple"/><rect class="finger m" x="24" y="12" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">TAP TAP TAP</div>
+      <div>as fast as you can</div>
+      <div class="key">Space, repeatedly</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="30" r="14" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="28" cy="30" r="14" fill="none" stroke="var(--gold)" stroke-width="3" class="holdarc" transform="rotate(-90 28 30)"/><rect class="finger h" x="24" y="19" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">HOLD</div>
+      <div>keep it pressed</div>
+      <div class="key">hold Space</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M8 44h40" stroke="var(--line)" stroke-width="2"/><path d="M6 44l5-4v8zM50 44l-5-4v8z" fill="var(--gold)"/><rect class="finger d" x="24" y="14" width="8" height="24" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">DRAG</div>
+      <div>slide left and right</div>
+      <div class="key">← → arrows</div>
+    </div>
+  </div>
+
+
+  <h2>The timeline</h2>
+  <p>Fourteen beats, about two minutes. Five to play, seven to watch, one to feel.</p>
+  <ol class="tl">
+    <li class="beat watch"><div class="t">0:00<b>title</b></div><div>
+      <h3>IL BARBIERE <span>title card</span></h3>
+      <dl><dt>See</dt><dd>Seville at dawn, a balcony, a shuttered window. The title.</dd><dt>Hear</dt><dd>A guitar arpeggio, waiting.</dd><dt>Do</dt><dd><span class="instr">TAP TO BEGIN <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> The only instruction on the card.</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">0:03<b>5 s</b></div><div>
+      <h3>Under the balcony <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Dawn. Count Almaviva under Rosina's balcony with a guitar; a musician or two behind him. The shutters closed.</dd><dt>Hear</dt><dd>"Ecco ridente in cielo", verified.</dd><dt>Caption</dt><dd><span class="cap">SEVILLE. DAWN. A BALCONY.</span><br><span class="cap">COUNT ALMAVIVA LOVES ROSINA. SHE HAS NEVER SEEN HIM.</span></dd><dt>Story</dt><dd>Who he is, who she is, and that she does not know him yet.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">0:08<b>8 s</b></div><div>
+      <h3>SERENADE! <span>PLAY · tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TO STRUM ON THE BEAT <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> A big note over his head with a ring closing on it each beat. Tap when the ring meets the note: six strums. The window is the only lit thing.</dd><dt>Win</dt><dd class="win">The shutters open. A note flutters down.</dd><dt>Lose</dt><dd class="lose">He strums off the beat. The note is thrown and hits his head.</dd><dt>Then</dt><dd>Both: he has her note in his hand. <span class="cap">SHE DROPS HIM A NOTE.</span><br><span class="cap">HE SAYS HE IS LINDORO, A POOR STUDENT. A LIE.</span></dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">0:21<b>5 s</b></div><div>
+      <h3>Figaro <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Figaro strides in with his guitar and his shop sign. The Count grabs him. Through the window, Bartolo's silhouette locks a door.</dd><dt>Hear</dt><dd>"Largo al factotum", verified.</dd><dt>Caption</dt><dd><span class="cap">FIGARO. THE BARBER. HE FIXES EVERYTHING, FOR A FEE.</span><br><span class="cap">DR BARTOLO KEEPS ROSINA LOCKED UP. HE MEANS TO MARRY HER HIMSELF.</span></dd><dt>Story</dt><dd>The fixer and the obstacle, in one breath.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">0:28<b>8 s</b></div><div>
+      <h3>SLIP! <span>PLAY · drag</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">DRAG THE LETTER UNDER THE DOOR <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M3 18l3-3v6zM21 18l-3-3v6z" fill="currentColor"/></svg></span> Rosina's room. A letter at her feet, a line of light under the door across the room, Bartolo in his chair with a newspaper. Drag the letter along the floor. His paper trembles a beat before he looks up: moving while he looks is being caught.</dd><dt>Win</dt><dd class="win">Under the door, into the light.</dd><dt>Lose</dt><dd class="lose">AH-HA! He catches her. She kicks it under the door anyway.</dd><dt>Then</dt><dd>Both: the letter is gone, Bartolo grumbling. <span class="cap">THE LETTER IS ON ITS WAY.</span><br><span class="cap">ROSINA WANTS LINDORO TOO.</span></dd><dt>Hear</dt><dd>"Una voce poco fa", verified.</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">0:41<b>5 s</b></div><div>
+      <h3>A drunk soldier <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Bartolo's front door. The Count reels up in a soldier's coat, a bottle in one hand and a paper in the other. Bartolo in the doorway, arms folded.</dd><dt>Hear</dt><dd>A march that stumbles.</dd><dt>Caption</dt><dd><span class="cap">THE COUNT COMES BACK IN DISGUISE: A DRUNK SOLDIER.</span><br><span class="cap">HIS PAPERS SAY HE MAY SLEEP HERE. BARTOLO SAYS NO.</span></dd><dt>Story</dt><dd>Disguise one, and why it gets him through the door.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">0:48<b>7 s</b></div><div>
+      <h3>STAGGER! <span>PLAY · tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TO STEADY HIM <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> He crosses the hall toward Bartolo, tipping left or right; an arrow glows on the side he is falling to. Tap while it glows to right him. Four tips.</dd><dt>Win</dt><dd class="win">He arrives upright and slaps the billet on Bartolo's chest.</dd><dt>Lose</dt><dd class="lose">He falls. The billet lands on Bartolo's head anyway.</dd><dt>Then</dt><dd>Both: Bartolo frozen with the paper, the Count and Rosina swapping a glance. <span class="cap">BARTOLO FREEZES.</span><br><span class="cap">THE LOVERS SWAP NOTES UNDER HIS NOSE.</span></dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">1:00<b>5 s</b></div><div>
+      <h3>The music lesson <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>The music room. A harpsichord. The Count again, now in a black gown and spectacles. Bartolo settles into a chair to listen.</dd><dt>Hear</dt><dd>A polite scale, then a yawn.</dd><dt>Caption</dt><dd><span class="cap">DISGUISE TWO: DON ALONSO, MUSIC TEACHER.</span><br><span class="cap">THE LESSON IS A COVER. THEY PLAN TO ELOPE TONIGHT.</span></dd><dt>Story</dt><dd>Disguise two, and the plan said out loud.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">1:07<b>8 s</b></div><div>
+      <h3>TUNE! <span>PLAY · tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP THE GOLD KEY <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> The keyboard. One key at a time turns gold; tap it before it fades. Each right note sends Bartolo's head a little lower.</dd><dt>Win</dt><dd class="win">Bartolo snores.</dd><dt>Lose</dt><dd class="lose">A wrong note. Bartolo leaps up, then dozes off anyway.</dd><dt>Then</dt><dd>Both: Bartolo asleep in the chair, the lovers whispering. <span class="cap">BARTOLO SNORES.</span><br><span class="cap">MIDNIGHT, THE BALCONY. THAT IS THE PLAN.</span></dd></dl>
+    </div></li>
+    <li class="beat toy"><div class="t">1:20<b>10 s</b></div><div>
+      <h3>SHAVE! <span>TOY · no fuse, no verdict</span></h3>
+      <dl><dt>See</dt><dd>Figaro at the chair with the brush. Bartolo half asleep. Foam.</dd><dt>Do</dt><dd><span class="instr">DRAG TO LATHER <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M3 18l3-3v6zM21 18l-3-3v6z" fill="currentColor"/></svg></span> Slide the brush over him: foam piles up wherever it goes, each pass a note of the Largo. Foam to the wig. No way to fail; it just gets sillier.</dd><dt>Hear</dt><dd>"Largo al factotum" note by note under the brush, verified.</dd><dt>Caption</dt><dd><span class="cap">FIGARO POCKETS THE BALCONY KEY.</span> At the end, as the foam settles.</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">1:33<b>6 s</b></div><div>
+      <h3>Midnight <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>A storm. Lightning. A ladder against the balcony. Figaro and the Count climb in through the window. Rosina turns her back on them.</dd><dt>Hear</dt><dd>Thunder, a tremolo, then quiet.</dd><dt>Caption</dt><dd><span class="cap">MIDNIGHT. A STORM. A LADDER.</span><br><span class="cap">BARTOLO HAS TOLD ROSINA THAT LINDORO IS A FRAUD.</span><br><span class="cap">HE SHOWS HER: LINDORO IS THE COUNT. SHE SAYS YES.</span></dd><dt>Story</dt><dd>The last obstacle and the reveal, in three lines, because it has to happen fast.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">1:41<b>8 s</b></div><div>
+      <h3>WED! <span>PLAY · tap tap tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TAP TAP TO CLIMB DOWN <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> Rosina on the ladder. Each tap a rung. Bartolo's footsteps get louder along the top: he is coming back with the notary.</dd><dt>Win</dt><dd class="win">Down the ladder into the Count's arms.</dd><dt>Lose</dt><dd class="lose">Bartolo pulls the ladder away. She jumps. Caught anyway.</dd><dt>Then</dt><dd>Both: the notary at the door, the couple hand in hand, Bartolo arriving too late. <span class="cap">THE NOTARY MARRIES THEM ON THE SPOT.</span><br><span class="cap">BARTOLO KEEPS THE DOWRY. EVERYONE IS HAPPY.</span></dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">1:54<b>4 s</b></div><div>
+      <h3>The bill <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>The tableau holds. Confetti. Figaro steps forward and holds out his hand.</dd><dt>Hear</dt><dd>A rising run, a cadence.</dd><dt>Caption</dt><dd><span class="tag">E IL CONTO ?</span> beside Figaro. The wink: and the bill?</dd><dt>Story</dt><dd>Everything got fixed, for a fee.</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">2:00<b>result</b></div><div>
+      <h3>The card <span>result</span></h3>
+      <dl><dt>See</dt><dd>Five marks, bravos out of five, one line of ending. <span class="cap">ROSINA AND THE COUNT ARE MARRIED. FIGARO GOT PAID.</span></dd><dt>Do</dt><dd><span class="instr">TAP TO PLAY AGAIN <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span></dd></dl>
+    </div></li>
+  </ol>
+
+  <div class="sum">
+    <div><b>5</b>to play: tap, drag, tap, tap, tap tap tap</div>
+    <div><b>7</b>to watch, four to six seconds each</div>
+    <div><b>~2:00</b>title to result; the bill beat can be trimmed to hit it</div>
+  </div>
+
+  <h2>Notes</h2>
+  <ul class="rules">
+    <li><b>1</b><span>STAGGER and WED lose their arrow keys: steadying is a timed tap on a glowing arrow, climbing is a mash. Nothing in the opera needs left and right any more.</span></li>
+    <li><b>2</b><span>The two disguises are each said in a caption before their game, so the same man in three coats reads as a plan, not a bug.</span></li>
+    <li><b>3</b><span>SHAVE stays the toy and moves nothing forward but the key, which is the joke: the whole plot turns on a barber pocketing a key while lathering.</span></li>
+    <li><b>4</b><span>Ecco ridente, Una voce and the Largo are verified. The march, the scale and the storm are filler in the key and are not claimed as quotes.</span></li>
+    <li><b>5</b><span>It runs right at the two-minute ceiling. If it must give, the bill beat folds into WED's outcome (the tag appears there) and Midnight drops to five seconds.</span></li>
+  </ul>
+</div>

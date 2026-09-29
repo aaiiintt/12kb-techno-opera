@@ -1,0 +1,214 @@
+<title>Traviata Timeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* layout: one reading column; a vertical timeline whose beats alternate WATCH (letterboxed, quiet) and PLAY (fuse bar, bright) */
+:root {
+  --bg: #f6efe6; --fg: #1e1620; --muted: #6d5e66; --line: #d9cbc0; --panel: #fbf7f1;
+  --red: #c4122c; --gold: #d99a1e; --blue: #2f5fcf; --green: #4f9d2e; --sand: #e4cfa4;
+  --watch-bg: #e9e1d8; --play-bg: #fff8ec;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #100b12; --fg: #f1e7dc; --muted: #a2909a; --line: #35293a; --panel: #1a1320;
+  --red: #ff3b58; --gold: #f4b93a; --blue: #6f9bff; --green: #62c43a; --sand: #7a6a52;
+  --watch-bg: #171120; --play-bg: #1f1620; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #100b12; --fg: #f1e7dc; --muted: #a2909a; --line: #35293a; --panel: #1a1320;
+  --red: #ff3b58; --gold: #f4b93a; --blue: #6f9bff; --green: #62c43a; --sand: #7a6a52;
+  --watch-bg: #171120; --play-bg: #1f1620; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.5; padding-inline: 16px; padding-block: 24px 64px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+h1 { font-family: var(--display); font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.1; margin: 0 0 4px; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 1rem; letter-spacing: .04em; margin: 40px 0 12px; text-transform: uppercase; }
+h3 { font-size: 1.05rem; margin: 0; }
+p { margin: 0 0 12px; max-width: 65ch; }
+.eyebrow { font-family: var(--display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); font-size: 1.05rem; }
+.rules { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.rules li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+.rules b { font-family: var(--display); font-size: .8rem; color: var(--red); padding-top: 3px; }
+
+/* the grammar: two kinds of beat */
+.grammar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 0; }
+@media (max-width: 560px) { .grammar { grid-template-columns: 1fr; } }
+.kind { border: 1px solid var(--line); padding: 14px 16px; }
+.kind.watch { background: var(--watch-bg); }
+.kind.play { background: var(--play-bg); }
+.kind .eyebrow { color: var(--fg); }
+.kind ul { margin: 8px 0 0; padding-left: 18px; }
+.kind li { margin: 2px 0; }
+.screen { position: relative; aspect-ratio: 16/9; max-width: 100%; background: #14101a; margin: 10px 0 8px; overflow: hidden; border: 1px solid var(--line); }
+.screen .bar { position: absolute; left: 0; right: 0; height: 14%; background: #000; }
+.screen .bar.top { top: 0 } .screen .bar.bot { bottom: 0 }
+.screen .fuse { position: absolute; top: 4%; left: 3%; right: 3%; height: 5%; background: linear-gradient(90deg, #f4e9d8 62%, #3a2d3f 62%); }
+.screen .fig { position: absolute; bottom: 22%; width: 7%; height: 26%; background: var(--blue); }
+.screen .fig.c { background: var(--red); left: 62%; }
+.screen .fig.j { left: 30%; }
+.screen .cap { position: absolute; left: 0; right: 0; bottom: 16%; text-align: center; font-family: var(--display); font-size: .55rem; color: #f4e9d8; letter-spacing: .05em; }
+.screen .verb { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); background: #f4e9d8; color: #14101a; font-family: var(--display); font-weight: 700; font-size: .8rem; padding: 3px 8px; }
+.screen .hint { position: absolute; left: 50%; top: 52%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: .5rem; color: #f4b93a; }
+
+/* input icons */
+.icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0 0; }
+@media (max-width: 560px) { .icons { grid-template-columns: repeat(2, 1fr); } }
+.icon { border: 1px solid var(--line); background: var(--panel); padding: 12px; display: grid; gap: 6px; justify-items: center; text-align: center; font-size: .85rem; }
+.icon svg { width: 56px; height: 56px; display: block; }
+.icon .name { font-family: var(--display); font-size: .75rem; }
+.icon .key { color: var(--muted); font-size: .78rem; }
+@keyframes tap { 0%, 100% { transform: translateY(0) } 45% { transform: translateY(6px) } }
+@keyframes ring { 0% { r: 6; opacity: .9 } 100% { r: 16; opacity: 0 } }
+@keyframes mash { 0%, 100% { transform: translateY(0) } 25% { transform: translateY(5px) } 50% { transform: translateY(0) } 75% { transform: translateY(5px) } }
+@keyframes drag { 0%, 100% { transform: translateX(-10px) } 50% { transform: translateX(10px) } }
+@keyframes holdfill { 0% { stroke-dashoffset: 88 } 70%, 100% { stroke-dashoffset: 0 } }
+.finger { animation: tap 1.2s ease-in-out infinite; transform-origin: center; }
+.finger.m { animation: mash .6s ease-in-out infinite; }
+.finger.d { animation: drag 1.6s ease-in-out infinite; }
+.finger.h { animation: none; }
+.ripple { animation: ring 1.2s ease-out infinite; }
+.holdarc { stroke-dasharray: 88; animation: holdfill 1.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .finger, .ripple, .holdarc { animation: none; } }
+
+/* the timeline */
+.tl { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.beat { display: grid; grid-template-columns: 64px 1fr; gap: 12px; border: 1px solid var(--line); padding: 12px 14px; }
+.beat.watch { background: var(--watch-bg); }
+.beat.play { background: var(--play-bg); border-left: 4px solid var(--red); }
+.beat.toy { background: var(--play-bg); border-left: 4px solid var(--gold); }
+.beat .t { font-family: var(--display); font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.beat .t b { display: block; color: var(--fg); font-size: .75rem; }
+.beat h3 span { font-family: var(--display); font-size: .7rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.beat dl { display: grid; grid-template-columns: 84px 1fr; gap: 3px 10px; margin: 8px 0 0; font-size: .92rem; }
+.beat dt { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+.beat dd { margin: 0; min-width: 0; }
+.cap { font-family: var(--display); font-size: .72rem; letter-spacing: .03em; }
+.tag { display: inline-block; background: #14101a; color: #f4e9d8; padding: 1px 6px; font-family: var(--display); font-size: .65rem; margin: 1px 2px 1px 0; }
+.instr { display: inline-flex; align-items: center; gap: 8px; background: #f4e9d8; color: #14101a; font-family: var(--display); font-weight: 700; font-size: .78rem; padding: 3px 8px; }
+.instr svg { width: 18px; height: 18px; }
+.win { color: var(--gold); } .lose { color: var(--red); }
+.q { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: q; }
+.q li { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; display: grid; grid-template-columns: 30px 1fr; gap: 10px; }
+.q li::before { counter-increment: q; content: counter(q); font-family: var(--display); color: var(--red); }
+.q .rec { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+.sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 0; }
+@media (max-width: 560px) { .sum { grid-template-columns: 1fr; } }
+.sum div { border: 1px solid var(--line); background: var(--panel); padding: 10px 12px; font-size: .9rem; }
+.sum b { display: block; font-family: var(--display); font-size: 1.1rem; }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Dot Opera Arcade · plan for approval · 29 Sep</div>
+  <h1>La traviata, beat by beat</h1>
+  <p class="lede">The same grammar as Carmen: five games, one toy, seven scenes, the story told between the games in plain words. Nothing here is built yet. Approve it or change it and it gets built on the same runner.</p>
+
+  <h2>The grammar</h2>
+  <p>The same as Carmen's approved timeline: WATCH beats are cutscenes (bars in, one typed caption, no fuse); PLAY beats have the fuse, a verb, an instruction line and an animated icon; a TOY has no fuse and no verdict. Losing never changes the story: both outcomes end on one tableau and the second caption line states the same fact. The last thing the player does is a game; the ending is watched. Five games, one toy, under two minutes.</p>
+
+  <h2>Four inputs, four pictograms</h2>
+  <p>Only these four, so a player learns them in the first opera and never again. Touch and mouse are the same gesture. The keyboard is a courtesy, shown small on desktop.</p>
+  <div class="icons">
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="34" r="6" fill="none" stroke="var(--gold)" stroke-width="2" class="ripple"/><rect class="finger" x="24" y="12" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">TAP</div>
+      <div>once, or when the thing glows</div>
+      <div class="key">Space · click</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="34" r="6" fill="none" stroke="var(--gold)" stroke-width="2" class="ripple"/><rect class="finger m" x="24" y="12" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">TAP TAP TAP</div>
+      <div>as fast as you can</div>
+      <div class="key">Space, repeatedly</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="30" r="14" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="28" cy="30" r="14" fill="none" stroke="var(--gold)" stroke-width="3" class="holdarc" transform="rotate(-90 28 30)"/><rect class="finger h" x="24" y="19" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">HOLD</div>
+      <div>keep it pressed</div>
+      <div class="key">hold Space</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M8 44h40" stroke="var(--line)" stroke-width="2"/><path d="M6 44l5-4v8zM50 44l-5-4v8z" fill="var(--gold)"/><rect class="finger d" x="24" y="14" width="8" height="24" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">DRAG</div>
+      <div>slide left and right</div>
+      <div class="key">← → arrows</div>
+    </div>
+  </div>
+
+
+  <h2>The timeline</h2>
+  <p>Fourteen beats, about two minutes. Five to play, seven to watch, one to feel.</p>
+  <ol class="tl">
+    <li class="beat watch"><div class="t">0:00<b>title</b></div><div>
+      <h3>LA TRAVIATA <span>title card</span></h3>
+      <dl><dt>See</dt><dd>A Paris salon, chandeliers, a glass raised. The title.</dd><dt>Hear</dt><dd>The Brindisi bass, waiting.</dd><dt>Do</dt><dd><span class="instr">TAP TO BEGIN <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span></dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">0:03<b>5 s</b></div><div>
+      <h3>The party <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Violetta's salon. Guests, glasses, gold. Violetta in rose at the centre. Alfredo at the edge, looking only at her.</dd><dt>Hear</dt><dd>The Brindisi, "Libiamo", verified.</dd><dt>Caption</dt><dd><span class="cap">PARIS. A PARTY AT VIOLETTA'S.</span><br><span class="cap">VIOLETTA IS FAMOUS, ADORED, AND ILL. ALFREDO LOVES HER.</span></dd><dt>Story</dt><dd>Who she is, that she is ill, and who he is, before a glass is raised.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">0:08<b>8 s</b></div><div>
+      <h3>TOAST! <span>PLAY · tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TO CLINK ON THE BEAT <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> Two glasses swing toward each other; a gold square closes on the meeting point. Tap on the downbeat. Three clinks.</dd><dt>Win</dt><dd class="win">The glasses ring, three times.</dd><dt>Lose</dt><dd class="lose">They miss. A glass breaks. She laughs.</dd><dt>Then</dt><dd>Both: a cough, her hand to her mouth, Alfredo's hand on her arm. <span class="cap">SHE COUGHS. SHE LAUGHS IT OFF.</span><br><span class="cap">SHE LEAVES PARIS TO LIVE WITH ALFREDO.</span></dd></dl>
+    </div></li>
+    <li class="beat toy"><div class="t">0:21<b>10 s</b></div><div>
+      <h3>SNIP! <span>TOY · no fuse, no verdict</span></h3>
+      <dl><dt>See</dt><dd>A garden in the country. Camellias on a bush, a basket, a bee wandering, petals drifting.</dd><dt>Do</dt><dd><span class="instr">DRAG TO PICK THE FLOWERS <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M3 18l3-3v6zM21 18l-3-3v6z" fill="currentColor"/></svg></span> Slide the scissors along the bush; each blossom it meets drops into the basket with a note. No way to fail.</dd><dt>Hear</dt><dd>"Un dì, felice" would go here but is not verified; a soft waltz in the key instead.</dd><dt>Caption</dt><dd><span class="cap">HAPPY MONTHS IN THE COUNTRY.</span> At the end.</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">0:34<b>6 s</b></div><div>
+      <h3>A man in grey <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>The garden gate. A man in a grey coat and a top hat, still. Violetta sets the basket down.</dd><dt>Hear</dt><dd>A low held note, the waltz stopping.</dd><dt>Caption</dt><dd><span class="cap">ALFREDO'S FATHER, GERMONT.</span><br><span class="cap">THE SCANDAL WILL RUIN HIS DAUGHTER'S WEDDING.</span><br><span class="cap">HE ASKS VIOLETTA TO LEAVE ALFREDO. FOR GOOD.</span></dd><dt>Story</dt><dd>The ask, and the reason for it, so the next game is not a puzzle.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">0:42<b>8 s</b></div><div>
+      <h3>RENOUNCE! <span>PLAY · hold</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">HOLD TO SIGN THE LETTER <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> A big letter on the table, its outline pulsing. Hold: the signature draws itself. Let go and the ink runs back.</dd><dt>Win</dt><dd class="win">She signs it.</dd><dt>Lose</dt><dd class="lose">Her hand shakes. Germont signs it for her.</dd><dt>Then</dt><dd>Both: the letter signed, Germont gone, Violetta alone. <span class="cap">SHE WILL LEAVE ALFREDO.</span><br><span class="cap">SHE CANNOT TELL HIM WHY.</span></dd><dt>Hear</dt><dd>"Pura siccome un angelo" is not verified; a slow bass line in the key.</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">0:55<b>6 s</b></div><div>
+      <h3>Flora's party <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Paris again, another salon, a card table. Violetta on the Baron's arm, not looking at Alfredo. Alfredo winning, coins stacking, his face set.</dd><dt>Hear</dt><dd>A gambling figure, quick and thin.</dd><dt>Caption</dt><dd><span class="cap">PARIS. FLORA'S PARTY.</span><br><span class="cap">ALFREDO THINKS SHE LEFT HIM FOR THE BARON.</span><br><span class="cap">HE WINS AT CARDS. HE WANTS TO PAY HER BACK.</span></dd><dt>Story</dt><dd>What he believes, wrongly, and what he is about to do with it.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">1:03<b>7 s</b></div><div>
+      <h3>FLING! <span>PLAY · tap tap tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TAP TAP TO THROW THE COINS <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> A purse in his hand. Each tap a coin, arcing at her feet. Twelve coins.</dd><dt>Win</dt><dd class="win">Every coin at her feet. Paris gasps.</dd><dt>Lose</dt><dd class="lose">The purse splits. The gold rolls to her feet anyway.</dd><dt>Then</dt><dd>Both: gold on the floor round her, the guests turned away from him. <span class="cap">HE HAS SHAMED HER IN FRONT OF PARIS.</span><br><span class="cap">HIS FATHER ARRIVES AND SHAMES HIM.</span></dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">1:15<b>6 s</b></div><div>
+      <h3>The sickroom <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Months later. A bare room, a bed, one candle. Violetta small in the bed. A letter on the blanket.</dd><dt>Hear</dt><dd>"Addio, del passato", verified, on the soprano, thin.</dd><dt>Caption</dt><dd><span class="cap">MONTHS LATER. VIOLETTA IS DYING.</span><br><span class="cap">A LETTER FROM GERMONT. SHE READS IT AGAIN.</span></dd><dt>Story</dt><dd>Time has passed; the ending is coming; the letter is the last hope.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">1:23<b>8 s</b></div><div>
+      <h3>READ! <span>PLAY · hold</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">HOLD TO SHIELD THE FLAME <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> Her hand and the candle. Draughts come as streaks; while held, her hand cups the flame. The letter's lines light up as she reads.</dd><dt>Win</dt><dd class="win">She reads it to the end.</dd><dt>Lose</dt><dd class="lose">The candle dies. She knows it by heart.</dd><dt>Then</dt><dd>Both: the letter to her chest. <span class="cap">GERMONT HAS TOLD ALFREDO THE TRUTH. HE IS COMING.</span><br><span class="tag">È TARDI !</span> beside Violetta (too late).</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">1:36<b>5 s</b></div><div>
+      <h3>Alfredo <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>The door. Alfredo runs in. She sits up. They hold each other. Colour comes back into the room for a moment.</dd><dt>Hear</dt><dd>A warm rise, the Brindisi bass under it, slow.</dd><dt>Caption</dt><dd><span class="cap">ALFREDO. THEY WILL LEAVE PARIS TOGETHER, HE SAYS.</span><br><span class="cap">SHE FEELS STRONG AGAIN. FOR A MOMENT.</span></dd><dt>Story</dt><dd>The reunion, and the false dawn named as one.</dd></dl>
+    </div></li>
+    <li class="beat play"><div class="t">1:43<b>6 s</b></div><div>
+      <h3>GIVE! <span>PLAY · drag</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">DRAG THE PORTRAIT TO HIS HAND <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M3 18l3-3v6zM21 18l-3-3v6z" fill="currentColor"/></svg></span> Violetta sitting up with a small framed picture. Alfredo's open hand a little way off, bobbing. Slide it across.</dd><dt>Win</dt><dd class="win">She puts it in his hand.</dd><dt>Lose</dt><dd class="lose">It slips. He picks it up.</dd><dt>Then</dt><dd>Both: the portrait in his hand, Germont in the doorway. <span class="cap">SHE GIVES HIM HER PORTRAIT.</span><br><span class="cap">FOR THE GIRL HE WILL MARRY ONE DAY.</span></dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">1:54<b>8 s</b></div><div>
+      <h3>The end <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>She stands. White camellia petals begin to fall over the room. She says the pain has gone. She falls. Alfredo catches her. Two beats of stillness.</dd><dt>Hear</dt><dd>"Addio, del passato" once more, the room opening, then silence.</dd><dt>Caption</dt><dd><span class="cap">SHE SAYS THE PAIN HAS GONE.</span><br><span class="cap">SHE DIES.</span><br><span class="tag">SCUSA.</span> beside Germont, a little late. The wink.</dd><dt>Story</dt><dd>Plain, so nobody wonders. The petals do the feeling.</dd></dl>
+    </div></li>
+    <li class="beat watch"><div class="t">2:02<b>result</b></div><div>
+      <h3>The card <span>result</span></h3>
+      <dl><dt>See</dt><dd>Five marks, bravos out of five, one line of ending. <span class="cap">VIOLETTA IS DEAD. PARIS TALKS ABOUT SOMETHING ELSE.</span></dd><dt>Do</dt><dd><span class="instr">TAP TO PLAY AGAIN <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span></dd></dl>
+    </div></li>
+  </ol>
+
+  <div class="sum">
+    <div><b>5</b>to play: tap, hold, tap tap tap, hold, drag</div>
+    <div><b>7</b>to watch, five to eight seconds each</div>
+    <div><b>~2:00</b>title to result; see note 5 for the trim</div>
+  </div>
+
+  <h2>Notes</h2>
+  <ul class="rules">
+    <li><b>1</b><span>READ becomes a hold (shield the flame while held) and GIVE a drag, so nothing needs the arrow keys.</span></li>
+    <li><b>2</b><span>The toy stays in the country, early, where the opera is tender; the end is watched with the petals, as Carmen's is. Two petal endings in the series is a rhyme, not a repeat: hers are white.</span></li>
+    <li><b>3</b><span>Germont's ask is given its reason in a caption, or RENOUNCE reads as her signing something for no reason.</span></li>
+    <li><b>4</b><span>The Brindisi and Addio del passato are verified. Un dì felice, Pura siccome un angelo and the gambling figure are filler in the key, not quotes, until they are checked.</span></li>
+    <li><b>5</b><span>It runs two or three seconds over the ceiling. Trim: the sickroom to five seconds and GIVE's outcome to three.</span></li>
+  </ul>
+</div>
