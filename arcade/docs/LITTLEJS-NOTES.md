@@ -46,12 +46,12 @@ Dot Opera's engine (`src/engine/`) is a timeline: `build(k)` schedules lights an
 Iain's answers to the eight questions the microgame treatments raised, and what they mean for the code:
 
 - **Look:** 8-bit sprites, a new look, not the dot grid. 256x144 landscape, pixel-doubled sprites drawn in code (`lib/pixels.js`), a 3x5 font. Dot Opera stays its own series.
-- **Input:** keyboard first (Left, Right, Space), LittleJS's on-screen gamepad on phones (a d-pad and one button). The runner reads both through one helper.
+- **Input:** direct. Tap or drag anywhere (a touch is a pointer to LittleJS: `mousePos`, `mouseIsDown`), Space and the arrows on a keyboard. The on-screen gamepad is off (29 Sep: four gestures, one grammar, no controller chrome). The runner reads both through one helper and `MG.drag` moves a character under the pointer or with the arrows.
 - **Sound:** the Dot Opera synth, ported (`lib/synth.js`), for the arias and the drama. ZzFX stays available for arcade hits.
 - **Ending:** a result card, bravos out of six and one line of story. The story never changes with the score.
 - **Jobs:** one per microgame. The treatments' second jobs (steer José's eyes while mashing) are flavour or dropped.
 - **Wink:** yes, one per opera, in the last outcome. Commands and captions in English only.
-- **Form:** six acts on a beat grid (curtain 4 beats, command 1, action 8 to 16, outcome 4 beats and at least 3 s), a shared runner (`lib/microgame.js`), one file per opera.
+- **Form:** a list of beats: WATCH beats (letterbox, a typed caption, no fuse, the story) between PLAY beats (command card 2 beats with the verb, the instruction line and the animated input icon; action 8 to 16 beats with the fuse; outcome 4 beats and at least 3.5 s with the bars in and the line on the bottom bar), plus toys. A shared runner (`lib/microgame.js`), one file per opera. The runner's header comment is the contract.
 
 ## Things still open
 

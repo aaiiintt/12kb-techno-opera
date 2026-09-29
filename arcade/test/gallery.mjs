@@ -1,10 +1,10 @@
 /* The review gallery: every phase of every act, both outcomes, deterministic.
      node test/gallery.mjs <id> [outDir]
    Runs the built opera twice in headless Chromium, once forcing every act to
-   win and once to lose (?force=), and photographs each act at: the curtain,
-   the command card, the action at about 40% of its window, the outcome early
-   and the outcome late. Writes <outDir>/<id>-win.png and <id>-lose.png as
-   contact sheets (6 rows, one per act, 5 columns), plus the frames. This is
+   win and once to lose (?force=), and photographs each beat: a game at the
+   command card, the action, the outcome early and late; a WATCH beat early,
+   in the middle and late. Writes <outDir>/<id>-win.png and <id>-lose.png as
+   contact sheets (one row per beat, 4 columns), plus the frames. This is
    the strict loop: build, then look at these two sheets before anything ships. */
 
 import fs from 'node:fs';
@@ -33,8 +33,9 @@ await new Promise((r) => server.listen(0, r));
 const port = server.address().port;
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 
-const PH = { CURTAIN: 1, COMMAND: 2, ACTION: 3, OUTCOME: 4, RESULT: 5 };
-const COLS = ['curtain', 'command', 'action', 'outcome', 'outcome late'];
+const PH = { WATCH: 1, COMMAND: 2, ACTION: 3, OUTCOME: 4, RESULT: 5 };
+const COLS = ['command / early', 'action / mid', 'outcome / late', 'outcome late'];
+let nActs = 6;
 const errorsAll = [];
 
 async function run(mode) {
@@ -42,29 +43,32 @@ async function run(mode) {
   const page = await browser.newPage({ viewport: { width: 512, height: 288 } });
   page.on('pageerror', (e) => errorsAll.push(`${mode} pageerror: ${e.message}`));
   page.on('console', (msg) => msg.type() === 'error' && errorsAll.push(`${mode} console: ${msg.text()}`));
-  const force = Array(6).fill(mode === 'win' ? 'w' : 'l').join(',');
+  const force = Array(20).fill(mode === 'win' ? 'w' : 'l').join(',');
   await page.goto(`http://127.0.0.1:${port}/dist/${id}.html?force=${force}`);
   await page.waitForTimeout(600);
   await page.mouse.click(256, 144);
   await page.keyboard.press('Space');
   const frames = {};   // `${act}-${col}` -> file
   const state = async () => page.evaluate(() => window.__mg || {});
-  let last = { phase: -1, act: -1 }, actionShotAt = 0, outcomeShots = 0, t0 = Date.now();
+  let last = { phase: -1, act: -1 }, actionShotAt = 0, outcomeShots = 0, watchShots = 0, t0 = Date.now();
   // keep the player doing something plausible so action frames aren't static
   let dir = 'ArrowRight';
   while (Date.now() - t0 < 900000) {
     const s = await state();
     if (s.phase === PH.RESULT) break;
     if (s.phase !== last.phase || s.act !== last.act) {
-      if (s.phase === PH.CURTAIN) { await page.waitForTimeout(350); await shoot(page, frames, s.act, 0, mode); }
-      if (s.phase === PH.COMMAND) { await page.waitForTimeout(150); await shoot(page, frames, s.act, 1, mode); }
+      if (s.acts) nActs = s.acts;
+      if (s.phase === PH.WATCH) { watchShots = 0; await page.waitForTimeout(500); await shoot(page, frames, s.act, 0, mode); watchShots = 1; }
+      if (s.phase === PH.COMMAND) { await page.waitForTimeout(250); await shoot(page, frames, s.act, 0, mode); }
       if (s.phase === PH.ACTION) { actionShotAt = 0; await page.keyboard.down(dir); }
-      if (s.phase === PH.OUTCOME) { await page.keyboard.up(dir); dir = dir === 'ArrowRight' ? 'ArrowLeft' : 'ArrowRight'; outcomeShots = 0; await page.waitForTimeout(700); await shoot(page, frames, s.act, 3, mode); outcomeShots = 1; }
+      if (s.phase === PH.OUTCOME) { await page.keyboard.up(dir); dir = dir === 'ArrowRight' ? 'ArrowLeft' : 'ArrowRight'; outcomeShots = 0; await page.waitForTimeout(700); await shoot(page, frames, s.act, 2, mode); outcomeShots = 1; }
       last = { phase: s.phase, act: s.act };
     }
-    if (s.phase === PH.ACTION && !actionShotAt && s.t > 0.7) { await page.keyboard.press('Space'); await page.waitForTimeout(80); await shoot(page, frames, s.act, 2, mode); actionShotAt = 1; }
+    if (s.phase === PH.WATCH && watchShots === 1 && s.t > s.len / 2) { await shoot(page, frames, s.act, 1, mode); watchShots = 2; }
+    if (s.phase === PH.WATCH && watchShots === 2 && s.t > s.len - 0.9) { await shoot(page, frames, s.act, 2, mode); watchShots = 3; }
+    if (s.phase === PH.ACTION && !actionShotAt && s.t > 0.7) { await page.keyboard.press('Space'); await page.waitForTimeout(80); await shoot(page, frames, s.act, 1, mode); actionShotAt = 1; }
     if (s.phase === PH.ACTION && s.t > 0.3 && Math.random() < 0.12) await page.keyboard.press('Space');
-    if (s.phase === PH.OUTCOME && outcomeShots === 1 && s.t > 2.3) { await shoot(page, frames, s.act, 4, mode); outcomeShots = 2; }
+    if (s.phase === PH.OUTCOME && outcomeShots === 1 && s.t > 2.3) { await shoot(page, frames, s.act, 3, mode); outcomeShots = 2; }
     await page.waitForTimeout(60);
   }
   const res = await state();
@@ -81,9 +85,9 @@ async function shoot(page, frames, act, col, mode) {
 
 async function sheet(frames, mode, bravos) {
   const w = 384, h = 216;
-  const page = await browser.newPage({ viewport: { width: 5 * w, height: 6 * h + 24 } });
-  let html = `<body style="margin:0;background:#111;color:#0f0;font:14px monospace"><div style="height:24px;line-height:24px;padding-left:8px">${id} · every act forced to ${mode} · ${bravos} bravos · columns: ${COLS.join(' / ')}</div><div style="display:grid;grid-template-columns:repeat(5,${w}px)">`;
-  for (let a = 0; a < 6; a++) for (let c = 0; c < 5; c++) {
+  const page = await browser.newPage({ viewport: { width: 4 * w, height: nActs * h + 24 } });
+  let html = `<body style="margin:0;background:#111;color:#0f0;font:14px monospace"><div style="height:24px;line-height:24px;padding-left:8px">${id} · every act forced to ${mode} · ${bravos} bravos · columns: ${COLS.join(' / ')}</div><div style="display:grid;grid-template-columns:repeat(4,${w}px)">`;
+  for (let a = 0; a < nActs; a++) for (let c = 0; c < 4; c++) {
     const f = frames[`${a}-${c}`];
     html += f ? `<div style="position:relative"><img src="data:image/png;base64,${fs.readFileSync(f).toString('base64')}" style="width:${w}px;height:${h}px;image-rendering:pixelated"><span style="position:absolute;left:4px;top:2px">${a + 1} ${COLS[c]}</span></div>` : `<div style="width:${w}px;height:${h}px;background:#300">${a + 1} ${COLS[c]} MISSING</div>`;
   }
