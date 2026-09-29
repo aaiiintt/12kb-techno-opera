@@ -268,7 +268,7 @@ MG.opera({
     },
     // ---------------------------------------------------------------- VI
     { name: 'ACT IV · OUTSIDE THE ARENA', aria: 'THE FINALE', command: 'REJECT!', bpm: 150, beats: 12, verb: 'tap', outcomeSeconds: 4.2, shot: 'wide',
-      onOutcome(m) { m.cut('close', m.cx + 2, GROUND + 14); },
+      onOutcome(m) { m.cut('mid', m.cx - 10, GROUND + 20); },
       init(m) { m.jx = 16; m.cx = 200; m.thrown = false; m.ring = null; m.step = 0; m.knife = 0; m.lineY = 10; },
       update(m) {
         const b = MG.beat();

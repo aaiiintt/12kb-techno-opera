@@ -20,6 +20,9 @@
        music: { curtain(t, b), bar(t, b, i), outcome(t, b, won) }  // schedule audio at time t, beat length b
        outcome(m)           // returns [english line] shown at OUTCOME, after m.won is known
      }]
+   toy: true marks an act with no win or lose: six seconds of feeling (petals, particles, sound).
+   It never ends early, its outcome line is drawn in the ink colour, and the result card counts
+   bravos out of the acts that can be won.
    shot: 'wide' | 'mid' | 'close' (the camera: the whole 256x144 stage, half of it, a quarter), with
    focus(m) -> [x, y] the world point the mid and close shots centre on. m.cut(shot, x, y) changes
    it during the act, and the outcome can cut too: an act's outcome is a place for a close-up.
@@ -66,6 +69,13 @@ MG.opera = (opera) => {
   engineInit(mgInit, mgUpdate, () => {}, mgRender, mgRenderPost);
 };
 
+// Review hooks. ?act=N starts at act N (1-based) on the first press. ?force=w,l,w,...
+// decides each act at 60% of its window (w wins, l loses, anything else plays).
+// window.__mg reports {phase, act, t, won} for test/gallery.mjs.
+const mgQuery = new URLSearchParams(location.search);
+const mgForce = (mgQuery.get('force') || '').split(',');
+const mgStartAt = Math.max(0, (parseInt(mgQuery.get('act'), 10) || 1) - 1);
+
 function mgInit() {
   PX.initFont();
   if (mgOpera.sprites) mgOpera.sprites();
@@ -107,6 +117,7 @@ function mgApplyShot() {
 
 function mgStartAct(i) {
   mgActIndex = i;
+  engineObjectsDestroy();           // an act's particle emitters do not outlive it
   for (const k of Object.keys(m)) delete m[k];
   m.i = i;
   m.shotName = mgOpera.acts[i].shot || 'wide';
@@ -114,8 +125,11 @@ function mgStartAct(i) {
   m.act = mgOpera.acts[i];
   m.beats = m.act.beats;
   m.won = false; m.done = false;
-  m.win = () => { if (!m.done) { m.done = true; m.won = true; } };
-  m.lose = () => { if (!m.done) { m.done = true; m.won = false; } };
+  // a forced act (?force=) ignores the other verdict, so a gallery run is deterministic
+  const forced = mgForce[i];
+  const toy = !!m.act.toy;
+  m.win = () => { if (!m.done && !toy && forced !== 'l') { m.done = true; m.won = true; } };
+  m.lose = () => { if (!m.done && !toy && forced !== 'w') { m.done = true; m.won = false; } };
   m.W = PX.W; m.H = PX.H;
   m.act.init(m);
   mgPhaseLen = 0;
@@ -127,7 +141,17 @@ function mgStartAct(i) {
   S.registerLight('curtain', mgPhaseStart, mgPhaseStart + 4 * b, (el) => Math.max(0, 1 - el / (4 * b)));
 }
 
+function mgReport() { window.__mg = { phase: mgPhase, act: mgActIndex, t: m.t, won: m.won, bravos: mgBravos }; }
+function mgIntegerScale() {
+  // the engine stretches a fixed-size canvas to the window; snap that to a whole number of
+  // screen pixels per canvas pixel, or a 256-wide picture at 4.3x has uneven pixels
+  const k = Math.max(1, Math.floor(Math.min(innerWidth / PX.W, innerHeight / PX.H)));
+  const w = PX.W * k + 'px', h = PX.H * k + 'px';
+  for (const cv of [mainCanvas, glCanvas]) if (cv && cv.style.width !== w) { cv.style.width = w; cv.style.height = h; }
+}
+
 function mgUpdate() {
+  mgIntegerScale();
   mgReadInput();
   const now = S.now();
   m.t = now - mgPhaseStart;
@@ -136,15 +160,18 @@ function mgUpdate() {
   mgFlash = Math.max(0, mgFlash - timeDelta * 4);
 
   if (mgPhase === MG_TITLE) {
-    if ((m.press || m.tap) && audioIsRunning()) { mgBravos = 0; mgResults = []; mgStartAct(0); }
+    if ((m.press || m.tap) && audioIsRunning()) { mgBravos = 0; mgResults = []; mgStartAct(mgStartAt); }
+    mgReport();
     return;
   }
   if (mgPhase === MG_RESULT) {
     if (m.t > 1.5 && (m.press || m.tap)) { mgPhase = MG_TITLE; mgPhaseStart = now; }
+    mgReport();
     return;
   }
   if (mgPhase === MG_CURTAIN) {
     if (m.t >= mgPhaseLen) mgStartPhase(MG_COMMAND, 1);
+    mgReport();
     return;
   }
   if (mgPhase === MG_COMMAND) {
@@ -152,6 +179,7 @@ function mgUpdate() {
       mgStartPhase(MG_ACTION, m.beats);
       mgFlash = 1;
     }
+    mgReport();
     return;
   }
   if (mgPhase === MG_ACTION) {
@@ -164,23 +192,29 @@ function mgUpdate() {
       mgBarsScheduled++;
     }
     if (!m.done) m.act.update(m);
+    const forced = mgForce[mgActIndex];
+    if (!m.done && !m.act.toy && m.frac >= 0.6 && (forced === 'w' || forced === 'l')) { m.done = true; m.won = forced === 'w'; }
     if (m.done || m.t >= mgPhaseLen) {
       if (!m.done) { m.done = true; m.won = !!m.timeoutWins; }
       // the outcome starts on the next beat, so the music lands
       const nextBeat = mgPhaseStart + Math.ceil(m.t / b + 0.001) * b;
       mgPhaseLen = nextBeat - mgPhaseStart;
       mgStartPhase(MG_OUTCOME, 4, m.act.outcomeSeconds ?? 3);
-      if (m.won) mgBravos++;
-      mgResults.push(m.won);
+      if (m.act.toy) m.won = true;
+      if (m.won && !m.act.toy) mgBravos++;
+      mgResults.push(m.act.toy ? 'toy' : m.won);
       m.line = m.act.outcome(m);
       m.act.music?.outcome?.(mgPhaseStart, b, m.won);
       m.act.onOutcome?.(m);
     }
+    mgReport();
     return;
   }
   if (mgPhase === MG_OUTCOME) {
     m.act.updateOutcome?.(m);
+    mgReport();
     if (m.t >= mgPhaseLen) {
+      mgReport();
       if (mgActIndex + 1 < mgOpera.acts.length) mgStartAct(mgActIndex + 1);
       else { mgPhase = MG_RESULT; mgPhaseStart = S.now(); mgPhaseLen = 0; m.phase = MG_RESULT; mgOpera.music?.result?.(S.now(), mgBravos); }
     }
@@ -206,9 +240,11 @@ function mgRender() {
     // six marks, one per act: lit for a bravo
     for (let i = 0; i < mgResults.length; i++) {
       const x = W / 2 - 6 * 9 + i * 12 + 6;
-      PX.rect(x - 4, H / 2 + 8, 8, 8, mgResults[i] ? PX.c(C.bravo || '#ffd23a') : PX.c(C.dim || '#444444'));
+      const r = mgResults[i];
+      PX.rect(x - 4, H / 2 + 8, 8, 8, r === 'toy' ? PX.c(C.ink || '#ffffff', 0.5) : r ? PX.c(C.bravo || '#ffd23a') : PX.c(C.dim || '#444444'));
     }
-    PX.text(`${mgBravos} BRAVO${mgBravos === 1 ? '' : 'S'} OF 6`, W / 2, H / 2 - 6, ink, { align: 'center' });
+    const playable = mgOpera.acts.filter((a) => !a.toy).length;
+    PX.text(`${mgBravos} BRAVO${mgBravos === 1 ? '' : 'S'} OF ${playable}`, W / 2, H / 2 - 6, ink, { align: 'center' });
     const lines = mgOpera.ending(m, mgBravos);
     lines.forEach((l, i) => PX.text(l, W / 2, H / 2 - 20 - i * 8, PX.c(C.dim || '#888888'), { align: 'center' }));
     if (m.t > 1.5 && Math.floor(timeReal * 2) % 2 === 0) PX.text('AGAIN?', W / 2, 10, ink, { align: 'center' });
@@ -219,6 +255,12 @@ function mgRender() {
   if (act.focus && !m.cutFocus) m.focus = act.focus(m);
   mgApplyShot();
   act.render(m);
+}
+
+function mgRenderPost() {
+  // the HUD, drawn after the engine's objects (particles) so nothing covers it
+  if (mgPhase === MG_TITLE || mgPhase === MG_RESULT) return mgRenderCorner();
+  const C = mgOpera.colours, W = PX.W, H = PX.H, act = m.act;
   PX.screen = true;                 // everything below is HUD
 
   if (mgPhase === MG_CURTAIN) {
@@ -244,14 +286,18 @@ function mgRender() {
     const y = act.lineY ?? 10;
     const line = m.line;
     if (line && m.t > 0.25) {
+      // the line sits on a black band, so it reads on any floor
       const lines = Array.isArray(line) ? line : [line];
-      lines.forEach((l, i) => PX.text(l, W / 2, y + (lines.length - 1 - i) * 8, PX.c(m.won ? (C.bravo || '#ffd23a') : (C.tragic || '#ff4d6d')), { align: 'center' }));
+      PX.rect(0, y - 3, W, lines.length * 8 + 4, PX.c('#000000', 0.85));
+      const col = act.toy ? (C.ink || '#ffffff') : m.won ? (C.bravo || '#ffd23a') : (C.tragic || '#ff4d6d');
+      lines.forEach((l, i) => PX.text(l, W / 2, y + (lines.length - 1 - i) * 8, PX.c(col), { align: 'center' }));
     }
   }
   PX.screen = false;
+  mgRenderCorner();
 }
 
-function mgRenderPost() {
+function mgRenderCorner() {
   // the act counter, tiny, in the corner
   PX.screen = true;
   if (mgPhase >= MG_CURTAIN && mgPhase <= MG_OUTCOME)
