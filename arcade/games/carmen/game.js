@@ -33,6 +33,13 @@ function carmenSprites() {
   SP.flower = PX.sprite(['.p.p.', 'ppppp', '.pyp.', 'ppppp', '.p.p.'], { p: COL.pink, y: COL.gold });
   SP.flowerDead = PX.sprite(['.p.p.', 'ppppp', '.pyp.', 'ppppp', '.p.p.'], { p: '#5a4a50', y: '#7a6a5a' });
   SP.rope = PX.sprite(['rr.rr.rr', '.rrr.rrr', 'rr.rr.rr'], { r: COL.sand });
+  // the close-up: her wrists, the rope tight, loosening, and off
+  const wrists = (a, b) => PX.sprite([
+    '..ss......ss..', '.ssss....ssss.', 'ss' + a + 'ss..ss' + a + 'ss', 's' + b + 's' + b + 's..s' + b + 's' + b + 's', '.ssss....ssss.', '.ss.s....s.ss.', '.ss......ss...',
+  ], { s: COL.skin, r: COL.sand, k: COL.gold, '.': null });
+  SP.wristsTied = wrists('rr', 'r');
+  SP.wristsLoose = wrists('kk', 'k');
+  SP.wristsFree = wrists('ss', 's');
   SP.cardBack = PX.sprite(['wwwwwww', 'wbwbwbw', 'wwbwbww', 'wbwbwbw', 'wwbwbww', 'wbwbwbw', 'wwbwbww', 'wbwbwbw', 'wwwwwww'], { w: COL.ink, b: COL.blue });
   SP.spade = PX.sprite(['wwwwwww', 'www.www', 'ww...ww', 'w.....w', 'w.....w', 'ww.w.ww', 'www.www', 'ww...ww', 'wwwwwww'], { w: COL.ink });
   SP.bull = PX.sprite([
@@ -108,7 +115,8 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- II
-    { name: 'ACT I · THE ESCAPE', aria: 'SEGUIDILLA', command: 'UNTIE!', bpm: 140, beats: 12, verb: 'mash',
+    { name: 'ACT I · THE ESCAPE', aria: 'SEGUIDILLA', command: 'UNTIE!', bpm: 140, beats: 12, verb: 'mash', shot: 'close', focus: () => [108, GROUND + 14],
+      onOutcome(m) { m.cut('wide'); },
       init(m) { m.knot = 0; m.look = 0; m.snap = 0; m.mashes = 0; },
       update(m) {
         if (m.press) { m.knot = Math.min(1, m.knot + 0.09); m.mashes++; S.drum('hat', S.now(), 0.12); }
@@ -126,6 +134,8 @@ MG.opera({
         PX.draw(SP.jose, 76, GROUND, { flip: false });
         PX.draw(SP.carmen, cx, GROUND);
         if (!(done && m.won)) PX.draw(SP.rope, cx - 1, GROUND + 6, { color: done ? WHITE : c(COL.sand) });
+        // the close-up: her hands, the rope, each mash a shake
+        if (!done) PX.draw(m.knot > 0.6 ? SP.wristsLoose : SP.wristsTied, 94 + (m.press ? 1 : 0), GROUND + 6);
         if (m.phase === MG.phase.ACTION || (done && !m.won)) {
           // the knot loosening: a bar that shakes with each mash
           const w = Math.round(60 * m.knot);
@@ -142,7 +152,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- III
-    { name: 'ACT II · THE TAVERN', aria: 'LA FLEUR', command: 'HOLD!', bpm: 120, beats: 14, verb: 'hold',
+    { name: 'ACT II · THE TAVERN', aria: 'LA FLEUR', command: 'HOLD!', bpm: 120, beats: 14, verb: 'hold', shot: 'mid', focus: () => [128, GROUND + 22],
       init(m) { m.held = 0; m.total = 0; m.colour = 1; m.wasHeld = false; m.lamps = [-40, 60, 160]; m.timeoutWins = false; },
       update(m) {
         m.total += timeDelta;
@@ -178,7 +188,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- IV
-    { name: 'ACT III · THE PASS', aria: 'THE CARDS', command: 'FLIP!', bpm: 110, beats: 10, verb: 'choose',
+    { name: 'ACT III · THE PASS', aria: 'THE CARDS', command: 'FLIP!', bpm: 110, beats: 10, verb: 'choose', shot: 'mid', focus: () => [120, GROUND + 18],
       init(m) { m.cur = 1; m.flipped = -1; m.was = false; },
       update(m) {
         const d = MG.stepped(m);
@@ -257,7 +267,8 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- VI
-    { name: 'ACT IV · OUTSIDE THE ARENA', aria: 'THE FINALE', command: 'REJECT!', bpm: 150, beats: 12, verb: 'tap', outcomeSeconds: 4.2,
+    { name: 'ACT IV · OUTSIDE THE ARENA', aria: 'THE FINALE', command: 'REJECT!', bpm: 150, beats: 12, verb: 'tap', outcomeSeconds: 4.2, shot: 'wide',
+      onOutcome(m) { m.cut('close', m.cx + 2, GROUND + 14); },
       init(m) { m.jx = 16; m.cx = 200; m.thrown = false; m.ring = null; m.step = 0; m.knife = 0; m.lineY = 10; },
       update(m) {
         const b = MG.beat();

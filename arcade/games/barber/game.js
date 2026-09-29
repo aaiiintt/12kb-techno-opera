@@ -112,7 +112,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- II
-    { name: "ACT I · ROSINA'S ROOM", aria: 'UNA VOCE POCO FA', command: 'SLIP!', bpm: 135, beats: 14, verb: 'mash when he is not looking',
+    { name: "ACT I · ROSINA'S ROOM", aria: 'UNA VOCE POCO FA', command: 'SLIP!', bpm: 135, beats: 14, verb: 'mash when he is not looking', shot: 'mid', focus: () => [130, GROUND + 26],
       init(m) { m.ink = 0; m.looking = false; m.nextLook = 2.2; m.warn = 0; m.caught = false; },
       update(m) {
         // Bartolo glances in on a schedule: a warning beat, then he looks for a beat and a half
@@ -153,7 +153,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- III
-    { name: "ACT I · BARTOLO'S HOUSE", aria: 'THE DRUNKEN OFFICER', command: 'STAGGER!', bpm: 145, beats: 12, verb: 'balance',
+    { name: "ACT I · BARTOLO'S HOUSE", aria: 'THE DRUNKEN OFFICER', command: 'STAGGER!', bpm: 145, beats: 12, verb: 'balance', shot: 'mid', focus: () => [130, GROUND + 22],
       init(m) { m.tilt = 0; m.v = 0; m.timeoutWins = true; m.fell = false; m.push = 0; },
       update(m) {
         // the room spins: a drift that grows, and shoves; the arrows lean against it
@@ -188,7 +188,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- IV
-    { name: 'ACT II · THE MUSIC ROOM', aria: 'THE LESSON', command: 'TUNE!', bpm: 155, beats: 12, verb: 'steer',
+    { name: 'ACT II · THE MUSIC ROOM', aria: 'THE LESSON', command: 'TUNE!', bpm: 155, beats: 12, verb: 'steer', shot: 'mid', focus: () => [136, GROUND + 26],
       init(m) { m.pitch = 0.3; m.target = 0.6; m.inTune = 0; m.total = 0; m.timeoutWins = false; m.nod = 0; },
       update(m) {
         m.total += timeDelta;
@@ -230,7 +230,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- V
-    { name: "ACT II · THE BARBER'S CHAIR", aria: 'LARGO AL FACTOTUM', command: 'SHAVE!', bpm: 165, beats: 12, verb: 'steer',
+    { name: "ACT II · THE BARBER'S CHAIR", aria: 'LARGO AL FACTOTUM', command: 'SHAVE!', bpm: 165, beats: 12, verb: 'steer', shot: 'mid', focus: () => [128, GROUND + 36],
       init(m) { m.x = 128; m.foam = [100, 124, 148, 112, 136].map((x, i) => ({ x, y: GROUND + 40 + (i % 2) * 6, left: 1, done: false })); m.timeoutWins = false; m.shaved = 0; },
       update(m) {
         MG.walk(m, 'x', 110, 80, 168);
@@ -263,7 +263,8 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- VI
-    { name: 'ACT II · THE BALCONY', aria: 'ZITTI, ZITTI, PIANO, PIANO', command: 'WED!', bpm: 180, beats: 12, verb: 'steer', outcomeSeconds: 4,
+    { name: 'ACT II · THE BALCONY', aria: 'ZITTI, ZITTI, PIANO, PIANO', command: 'WED!', bpm: 180, beats: 12, verb: 'steer', outcomeSeconds: 4, shot: 'wide',
+      onOutcome(m) { if (m.won) m.cut('mid', 150, GROUND + 24); },
       init(m) { m.x = 120; m.wind = 0; m.climb = 0; m.timeoutWins = false; m.flash = 0; m.nextFlash = 1; m.lineY = 10; },
       update(m) {
         // the storm shoves the ladder; keep its foot under the balcony and Rosina climbs down

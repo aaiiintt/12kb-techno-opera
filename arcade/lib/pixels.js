@@ -73,11 +73,17 @@ PX.bake = () => {
   for (const s of list) s.tile = new TileInfo(vec2(s.x, s.y), vec2(s.w, s.h), info);
 };
 
+// Screen space: while PX.screen is true, coordinates are canvas pixels with y up
+// from the bottom, unaffected by the camera. The runner draws the HUD this way
+// (the fuse, the command card, captions) so a close shot scales the scene, not the type.
+PX.screen = false;
+const pxPos = (x, y, w, h) => PX.screen ? vec2(x + w / 2, PX.H - y - h / 2) : vec2(x + w / 2, y + h / 2);
+
 // draw a sprite with its bottom-left corner at (x, y), optional tint, flip and scale
 PX.draw = (s, x, y, o = {}) => {
   const k = o.scale || PX.SCALE;
   const w = s.w * k, h = s.h * k;
-  drawTile(vec2(x + w / 2, y + h / 2), vec2(w, h), s.tile, o.color || WHITE, o.angle || 0, !!o.flip, o.add);
+  drawTile(pxPos(x, y, w, h), vec2(w, h), s.tile, o.color || WHITE, o.angle || 0, !!o.flip, o.add, glEnable, PX.screen);
 };
 
 // ---- a 3x5 font, each glyph 15 bits, row-major from the top ----
@@ -125,7 +131,10 @@ PX.text = (str, x, y, color = WHITE, o = {}) => {
 };
 
 // a filled pixel rectangle with its bottom-left at (x, y)
-PX.rect = (x, y, w, h, color) => drawRect(vec2(x + w / 2, y + h / 2), vec2(w, h), color);
+PX.rect = (x, y, w, h, color) => drawRect(pxPos(x, y, w, h), vec2(w, h), color, 0, glEnable, PX.screen);
+
+// the screen position (x right, y up, canvas pixels) of a world point, for a caption beside a character in any shot
+PX.toScreen = (x, y) => { const p = worldToScreen(vec2(x, y)); return [Math.round(p.x), Math.round(PX.H - p.y)]; };
 
 // hex colour -> Color
 PX.c = (hex, a = 1) => { const c = new Color(); c.setHex(hex); c.a = a; return c; };

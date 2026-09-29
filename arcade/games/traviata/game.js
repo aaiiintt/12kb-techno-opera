@@ -68,7 +68,7 @@ MG.opera({
 
   acts: [
     // ---------------------------------------------------------------- I
-    { name: 'ACT I · THE SALON', aria: 'LIBIAMO', command: 'TOAST!', bpm: 125, beats: 15, verb: 'tap on the downbeat',
+    { name: 'ACT I · THE SALON', aria: 'LIBIAMO', command: 'TOAST!', bpm: 125, beats: 15, verb: 'tap on the downbeat', shot: 'mid', focus: () => [128, GROUND + 24],
       init(m) { m.clinks = 0; m.coughs = 0; m.timeoutWins = false; m.flash = 0; m.lastBar = -1; },
       update(m) {
         // a waltz: the downbeat is every third beat; tap on it
@@ -109,7 +109,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- II
-    { name: 'ACT II · THE COUNTRY', aria: 'UN DÌ, FELICE', command: 'SNIP!', bpm: 135, beats: 12, verb: 'mash',
+    { name: 'ACT II · THE COUNTRY', aria: 'UN DÌ, FELICE', command: 'SNIP!', bpm: 135, beats: 12, verb: 'mash', shot: 'mid', focus: () => [90, GROUND + 20],
       init(m) { m.cut = 0; m.need = 12; m.shadow = 262; m.timeoutWins = false; m.flowers = []; },
       update(m) {
         if (m.press && m.cut < m.need) { m.cut++; m.flowers.push({ x: 60 + m.cut * 4, y: GROUND + 22 }); S.drum('hat', S.now(), 0.14); S.voice('arp', S.deg(['1', '3', '5', '1+'][m.cut % 4]) + 12, S.now(), 0.1, { vol: 0.06 }); }
@@ -137,7 +137,8 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- III
-    { name: "ACT II · GERMONT'S DEMAND", aria: 'PURA SICCOME UN ANGELO', command: 'RENOUNCE!', bpm: 110, beats: 12, verb: 'hold',
+    { name: "ACT II · GERMONT'S DEMAND", aria: 'PURA SICCOME UN ANGELO', command: 'RENOUNCE!', bpm: 110, beats: 12, verb: 'hold', shot: 'close', focus: () => [122, GROUND + 20],
+      onOutcome(m) { m.cut('mid', 130, GROUND + 22); },
       init(m) { m.sign = 0; m.timeoutWins = false; m.lineY = 10; },
       update(m) {
         // hold to sign: the pen moves while you hold, and the letter is the sacrifice
@@ -201,7 +202,7 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- V
-    { name: 'ACT III · THE DEATHBED', aria: 'ADDIO, DEL PASSATO', command: 'READ!', bpm: 100, beats: 12, verb: 'shield',
+    { name: 'ACT III · THE DEATHBED', aria: 'ADDIO, DEL PASSATO', command: 'READ!', bpm: 100, beats: 12, verb: 'shield', shot: 'close', focus: () => [142, GROUND + 18],
       init(m) { m.flame = 1; m.side = 0; m.draft = 0; m.nextDraft = 1.2; m.gust = 0; m.timeoutWins = true; m.out = false; },
       update(m) {
         // drafts come from a side, telegraphed a beat early; put the hand on that side
@@ -238,7 +239,8 @@ MG.opera({
       },
     },
     // ---------------------------------------------------------------- VI
-    { name: 'ACT III · THE FAREWELL', aria: "PRENDI, QUEST'È L'IMMAGINE", command: 'GIVE!', bpm: 175, beats: 8, verb: 'reach', outcomeSeconds: 4.2,
+    { name: 'ACT III · THE FAREWELL', aria: "PRENDI, QUEST'È L'IMMAGINE", command: 'GIVE!', bpm: 175, beats: 8, verb: 'reach', outcomeSeconds: 4.2, shot: 'close', focus: () => [140, GROUND + 20],
+      onOutcome(m) { m.cut('mid', 150, GROUND + 22); },
       init(m) { m.reach = 0; m.pulse = 1; m.given = false; m.timeoutWins = false; m.lineY = 10; },
       update(m) {
         // hold Right to reach; her pulse runs down whatever you do

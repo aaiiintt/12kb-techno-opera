@@ -1,5 +1,7 @@
 # Dot Opera Arcade
 
+**The goal.** Three playable operas that are Nintendo-level fun at under 48 KB each, with remarkable chiptune operatics: original orchestration of recognisable classics, and stories that make opera lovers smile and opera haters chuckle and want to know more.
+
 A fork of Dot Opera where the operas are playable: famous operas retold in about a minute as small games on a grid of glowing discs, built on [LittleJS](https://github.com/KilledByAPixel/LittleJS).
 
 The brief is the parent project's (`../docs/BRIEF.md`): flat discs on black, colours from the staging, the opera's tune quoted, one caption style, one wink, small. The new rule is that the audience plays it, with one finger, on a phone.
@@ -41,6 +43,10 @@ npm run build      # prints the gzipped size of each dist page and fails on its 
 npm test           # needs a build first; SHOT=<dir> also saves a screenshot per game
 node test/play.mjs carmen /tmp/play-carmen 80 && node test/sheet.mjs /tmp/play-carmen   # frames of a whole play
 ```
+
+## Shots
+
+Every act names its shot: wide (the whole stage), mid (half of it) or close (a quarter), on a focus point, and an outcome can cut. Untie is a close-up on the rope round her wrists; the signature and the candle are close; the bullring and the party are wide. Captions and the HUD stay at screen size whatever the shot.
 
 ## The form
 

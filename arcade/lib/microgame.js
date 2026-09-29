@@ -20,6 +20,9 @@
        music: { curtain(t, b), bar(t, b, i), outcome(t, b, won) }  // schedule audio at time t, beat length b
        outcome(m)           // returns [english line] shown at OUTCOME, after m.won is known
      }]
+   shot: 'wide' | 'mid' | 'close' (the camera: the whole 256x144 stage, half of it, a quarter), with
+   focus(m) -> [x, y] the world point the mid and close shots centre on. m.cut(shot, x, y) changes
+   it during the act, and the outcome can cut too: an act's outcome is a place for a close-up.
    m is the microgame state: m.left / m.right (held), m.press (Space or button, this frame),
    m.hold (held), m.t (seconds into the phase), m.beat (beats into the phase, fractional),
    m.beats (the action's length), m.phase, m.won, m.done, m.act (the act object), m.i (its index),
@@ -91,10 +94,23 @@ function mgStartPhase(phase, beats, minSeconds = 0) {
   m.phase = phase;
 }
 
+const MG_ZOOM = { wide: 1, mid: 2, close: 4 };
+function mgApplyShot() {
+  const zoom = MG_ZOOM[m.shotName] || 1;
+  let [fx, fy] = m.focus || [PX.W / 2, PX.H / 2];
+  // keep the frame on the stage
+  const hw = PX.W / zoom / 2, hh = PX.H / zoom / 2;
+  fx = clamp(fx, hw, PX.W - hw); fy = clamp(fy, hh, PX.H - hh);
+  setCameraScale(zoom);
+  setCameraPos(vec2(fx, fy));
+}
+
 function mgStartAct(i) {
   mgActIndex = i;
   for (const k of Object.keys(m)) delete m[k];
   m.i = i;
+  m.shotName = mgOpera.acts[i].shot || 'wide';
+  m.cut = (shot, x, y) => { m.shotName = shot; if (x != null) { m.focus = [x, y]; m.cutFocus = true; } };
   m.act = mgOpera.acts[i];
   m.beats = m.act.beats;
   m.won = false; m.done = false;
@@ -174,6 +190,7 @@ function mgUpdate() {
 function mgRender() {
   const C = mgOpera.colours, ink = PX.c(C.ink || '#ffffff');
   const W = PX.W, H = PX.H;
+  if (mgPhase === MG_TITLE || mgPhase === MG_RESULT) { setCameraScale(1); setCameraPos(vec2(W / 2, H / 2)); }
   if (mgPhase === MG_TITLE) {
     mgOpera.renderTitle?.(m);
     PX.text(mgOpera.title, W / 2, H / 2 + 8, ink, { align: 'center', scale: 3 });
@@ -199,7 +216,10 @@ function mgRender() {
   }
 
   const act = m.act;
+  if (act.focus && !m.cutFocus) m.focus = act.focus(m);
+  mgApplyShot();
   act.render(m);
+  PX.screen = true;                 // everything below is HUD
 
   if (mgPhase === MG_CURTAIN) {
     // the act's name and its aria over the scene, fading as the curtain rises
@@ -228,12 +248,15 @@ function mgRender() {
       lines.forEach((l, i) => PX.text(l, W / 2, y + (lines.length - 1 - i) * 8, PX.c(m.won ? (C.bravo || '#ffd23a') : (C.tragic || '#ff4d6d')), { align: 'center' }));
     }
   }
+  PX.screen = false;
 }
 
 function mgRenderPost() {
   // the act counter, tiny, in the corner
+  PX.screen = true;
   if (mgPhase >= MG_CURTAIN && mgPhase <= MG_OUTCOME)
     PX.text(`${mgActIndex + 1}/6`, PX.W - 2, 2, PX.c(mgOpera.colours.dim || '#666666'), { align: 'right' });
+  PX.screen = false;
 }
 
 // ---- helpers for acts ----
@@ -260,9 +283,15 @@ MG.GROUND = 24;
 MG.floor = (colour, dim = '#7a6a7a') => { PX.rect(0, 0, PX.W, MG.GROUND, PX.c(colour)); PX.rect(0, MG.GROUND, PX.W, 1, PX.c(dim)); };
 // the one caption style: a small tag beside the speaker, white on black
 MG.say = (text, x, y, colour = '#f4e9d8', bg = '#1a1424') => {
+  // x, y is a world point beside the speaker; the tag is drawn at screen size, wherever the shot is
+  const was = PX.screen;
+  let [sx, sy] = was ? [x, y] : PX.toScreen(x, y);
   const w = PX.textWidth(text) + 4;
-  PX.rect(x - 2, y - 2, w, 9, PX.c(bg));
-  PX.text(text, x, y, PX.c(colour));
+  sx = clamp(sx, 2, PX.W - w - 2); sy = clamp(sy, 12, PX.H - 12);
+  PX.screen = true;
+  PX.rect(sx - 2, sy - 2, w, 9, PX.c(bg));
+  PX.text(text, sx, sy, PX.c(colour));
+  PX.screen = was;
 };
 // sing a line: scale degrees and durations in beats, on a voice, from time t
 MG.sing = (voice, notes, durs, t, b, o = {}) => {
