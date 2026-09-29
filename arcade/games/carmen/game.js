@@ -42,6 +42,7 @@ function carmenSprites() {
   ], { h: COL.bull, t: COL.bull, w: COL.ink, e: COL.red });
   SP.ring = PX.sprite(['.ggg.', 'g...g', 'g...g', 'g...g', '.ggg.'], { g: COL.gold });
   SP.knife = PX.sprite(['wwwwwwd', '.wwwwdd', '......d'], { w: COL.white, d: COL.dark });
+  SP.petal = PX.sprite(['.w.', 'www', '.w.'], { w: COL.white });
   SP.heart = PX.sprite(['.r.r.', 'rrrrr', 'rrrrr', '.rrr.', '..r..'], { r: COL.pink });
 }
 
@@ -73,7 +74,7 @@ const glow = (s, x, y, col, a = 1, o = {}) => {
   draw(s, x, y, o);
 };
 // a puff of tinted squares (untextured particles): n of them from x, y at speed px per frame
-const puff = (x, y, cols, n = 12, speed = 1.5, o = {}) => new ParticleEmitter(vec2(x, y), o.angle || 0, o.size ?? 2, 0.05, n * 20, o.cone ?? PI, undefined,
+const puff = (x, y, cols, n = 12, speed = 1.5, o = {}) => new ParticleEmitter(vec2(x, y), o.angle || 0, o.size ?? 2, 0.05, n * 20, o.cone ?? PI, o.tile,
   c(cols[0]), c(cols[1] || cols[0]), c(cols[0], o.keep ?? 0), c(cols[1] || cols[0], o.keep ?? 0),
   o.life ?? 0.8, o.s0 ?? 3, o.s1 ?? 2, speed, o.spin ?? 0.15, o.damp ?? 0.94, 1, o.g ?? 1, PI, 0.15, 0.5);
 // particles that reach the floor lie on it (petals, roses, rope ends)
@@ -97,8 +98,8 @@ const ACTS = [
     update(m) {
       if (!m.falls.length) {
         // she throws: the flower bursts over the stage, then the petals keep coming
-        m.falls.push(puff(128, 104, [COL.red, COL.pink], 36, 1.2, { size: vec2(200, 30), life: 7, keep: 1, g: 0.35, damp: 0.96, spin: 0.08, s0: 3, s1: 3 }));
-        m.falls.push(new ParticleEmitter(vec2(128, 124), 0, vec2(250, 36), 0, 12, PI, undefined, c(COL.red), c(COL.pink), c(COL.red), c(COL.pink),
+        m.falls.push(puff(128, 104, [COL.red, COL.pink], 36, 1.2, { size: vec2(200, 30), life: 7, keep: 1, g: 0.35, damp: 0.96, spin: 0.08, s0: 3, s1: 3, tile: SP.petal.tile }));
+        m.falls.push(new ParticleEmitter(vec2(128, 124), 0, vec2(250, 36), 0, 12, PI, SP.petal.tile, c(COL.red), c(COL.pink), c(COL.red), c(COL.pink),
           7, 3, 3, 0.1, 0.06, 0.96, 1, 0.4, PI, 0.1, 0.4));
         S.drum('hat', S.now(), 0.15);
       }
@@ -157,7 +158,7 @@ const ACTS = [
       m.cut('wide'); m.go = m.won ? 0.3 : 0.9; m.pushed = 0; m.bits = [];
       if (m.won) m.bits.push(puff(115, GROUND + 14, [COL.sand, COL.gold], 24, 1.8, { life: 2, keep: 1, g: 1 }));
     },
-    init(m) { m.knot = 0; m.jig = 0; m.n = 0; },
+    init(m) { m.knot = 0; m.jig = 0; m.n = 0; m.tw = 0; m.tt = 0; },
     update(m) {
       if (m.press) {
         m.knot = Math.min(1, m.knot + 0.1); m.jig = 1;
@@ -166,6 +167,9 @@ const ACTS = [
       }
       m.knot = Math.max(0, m.knot - 0.2 * timeDelta);
       m.jig = Math.max(0, m.jig - timeDelta * 8);
+      if (m.press) m.tw = 0.35;
+      if (m.tw > 0) m.tt += timeDelta;
+      m.tw = Math.max(0, m.tw - timeDelta);
       if (m.knot >= 1) m.win();
     },
     updateOutcome(m) {
@@ -182,7 +186,7 @@ const ACTS = [
       const cx = gone ? 108 + (m.t - m.go) * 190 : 108 + (o && !m.won ? Math.round(Math.sin(m.t * 40)) : 0);
       // José falls back when she shoves him
       if (gone) CAST.draw(SP.jose, 80, GROUND, { pose: 'fall' });
-      else CAST.draw(SP.jose, 88 + Math.round(m.jig * 2), GROUND, { pose: 'idle' });
+      else CAST.draw(SP.jose, 96 + Math.round(m.jig), GROUND, m.tw > 0 && m.phase === ACTION ? { pose: 'walk', t: m.tt * 0.5 } : { pose: 'idle' });
       CAST.draw(SP.carmen, cx, GROUND);
       // the rope: coils round her, one gone for each third of the knot
       if (!o || (!m.won && !gone)) {
@@ -255,7 +259,13 @@ const ACTS = [
       S.drum(wind ? 'breath' : 'snare', S.now(), 0.2); S.voice('pulse', S.deg(['5', '4', '3'][i]), S.now(), 0.3, { vol: 0.06 });
     },
     update(m) {
-      if (m.press && m.n < 3) { m.act.flip(m, m.n); if (m.n === 3) m.win(); }
+      const on = Math.abs(m.beat - Math.round(m.beat)) < 0.25;
+      m.on = on;
+      if (m.press && m.n < 3) {
+        if (on) { m.act.flip(m, m.n); if (m.n === 3) m.win(); }
+        else { m.shk = 0.3; S.voice('bass', S.deg('1-') + 5, S.now(), 0.06, { vol: 0.1 }); S.drum('hat', S.now(), 0.08); }
+      }
+      m.shk = Math.max(0, (m.shk || 0) - timeDelta);
       m.pop = m.pop.map((p) => Math.max(0, p - timeDelta * 4));
     },
     updateOutcome(m) {
@@ -273,9 +283,9 @@ const ACTS = [
       PX.rect(94, GROUND + 11, 80, 1, c('#8a5a3a'));
       for (let i = 0; i < 3; i++) {
         const x = 100 + i * 22, next = m.phase === ACTION && i === m.n;
-        const y = GROUND + 12 + (next ? Math.round(MG.bounce() * 2) : 0);
+        const y = GROUND + 12 + (next && m.on ? 2 : 0);
         const s = i < m.n ? SP.spade : SP.cardBack;
-        if (next) glow(s, x, y, COL.gold);
+        if (next) glow(s, x + (m.shk > 0 ? randInt(-1, 2) : 0), y, m.on ? COL.gold : COL.dim);
         else PX.draw(s, x, y, { color: i < m.n ? WHITE : c('#9a9ab0'), add: m.pop[i] ? new Color(m.pop[i], m.pop[i], m.pop[i], 0) : undefined });
       }
       if (out(m) && m.t > 1.6) say('LA MORT !', 66, GROUND + 28);
@@ -290,14 +300,14 @@ const ACTS = [
   },
   // ---------------------------------------------------------------- V
   // the bull charges three times; jump it; tossed or not, the crowd is his
-  { name: 'ACT IV · THE BULLRING', aria: 'TOREADOR', command: 'GLORY!', bpm: 140, beats: 16, verb: 'jump',
-    init(m) { m.x = 122; m.y = 0; m.vy = 0; m.bull = null; m.charges = 0; m.passes = 0; m.next = 0.4; m.ole = 0; m.timeoutWins = true; },
+  { name: 'ACT IV · THE BULLRING', aria: 'TOREADOR', command: 'GLORY!', bpm: 140, beats: 16, verb: 'jump', shot: 'mid', focus: () => [122, GROUND + 30],
+    init(m) { m.tag = 0; m.x = 122; m.y = 0; m.vy = 0; m.bull = null; m.charges = 0; m.passes = 0; m.next = 0.4; m.ole = 0; m.timeoutWins = true; },
     onOutcome(m) { m.roses = []; m.cheered = 0; m.up = m.won ? 0 : 1.5; },
     bullStep(m) {
       const bu = m.bull;
       if (!bu) return;
       bu.x += bu.dir * bu.speed * timeDelta;
-      if (bu.x < -40 || bu.x > 280) m.bull = null;
+      if (bu.x < 24 || bu.x > 206) m.bull = null;
     },
     update(m) {
       if (m.press && !m.y) { m.vy = 240; S.drum('hat', S.now(), 0.14); }
@@ -305,7 +315,8 @@ const ACTS = [
       m.ole = Math.max(0, m.ole - timeDelta * 1.5);
       if (!m.bull && m.t >= m.next && m.charges < 3) {
         const left = m.charges % 2 === 0;
-        m.bull = { x: left ? -26 : 258, dir: left ? 1 : -1, speed: 150 + m.charges * 30 };
+        m.bull = { x: left ? 36 : 194, dir: left ? 1 : -1, speed: 120 + m.charges * 25 };
+        if (!m.charges) m.tag = m.t + 0.7;
         m.charges++;
         S.drum('thunder', S.now(), 0.3);
       }
@@ -326,7 +337,7 @@ const ACTS = [
       settle(m.roses);
       if (m.t > m.up && !m.cheered) {
         m.cheered = 1; S.drum('crowd', S.now(), 0.28);
-        m.roses.push(puff(128, 136, [COL.red, COL.pink], 40, 0.6, { size: vec2(220, 8), life: 4, keep: 1, g: 1, angle: PI, cone: 0.6 }));
+        m.roses.push(puff(128, 92, [COL.red, COL.pink], 40, 0.6, { size: vec2(220, 8), life: 4, keep: 1, g: 1, angle: PI, cone: 0.6 }));
       }
     },
     render(m) {
@@ -336,18 +347,19 @@ const ACTS = [
       // the crowd: dim and still while he fights, on their feet after
       for (let i = 0; i < 32; i++) for (let r = 0; r < 3; r++) {
         const jump = roar && (i + r + Math.floor(m.beat * 2)) % 2 ? 2 : 0;
-        PX.rect(i * 8 + 2, 106 + r * 9 + jump, 4, 4, c([COL.red, COL.gold, COL.ink][(i + r) % 3], roar ? 0.9 : 0.3));
+        PX.rect(i * 8 + 2, 66 + r * 8 + jump, 4, 4, c([COL.red, COL.gold, COL.ink][(i + r) % 3], roar ? 0.9 : 0.3));
       }
       PX.rect(0, GROUND, 256, 40, c('#5a2a20'));               // the barrera
       PX.rect(0, GROUND + 38, 256, 2, c('#8a5a3a'));
       stageFloor(COL.sand);
-      if (o && m.t > 1.2) glow(SP.joseShadow, 14, GROUND, COL.green, 0.6);   // José, at the gate
+      if (o && m.t > 1.2) glow(SP.joseShadow, 70, GROUND, COL.green, 0.6);   // José, at the gate
       if (m.bull) PX.draw(SP.bull, m.bull.x, GROUND, { flip: m.bull.dir < 0 });
       // tossed: up, over, down, and up again
       const tt = o && !m.won ? Math.max(0, m.t) : 9;
       if (tt < 0.8) CAST.draw(SP.esca, m.x, GROUND + Math.sin(tt / 0.8 * PI) * 40, { pose: 'jump', angle: tt * 9 });
       else if (tt < m.up) CAST.draw(SP.esca, m.x, GROUND, { pose: 'fall' });
       else glow(SP.esca, m.x, GROUND + (o ? Math.round(MG.bounce() * 2) : m.y), COL.white, o ? 0.5 : 0, { pose: m.y > 0 ? 'jump' : roar ? 'hold' : 0 });
+      if (m.phase === ACTION && m.t < m.tag) say('JUMP', m.x + 14, GROUND + 30, COL.gold);
       if (m.ole > 0.3) say('OLÉ !', m.x + 16, GROUND + 30, COL.gold);
       if (roar && m.t > m.up + 0.2) say('OLÉ !', m.x + 16, GROUND + 30, COL.gold);
     },
@@ -368,13 +380,13 @@ const ACTS = [
   // ---------------------------------------------------------------- VI
   // he walks up a step a beat; when he is in reach the ring shines: throw it back at him
   { name: 'ACT IV · OUTSIDE THE ARENA', aria: 'THE FINALE', command: 'REJECT!', bpm: 150, beats: 12, verb: 'tap', outcomeSeconds: 4.2,
-    init(m) { m.jx = 90; m.cx = 196; m.step = 0; m.near = false; },
-    onOutcome(m) { m.cut('mid', 160, GROUND + 22); m.knife = 0; m.land = 0; m.rx = m.cx - 8; m.to = m.jx + 18; m.blood = []; },
+    init(m) { m.nope = 0; m.jx = 90; m.cx = 196; m.step = 0; m.near = false; },
+    onOutcome(m) { m.cut('mid', m.cx - 30, GROUND + 22); m.knife = 0; m.land = 0; m.rx = m.cx - 8; m.to = m.jx + 18; m.blood = []; },
     update(m) {
       const step = Math.floor(m.beat);
       if (step > m.step) { m.step = step; m.jx = 90 + step * 8; S.drum('kick', S.now(), 0.18, 'kick'); }
       m.near = m.cx - m.jx < 66;
-      if (m.press) { if (m.near) m.win(); else S.drum('hat', S.now(), 0.1); }
+      if (m.press) { if (m.near) m.win(); else { m.nope = m.t + 0.5; S.drum('kick', S.now(), 0.1); S.voice('bass', S.deg('1-'), S.now(), 0.08, { vol: 0.1 }); } }
     },
     updateOutcome(m) {
       settle(m.blood);
@@ -394,7 +406,7 @@ const ACTS = [
       PX.rect(0, GROUND + 62, 256, 60, c('#2a1418'));           // the arena wall
       stageFloor(COL.sand);
       const o = out(m), fallen = o && m.t > 1.6;
-      if (fallen) CAST.draw(SP.carmenWhite, m.cx + 4, GROUND, { pose: 'fall' });
+      if (fallen) CAST.draw(SP.carmen, m.cx + 4, GROUND, { pose: 'fall' });
       else CAST.draw(SP.carmen, m.cx, GROUND, { flip: true, pose: o && m.won && m.t < 0.5 ? 'hold' : 0 });
       CAST.draw(SP.jose, m.jx, GROUND, { color: m.phase === ACTION && m.near ? c(COL.green) : WHITE });
       if (!o) {
@@ -402,6 +414,7 @@ const ACTS = [
         if (m.near) glow(SP.ring, m.cx - 8, y, COL.white);
         else PX.draw(SP.ring, m.cx - 8, y, { color: c('#ffffff', 0.5) });
       } else PX.draw(SP.ring, m.rx, m.ry);
+      if (!o && m.t < m.nope) say('NOT YET', m.cx - 30, GROUND + 30);
       if (o && m.t > 1.3) PX.draw(SP.knife, m.jx + 12, GROUND + 12);
       if (o && m.t > 1.6 && m.t < 1.75) PX.rect(0, 0, 256, 144, c(COL.white, 0.9));
       if (o && m.t > 2.6) say('MERDE !', m.jx + 14, GROUND + 28, COL.ink);   // the wink: José, deadpan, a beat too late
