@@ -82,6 +82,7 @@ function mgInit() {
   PX.bake();
   S.init();
   S.key(...mgOpera.key);
+  setGravity(vec2(0, -0.02));       // for particles: they fall unless an emitter's gravityScale says otherwise
   mgPhase = MG_TITLE;
 }
 
@@ -141,7 +142,7 @@ function mgStartAct(i) {
   S.registerLight('curtain', mgPhaseStart, mgPhaseStart + 4 * b, (el) => Math.max(0, 1 - el / (4 * b)));
 }
 
-function mgReport() { window.__mg = { phase: mgPhase, act: mgActIndex, t: m.t, won: m.won, bravos: mgBravos }; }
+function mgReport() { window.__mg = { phase: mgPhase, act: mgActIndex, t: m.t, won: m.won, bravos: mgBravos, playable: mgOpera.acts.filter((a) => !a.toy).length }; }
 function mgIntegerScale() {
   // the engine stretches a fixed-size canvas to the window; snap that to a whole number of
   // screen pixels per canvas pixel, or a 256-wide picture at 4.3x has uneven pixels
@@ -259,8 +260,9 @@ function mgRender() {
 
 function mgRenderPost() {
   // the HUD, drawn after the engine's objects (particles) so nothing covers it
-  if (mgPhase === MG_TITLE || mgPhase === MG_RESULT) return mgRenderCorner();
+  if (mgPhase === MG_TITLE || mgPhase === MG_RESULT) { mgDrawTags(); return mgRenderCorner(); }
   const C = mgOpera.colours, W = PX.W, H = PX.H, act = m.act;
+  mgDrawTags();
   PX.screen = true;                 // everything below is HUD
 
   if (mgPhase === MG_CURTAIN) {
@@ -328,17 +330,24 @@ MG.stepped = (m) => {
 MG.GROUND = 24;
 MG.floor = (colour, dim = '#7a6a7a') => { PX.rect(0, 0, PX.W, MG.GROUND, PX.c(colour)); PX.rect(0, MG.GROUND, PX.W, 1, PX.c(dim)); };
 // the one caption style: a small tag beside the speaker, white on black
+// x, y is a world point beside the speaker. The tag is queued and drawn in the runner's
+// post-render pass at screen size, so it sits over particles and reads in any shot.
+const mgTags = [];
 MG.say = (text, x, y, colour = '#f4e9d8', bg = '#1a1424') => {
-  // x, y is a world point beside the speaker; the tag is drawn at screen size, wherever the shot is
-  const was = PX.screen;
-  let [sx, sy] = was ? [x, y] : PX.toScreen(x, y);
-  const w = PX.textWidth(text) + 4;
-  sx = clamp(sx, 2, PX.W - w - 2); sy = clamp(sy, 12, PX.H - 12);
-  PX.screen = true;
-  PX.rect(sx - 2, sy - 2, w, 9, PX.c(bg));
-  PX.text(text, sx, sy, PX.c(colour));
-  PX.screen = was;
+  const [sx, sy] = PX.screen ? [x, y] : PX.toScreen(x, y);
+  mgTags.push({ text, sx, sy, colour, bg });
 };
+function mgDrawTags() {
+  PX.screen = true;
+  for (const t of mgTags) {
+    const w = PX.textWidth(t.text) + 4;
+    const sx = clamp(t.sx, 2, PX.W - w - 2), sy = clamp(t.sy, 12, PX.H - 12);
+    PX.rect(sx - 2, sy - 2, w, 9, PX.c(t.bg));
+    PX.text(t.text, sx, sy, PX.c(t.colour));
+  }
+  mgTags.length = 0;
+  PX.screen = false;
+}
 // sing a line: scale degrees and durations in beats, on a voice, from time t
 MG.sing = (voice, notes, durs, t, b, o = {}) => {
   let at = t;

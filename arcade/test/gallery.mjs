@@ -51,7 +51,7 @@ async function run(mode) {
   let last = { phase: -1, act: -1 }, actionShotAt = 0, outcomeShots = 0, t0 = Date.now();
   // keep the player doing something plausible so action frames aren't static
   let dir = 'ArrowRight';
-  while (Date.now() - t0 < 120000) {
+  while (Date.now() - t0 < 900000) {
     const s = await state();
     if (s.phase === PH.RESULT) break;
     if (s.phase !== last.phase || s.act !== last.act) {
@@ -61,14 +61,15 @@ async function run(mode) {
       if (s.phase === PH.OUTCOME) { await page.keyboard.up(dir); dir = dir === 'ArrowRight' ? 'ArrowLeft' : 'ArrowRight'; outcomeShots = 0; await page.waitForTimeout(700); await shoot(page, frames, s.act, 3, mode); outcomeShots = 1; }
       last = { phase: s.phase, act: s.act };
     }
-    if (s.phase === PH.ACTION && !actionShotAt && s.t > 1.2) { await page.keyboard.press('Space'); await page.waitForTimeout(80); await shoot(page, frames, s.act, 2, mode); actionShotAt = 1; }
-    if (s.phase === PH.ACTION && s.t > 0.3 && Math.random() < 0.3) await page.keyboard.press('Space');
+    if (s.phase === PH.ACTION && !actionShotAt && s.t > 0.7) { await page.keyboard.press('Space'); await page.waitForTimeout(80); await shoot(page, frames, s.act, 2, mode); actionShotAt = 1; }
+    if (s.phase === PH.ACTION && s.t > 0.3 && Math.random() < 0.12) await page.keyboard.press('Space');
     if (s.phase === PH.OUTCOME && outcomeShots === 1 && s.t > 2.3) { await shoot(page, frames, s.act, 4, mode); outcomeShots = 2; }
     await page.waitForTimeout(60);
   }
   const res = await state();
   await page.close();
-  return { frames, bravos: res.bravos };
+  console.log(`  ${mode} run took ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+  return { frames, bravos: res.bravos, playable: res.playable ?? 6 };
 }
 
 async function shoot(page, frames, act, col, mode) {
@@ -99,7 +100,7 @@ const a = await sheet(win.frames, 'win', win.bravos);
 const b = await sheet(lose.frames, 'lose', lose.bravos);
 await browser.close();
 server.close();
-console.log(`gallery: ${id}  win run ${win.bravos}/6 bravos (expect 6)  lose run ${lose.bravos}/6 (expect 0)\n  ${a}\n  ${b}`);
+console.log(`gallery: ${id}  win run ${win.bravos}/${win.playable} bravos (expect ${win.playable})  lose run ${lose.bravos}/${win.playable} (expect 0)\n  ${a}\n  ${b}`);
 for (const e of errorsAll) console.log('  ' + e);
-const bad = errorsAll.length || win.bravos !== 6 || lose.bravos !== 0;
+const bad = errorsAll.length || win.bravos !== win.playable || lose.bravos !== 0;
 process.exit(bad ? 1 : 0);

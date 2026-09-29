@@ -1,7 +1,9 @@
 /* CARMEN: six operatic microgames.
    Bizet, 1875. D minor. Carmen in red, José in dragoon blue, Escamillo in
    the gold suit of lights, Seville in sand. Green is jealousy, white is the
-   knife. One job per act: move, mash, hold, choose, dodge, tap.
+   knife. One job per act: a toy (run through the petals), mash, hold, tap,
+   jump, tap in time. Every act ends on one tableau whether you won or lost;
+   only the manner differs.
    Tunes quoted from memory as scale degrees; check them against the score. */
 
 'use strict';
@@ -9,62 +11,417 @@
 const SP = {};
 const COL = {
   bg: '#0b0710', ink: '#f4e9d8', dim: '#7a6a7a', card: '#f4e9d8', cardInk: '#0b0710',
-  bravo: '#f4b93a', tragic: '#d4152f', fuse: '#f4e9d8',
+  bravo: '#f4b93a', tragic: '#ff4d6d', fuse: '#f4e9d8',
   red: '#d4152f', blue: '#3d6fe0', gold: '#f4b93a', sand: '#e8c894', green: '#62c43a',
   skin: '#f1c9a5', dark: '#1a1424', night: '#141a33', white: '#ffffff', pink: '#ff7aa8',
+  wood: '#4a2c1c', bull: '#241614',
 };
 const c = PX.c;
 PX.SCALE = 2;                  // characters and props are drawn at 2x: 12x22 people on a 256x144 stage
+const ACTION = MG.phase.ACTION, OUTCOME = MG.phase.OUTCOME;
 
 function carmenSprites() {
+  setGravity(vec2(0, -0.06));  // per frame: confetti and petals fall, damping gives them a gentle drift
   const body = (h, f, b, l) => PX.sprite([
     '..hh..', '.hhhh.', '.ffff.', '.ffff.', '..ff..', '.bbbb.', 'bbbbbb', 'b.bb.b', '..bb..', '.ll.ll', '.ll.ll',
   ], { h, f, b, l });
-  const dress = (h, f, r) => PX.sprite([
-    '..hhh..', '.hhhhh.', '.hfffh.', '.hfffh.', '..fff..', '..rrr..', '.rrrrr.', '.rrrrr.', 'rrrrrrr', 'rrrrrrr', '.f...f.',
+  const dress = (h, f, r, rows = ['.hfffh.', '.hfffh.', '..fff..']) => PX.sprite([
+    '..hhh..', '.hhhhh.', ...rows, '..rrr..', '.rrrrr.', '.rrrrr.', 'rrrrrrr', 'rrrrrrr', '.f...f.',
   ], { h, f, r });
   SP.jose = body(COL.night, COL.skin, COL.blue, COL.dark);
   SP.joseShadow = body(COL.dark, COL.dark, COL.dark, COL.dark);
   SP.zuniga = body(COL.gold, COL.skin, COL.night, COL.dark);
   SP.esca = body(COL.dark, COL.skin, COL.gold, COL.gold);
   SP.carmen = dress(COL.dark, COL.skin, COL.red);
+  SP.carmenBack = dress(COL.dark, COL.skin, COL.red, ['.hhhhh.', '.hhhhh.', '..hhh..']);
   SP.carmenWhite = dress(COL.dark, COL.white, COL.white);
-  SP.bend = PX.sprite(['......', '......', '......', '..bbbb', '.bbbbh', 'bbbbhh', 'b.bbff', '..bb..', '.ll.ll', '.ll.ll'], { h: COL.night, f: COL.skin, b: COL.blue, l: COL.dark });
-  SP.flower = PX.sprite(['.p.p.', 'ppppp', '.pyp.', 'ppppp', '.p.p.'], { p: COL.pink, y: COL.gold });
-  SP.flowerDead = PX.sprite(['.p.p.', 'ppppp', '.pyp.', 'ppppp', '.p.p.'], { p: '#5a4a50', y: '#7a6a5a' });
-  SP.rope = PX.sprite(['rr.rr.rr', '.rrr.rrr', 'rr.rr.rr'], { r: COL.sand });
-  // the close-up: her wrists, the rope tight, loosening, and off
-  const wrists = (a, b) => PX.sprite([
-    '..ss......ss..', '.ssss....ssss.', 'ss' + a + 'ss..ss' + a + 'ss', 's' + b + 's' + b + 's..s' + b + 's' + b + 's', '.ssss....ssss.', '.ss.s....s.ss.', '.ss......ss...',
-  ], { s: COL.skin, r: COL.sand, k: COL.gold, '.': null });
-  SP.wristsTied = wrists('rr', 'r');
-  SP.wristsLoose = wrists('kk', 'k');
-  SP.wristsFree = wrists('ss', 's');
+  // José on one knee, the flower held out
+  SP.kneel = PX.sprite(['..hh....', '.hhhh...', '.ffff...', '.ffff...', '..ff....', '.bbbbbff', 'bbbbb...', '.bbllll.', '.ll...l.'], { h: COL.night, f: COL.skin, b: COL.blue, l: COL.dark });
+  const flower = (p, y, g) => PX.sprite(['.p.p.', 'ppppp', '.pyp.', 'ppppp', '.pgp.', '..g..', '..g..'], { p, y, g });
+  SP.flower = flower(COL.pink, COL.gold, COL.green);
+  SP.flowerDead = flower('#6a5058', '#7a6a5a', '#5a5a3a');
+  SP.coil = PX.sprite(['rrkrrkrr'], { r: COL.sand, k: '#b08a5a' });
   SP.cardBack = PX.sprite(['wwwwwww', 'wbwbwbw', 'wwbwbww', 'wbwbwbw', 'wwbwbww', 'wbwbwbw', 'wwbwbww', 'wbwbwbw', 'wwwwwww'], { w: COL.ink, b: COL.blue });
-  SP.spade = PX.sprite(['wwwwwww', 'www.www', 'ww...ww', 'w.....w', 'w.....w', 'ww.w.ww', 'www.www', 'ww...ww', 'wwwwwww'], { w: COL.ink });
+  SP.spade = PX.sprite(['wwwwwww', 'wwwkwww', 'wwkkkww', 'wkkkkkw', 'wkkkkkw', 'wwkwkww', 'wwwkwww', 'wwkkkww', 'wwwwwww'], { w: COL.white, k: COL.dark });
   SP.bull = PX.sprite([
-    'hh..........', '.hhh........', '..hhhhhhhhh.', '.hhhhhhhhhhh', '.ehhhhhhhhhh', '..hhhhhhhhh.', '..h.h...h.h.', '..h.h...h.h.',
-  ], { h: COL.dark, e: COL.red });
+    '.........w..', '.........ww.', '.hhhhhhhhhhh', 'thhhhhhhhhhe', '.hhhhhhhhhhh', '.hhhhhhhhhh.', '.h.h....h.h.', '.h.h....h.h.',
+  ], { h: COL.bull, t: COL.bull, w: COL.ink, e: COL.red });
   SP.ring = PX.sprite(['.ggg.', 'g...g', 'g...g', 'g...g', '.ggg.'], { g: COL.gold });
   SP.knife = PX.sprite(['wwwwwwd', '.wwwwdd', '......d'], { w: COL.white, d: COL.dark });
-  SP.heart = PX.sprite(['.r.r.', 'rrrrr', 'rrrrr', '.rrr.', '..r..'], { r: COL.red });
-  SP.note = PX.sprite(['..n', '..n', '..n', 'nnn', 'nnn'], { n: COL.gold });
+  SP.heart = PX.sprite(['.r.r.', 'rrrrr', 'rrrrr', '.rrr.', '..r..'], { r: COL.pink });
 }
 
 // ---- music helpers ----
-const B = { HAB: [0, 0.75, 1, 1.5] };                     // habanera bass: dum . da-dum dum
+// the habanera bass ostinato (d8 r16 a16 f8 a8, checked: docs/MUSIC.md), one 2/4 bar per two game beats
+const HB = TUNES.habanera.bass;
 const habanera = (t, b, bars = 1, vol = 0.12, voice = 'bass') => {
-  for (let i = 0; i < bars; i++) B.HAB.forEach((o, j) => S.voice(voice, S.deg(j === 1 ? '5-' : '1-'), t + (i * 2 + o) * b, b * 0.4, { vol, light: j ? null : 'bass' }));
+  for (let i = 0; i < bars; i++) HB.notes.forEach((n, j) => S.voice(voice, S.deg(n), t + (i * 2 + HB.at[j]) * b, b * HB.durs[j] * 0.9, { vol, light: j ? null : 'bass' }));
 };
-const SLIDE = ['1+', '7#', '7', '6#', '6', '5'], SLIDE_D = [0.75, 0.25, 0.5, 0.5, 0.75, 1.25];
+const SLIDE = TUNES.habanera.notes, SLIDE_D = TUNES.habanera.durs;   // "L'amour est un oiseau rebelle", 2/4
 const sing = MG.sing;
-const TOREADOR = ['5', '5', '5', '4', '3', '3', '1'], TOREADOR_D = [0.5, 0.5, 0.5, 0.5, 0.75, 0.25, 1];
+const TOREADOR = TUNES.toreador.notes, TOREADOR_D = TUNES.toreador.durs;   // the refrain, F major, checked
 const stingUp = MG.sting;
+// hit sounds: a soft chime on a chord tone, a bright rising run for a win, a low drop for a loss
+const CHIME = ['1', '3', '5', '1+', '3+', '5+', '1++'];
+const chime = (i, vol = 0.05) => S.voice('pulse', S.deg(CHIME[i % 7]) + 12, S.now(), 0.12, { vol });
+const winSting = (t) => { CHIME.slice(0, 6).forEach((d, i) => S.voice('pulse', S.deg(d) + 12, t + i * 0.045, 0.1, { vol: 0.05 })); S.drum('hat', t, 0.14); };
+const loseSting = (t) => { S.drum('kick', t, 0.3); S.voice('bass', S.deg('3'), t, 0.12, { vol: 0.16 }); S.voice('bass', S.deg('1') - 1, t + 0.13, 0.7, { vol: 0.18, grit: true }); };
 
 // ---- the stage ----
 const GROUND = MG.GROUND;
 const stageFloor = (colour) => MG.floor(colour, COL.dim);
+const backdrop = (colour) => PX.rect(0, GROUND, 256, 144 - GROUND, c(colour));
 const say = (text, x, y, colour = COL.ink) => MG.say(text, x, y, colour, COL.dark);
+// a sprite with a one-pixel rim in one colour: the thing to look at
+const glow = (s, x, y, col, a = 1, o = {}) => {
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) PX.draw(s, x + dx, y + dy, { ...o, color: c('#000000', a), add: c(col, 0) });
+  PX.draw(s, x, y, o);
+};
+// a puff of tinted squares (untextured particles): n of them from x, y at speed px per frame
+const puff = (x, y, cols, n = 12, speed = 1.5, o = {}) => new ParticleEmitter(vec2(x, y), o.angle || 0, o.size ?? 2, 0.05, n * 20, o.cone ?? PI, undefined,
+  c(cols[0]), c(cols[1] || cols[0]), c(cols[0], o.keep ?? 0), c(cols[1] || cols[0], o.keep ?? 0),
+  o.life ?? 0.8, o.s0 ?? 3, o.s1 ?? 2, speed, o.spin ?? 0.15, o.damp ?? 0.94, 1, o.g ?? 1, PI, 0.15, 0.5);
+// particles that reach the floor lie on it (petals, roses, rope ends)
+const settle = (list) => { for (const e of list) for (const p of e.particles) if (p.pos.y < GROUND + 1) { p.pos.y = GROUND + 1; p.velocity.set(0, 0); p.angleVelocity = 0; } };
+// the verdict, in the first frames of the outcome: a flash and a rising sting, or a shake and a low one
+// (the outcome clock m.t starts on the next beat, so it can be negative here; the flash keeps its own)
+const verdict = (m) => { const t = m.v0 = S.now(); if (m.act.toy) S.arp('III', 1.2, 20, t, { vol: 0.05, octave: 1 }); else if (m.won) winSting(t); else loseSting(t); };
+const verdictDraw = (m) => {
+  const k = Math.min(1, 1 - (S.now() - m.v0) / 0.35);
+  if (k > 0 && !m.act.toy) PX.rect(0, 0, PX.W, PX.H, m.won ? c(COL.white, 0.8 * k) : c('#000000', 0.55 * k));
+};
+const shake = (m) => { if (m.phase === OUTCOME && !m.won && S.now() - m.v0 < 0.4) setCameraPos(cameraPos.add(vec2(randInt(-2, 3), randInt(-2, 3)))); };
+const out = (m) => m.phase === OUTCOME;
+
+const ACTS = [
+  // ---------------------------------------------------------------- I
+  // the toy: she throws him the flower, it bursts, he runs and jumps through the petals
+  { name: 'ACT I · THE FACTORY', aria: 'HABANERA', command: 'CATCH!', bpm: 120, beats: 12, verb: 'move', toy: true,
+    init(m) { m.x = 60; m.y = 0; m.vy = 0; m.n = 0; m.last = 0; m.lit = 0; m.facing = 1; m.falls = []; },
+    onOutcome(m) { m.cut('mid', 122, GROUND + 36); m.fl = 0; m.lit = 0; },
+    update(m) {
+      if (!m.falls.length) {
+        // she throws: the flower bursts over the stage, then the petals keep coming
+        m.falls.push(puff(128, 104, [COL.red, COL.pink], 36, 1.2, { size: vec2(200, 30), life: 7, keep: 1, g: 0.35, damp: 0.96, spin: 0.08, s0: 3, s1: 3 }));
+        m.falls.push(new ParticleEmitter(vec2(128, 124), 0, vec2(250, 36), 0, 12, PI, undefined, c(COL.red), c(COL.pink), c(COL.red), c(COL.pink),
+          7, 3, 3, 0.1, 0.06, 0.96, 1, 0.4, PI, 0.1, 0.4));
+        S.drum('hat', S.now(), 0.15);
+      }
+      MG.walk(m, 'x', 90, 4, 240);
+      if (m.press && !m.y) { m.vy = 190; S.drum('hat', S.now(), 0.1); }
+      m.vy -= 640 * timeDelta; m.y = Math.max(0, m.y + m.vy * timeDelta); if (!m.y) m.vy = 0;
+      m.lit = Math.max(0, m.lit - timeDelta * 4);
+      settle(m.falls);
+      // a petal he touches is a note, climbing the chord
+      for (const e of m.falls) for (const p of e.particles) {
+        const py = p.pos.y - GROUND - m.y;
+        if (!p.destroyed && p.pos.y > GROUND + 2 && p.pos.x > m.x - 3 && p.pos.x < m.x + 15 && py > -2 && py < 25) {
+          p.destroy(); m.lit = 1;
+          puff(p.pos.x, p.pos.y, [COL.pink, COL.white], 5, 0.7, { life: 0.35, g: 0, s0: 2, s1: 1 });
+          if (m.t - m.last > 0.06) { chime(m.n++); m.last = m.t; }
+        }
+      }
+    },
+    updateOutcome(m) {
+      settle(m.falls);
+      m.y = Math.max(0, m.y - 200 * timeDelta);
+      m.facing = m.x < 104 ? 1 : -1;
+      m.x += Math.sign(104 - m.x) * Math.min(Math.abs(104 - m.x), 150 * timeDelta);
+      if (m.t > 0.9 && !m.fl) { m.fl = 1; chime(3, 0.06); chime(5, 0.05); puff(m.x + 7, GROUND + 18, [COL.pink, COL.red], 16, 1.1, { life: 1, g: 0.4 }); }
+    },
+    render(m) {
+      backdrop('#35283f');
+      stageFloor(COL.sand);
+      // the factory and Carmen in its lit door, up on the step
+      PX.rect(84, GROUND + 38, 88, 82, c('#241a2c'));
+      PX.rect(110, GROUND + 50, 36, 40, c('#8a5a42'));
+      PX.rect(106, GROUND + 48, 44, 2, c(COL.dim));
+      PX.draw(SP.carmen, 121, GROUND + 50);
+      if (m.phase < ACTION) PX.draw(SP.flower, 133, GROUND + 60);
+      const k = m.lit;
+      const bob = out(m) ? Math.round(MG.bounce() * 2) : 0;
+      PX.draw(SP.jose, m.x, GROUND + m.y + bob, { flip: m.facing < 0, add: new Color(k * 0.5, k * 0.25, k * 0.35, 0) });
+      if (out(m)) {
+        // the flower itself drifts down last, into his hand
+        const f = Math.min(1, m.t / 0.9);
+        PX.draw(SP.flower, lerp(130, m.x + 9, f), lerp(GROUND + 60, GROUND + 6 + bob, f));
+        if (m.t > 1) PX.draw(SP.heart, m.x + 2, GROUND + 28 + Math.round(MG.bounce() * 3));
+      }
+    },
+    outcome: () => ['SHE THROWS HIM A FLOWER. HE KEEPS IT.'],
+    music: {
+      curtain: (t, b) => { stingUp(t); habanera(t, b, 2, 0.12); },
+      bar: (t, b, i) => { habanera(t, b, 2); if (i % 4 === 0) sing('tenor', SLIDE, SLIDE_D, t, b * 2, { vol: 0.14, light: 'lead' }); },
+      outcome: (t, b, won) => { habanera(t, b, 1); sing('soprano', won ? ['5', '6', '5', '3'] : ['3', '2', '1', '7-'], [0.5, 0.5, 0.5, 1.5], t, b, { vol: 0.13 }); },
+    },
+  },
+  // ---------------------------------------------------------------- II
+  // José loosens the rope round her; either way she pushes him down and runs
+  { name: 'ACT I · THE ESCAPE', aria: 'SEGUIDILLA', command: 'UNTIE!', bpm: 140, beats: 12, verb: 'mash', shot: 'mid', focus: () => [112, GROUND + 22],
+    onOutcome(m) {
+      m.cut('wide'); m.go = m.won ? 0.3 : 0.9; m.pushed = 0; m.bits = [];
+      if (m.won) m.bits.push(puff(115, GROUND + 14, [COL.sand, COL.gold], 24, 1.8, { life: 2, keep: 1, g: 1 }));
+    },
+    init(m) { m.knot = 0; m.jig = 0; m.n = 0; },
+    update(m) {
+      if (m.press) {
+        m.knot = Math.min(1, m.knot + 0.1); m.jig = 1;
+        S.drum('hat', S.now(), 0.12); chime(m.n++ % 3, 0.03);
+        puff(115, GROUND + 12, [COL.sand], 3, 1, { life: 0.4, s0: 2, s1: 1 });
+      }
+      m.knot = Math.max(0, m.knot - 0.2 * timeDelta);
+      m.jig = Math.max(0, m.jig - timeDelta * 8);
+      if (m.knot >= 1) m.win();
+    },
+    updateOutcome(m) {
+      settle(m.bits);
+      if (m.t > m.go && !m.pushed) { m.pushed = 1; S.drum('kick', S.now(), 0.25); S.drum('breath', S.now(), 0.3); m.bits.push(puff(88, GROUND + 2, [COL.sand, COL.dim], 10, 0.8, { life: 0.6, g: 0 })); }
+    },
+    render(m) {
+      shake(m);
+      backdrop('#2c3358');
+      stageFloor(COL.dim);
+      PX.rect(192, GROUND, 40, 72, c(COL.dark));                // the guardroom door, Zuniga in it
+      PX.draw(SP.zuniga, 206, GROUND);
+      const o = out(m), gone = o && m.t > m.go;
+      const cx = gone ? 108 + (m.t - m.go) * 190 : 108 + (o && !m.won ? Math.round(Math.sin(m.t * 40)) : 0);
+      // José falls back when she shoves him
+      if (gone) PX.draw(SP.jose, 80, GROUND - 5, { angle: -PI / 2 });
+      else PX.draw(SP.jose, 88 + Math.round(m.jig * 2), GROUND);
+      PX.draw(SP.carmen, cx, GROUND);
+      // the rope: coils round her, one gone for each third of the knot
+      if (!o || (!m.won && !gone)) {
+        const n = o ? 3 : Math.max(1, 3 - Math.floor(m.knot * 3));
+        for (let i = 0; i < n; i++) glow(SP.coil, cx - 1, GROUND + 4 + i * 4 + (m.jig > 0.5 ? 1 : 0), COL.dark);
+      } else { PX.draw(SP.coil, 102, GROUND); PX.draw(SP.coil, 106, GROUND + 2); }   // on the floor, either way
+    },
+    renderOutcome: verdictDraw,
+    outcome: (m) => m.won ? ['THE ROPE GIVES. SHE PUSHES HIM DOWN AND RUNS.'] : ['THE KNOT HOLDS. SHE PUSHES HIM DOWN AND RUNS.'],
+    music: {
+      curtain: (t, b) => { stingUp(t); for (let i = 0; i < 12; i++) S.voice('pulse', S.deg(['1', '3', '5'][i % 3]), t + i * b / 3, b / 4, { vol: 0.06 }); },
+      bar: (t, b) => { for (let i = 0; i < 12; i++) { S.voice('pulse', S.deg(['1', '3', '5', '3', '5', '1+'][i % 6]), t + i * b / 3, b / 4, { vol: 0.07, light: i % 3 ? null : 'lead' }); if (i % 3 === 0) S.voice('bass', S.deg(i % 6 ? '5-' : '1-'), t + i * b / 3, b / 2, { vol: 0.12 }); } },
+      outcome: (t, b, won) => { if (won) { S.drum('snare', t, 0.2); sing('soprano', ['1+', '5', '3', '1'], [0.33, 0.33, 0.33, 1.5], t, b, { vol: 0.13 }); } else { S.drum('kick', t, 0.2); S.drum('kick', t + b, 0.2); S.voice('bass', S.deg('1-'), t + 2 * b, 1.5, { vol: 0.18 }); } },
+    },
+  },
+  // ---------------------------------------------------------------- III
+  // he holds the dry flower out; held, it blooms; she turns round either way
+  { name: 'ACT II · THE TAVERN', aria: 'LA FLEUR', command: 'HOLD!', bpm: 120, beats: 14, verb: 'hold', shot: 'mid', focus: () => [124, GROUND + 22],
+    init(m) { m.bloom = 0; m.was = false; m.turned = 0; },
+    onOutcome(m) {
+      m.bits = [];
+      if (m.won) m.bits.push(puff(117, GROUND + 22, [COL.pink, COL.red], 24, 1.3, { life: 2.5, keep: 1, g: 0.5, damp: 0.95 }));
+      else m.bits.push(puff(117, GROUND + 18, ['#6a5058'], 5, 0.4, { life: 2, keep: 1, g: 0.5, damp: 0.95 }));
+    },
+    update(m) {
+      if (m.hold) m.bloom = Math.min(1, m.bloom + timeDelta / 3); else m.bloom = Math.max(0, m.bloom - timeDelta / 4);
+      if (m.hold && !m.was) chime(4, 0.04);
+      if (!m.hold && m.was) S.voice('tenor', S.deg('1-'), S.now(), 0.35, { vol: 0.1, grit: true });
+      m.was = m.hold;
+      if (m.bloom >= 1) m.win();
+    },
+    updateOutcome(m) {
+      settle(m.bits);
+      const at = m.won ? 0.1 : 1.2;          // she turns round: at once, or after a moment
+      if (m.t > at && !m.turned) { m.turned = 1; chime(2, 0.05); chime(4, 0.04); if (!m.won) m.bits.push(puff(117, GROUND + 22, [COL.pink], 10, 0.9, { life: 1 })); }
+      if (m.turned) m.bloom = Math.min(1, m.bloom + timeDelta * 2);
+    },
+    render(m) {
+      shake(m);
+      backdrop('#3a2230');
+      PX.rect(150, GROUND + 60, 6, 3, c(COL.gold));             // a lamp, and its warm pool
+      stageFloor(COL.wood);
+      const o = out(m);
+      PX.draw(SP.kneel, 100, GROUND);
+      // the flower: dry, and blooming over it as he holds it out
+      const droop = o && !m.won && !m.turned;
+      const fx = 110, fy = GROUND + 6;
+      if (m.phase === ACTION) glow(SP.flowerDead, fx, fy, COL.pink, m.hold ? 0.6 + 0.4 * MG.bounce() : 0.35);
+      PX.draw(SP.flowerDead, fx, fy - (droop ? 2 : 0), { angle: droop ? 0.5 : 0 });
+      PX.draw(SP.flower, fx, fy - (droop ? 2 : 0), { color: c(COL.white, m.bloom), angle: droop ? 0.5 : 0 });
+      PX.draw(m.turned ? SP.carmen : SP.carmenBack, 138, GROUND);
+      if (m.turned) PX.draw(SP.heart, 126, GROUND + 30 + Math.round(MG.bounce() * 2));
+      if (o && m.t > 1.7) say('LÀ-BAS !', 150, GROUND + 30);
+    },
+    renderOutcome: verdictDraw,
+    outcome: (m) => m.won ? ['SHE TURNS. HE WILL DESERT FOR HER.'] : ['SHE TURNS ANYWAY. HE WILL DESERT FOR HER.'],
+    music: {
+      curtain: (t, b) => { stingUp(t); S.setRoom(900, 0.5, 1, t); sing('tenor', ['5', '5', '6', '5'], [0.5, 0.5, 0.5, 1.5], t + b, b, { vol: 0.12, vibrato: 6 }); },
+      bar: (t, b, i) => { S.key(2, 'major'); habanera(t, b, 2, 0.09); if (i % 4 === 0) sing('tenor', SLIDE, SLIDE_D, t, b * 2, { vol: 0.12, vibrato: 7, light: 'lead' }); S.key(2, 'minor'); },
+      outcome: (t, b, won) => { S.setRoom(2400, 0.4, 2, t); if (won) sing('tenor', ['1+', '7', '6', '5'], [0.5, 0.5, 0.5, 2], t, b, { vol: 0.13, vibrato: 8 }); else sing('tenor', ['5', '4b', '3', '1-'], [0.5, 0.5, 0.5, 2], t, b, { vol: 0.13, grit: true }); },
+    },
+  },
+  // ---------------------------------------------------------------- IV
+  // three cards face down; each press turns the next one; every one is the spade
+  { name: 'ACT III · THE PASS', aria: 'THE CARDS', command: 'FLIP!', bpm: 110, beats: 10, verb: 'tap', shot: 'mid', focus: () => [122, GROUND + 22],
+    init(m) { m.n = 0; m.pop = [0, 0, 0]; },
+    flip(m, i, wind) {
+      m.pop[i] = 1; m.n = Math.max(m.n, i + 1);
+      puff(107 + i * 22, GROUND + 21, wind ? [COL.dim] : [COL.white, COL.blue], 8, 1, { life: 0.4, g: 0 });
+      S.drum(wind ? 'breath' : 'snare', S.now(), 0.2); S.voice('pulse', S.deg(['5', '4', '3'][i]), S.now(), 0.3, { vol: 0.06 });
+    },
+    update(m) {
+      if (m.press && m.n < 3) { m.act.flip(m, m.n); if (m.n === 3) m.win(); }
+      m.pop = m.pop.map((p) => Math.max(0, p - timeDelta * 4));
+    },
+    updateOutcome(m) {
+      // the wind turns what she didn't
+      if (m.n < 3 && m.t > 0.5 + m.n * 0.3) m.act.flip(m, m.n, true);
+      m.pop = m.pop.map((p) => Math.max(0, p - timeDelta * 4));
+    },
+    render(m) {
+      shake(m);
+      backdrop('#23304a');
+      PX.rect(0, GROUND, 256, 30, c('#1a2238'));               // the mountains, far off, still
+      stageFloor(COL.dim);
+      PX.draw(SP.carmen, 72, GROUND);
+      PX.rect(94, GROUND, 80, 12, c(COL.wood));                // the table
+      PX.rect(94, GROUND + 11, 80, 1, c('#8a5a3a'));
+      for (let i = 0; i < 3; i++) {
+        const x = 100 + i * 22, next = m.phase === ACTION && i === m.n;
+        const y = GROUND + 12 + (next ? Math.round(MG.bounce() * 2) : 0);
+        const s = i < m.n ? SP.spade : SP.cardBack;
+        if (next) glow(s, x, y, COL.gold);
+        else PX.draw(s, x, y, { color: i < m.n ? WHITE : c('#9a9ab0'), add: m.pop[i] ? new Color(m.pop[i], m.pop[i], m.pop[i], 0) : undefined });
+      }
+      if (out(m) && m.t > 1.6) say('LA MORT !', 66, GROUND + 28);
+    },
+    renderOutcome: verdictDraw,
+    outcome: (m) => m.won ? ['SPADE. SPADE. SPADE. THE CARDS SAY DEATH.'] : ['THE WIND TURNS THEM. THE CARDS SAY DEATH.'],
+    music: {
+      curtain: (t, b) => { S.drone(S.deg('1-'), t, 5 * b, { tritone: true, vol: 0.05 }); S.drum('kick', t, 0.16, 'kick'); },
+      bar: (t, b) => { S.drone(S.deg('1-'), t, 4.2 * b, { tritone: true, vol: 0.05 }); S.drum('kick', t, 0.14); S.drum('kick', t + 2 * b, 0.14); S.voice('soprano', S.deg('5'), t + b, 1.2, { vol: 0.09 }); },
+      outcome: (t, b) => { S.drum('snare', t, 0.22, 'kick'); sing('soprano', ['5', '4', '3'], [1, 1, 2], t + b * 0.5, b, { vol: 0.14 }); S.drone(S.deg('1-'), t, 4 * b, { tritone: true, vol: 0.06 }); },
+    },
+  },
+  // ---------------------------------------------------------------- V
+  // the bull charges three times; jump it; tossed or not, the crowd is his
+  { name: 'ACT IV · THE BULLRING', aria: 'TOREADOR', command: 'GLORY!', bpm: 140, beats: 16, verb: 'jump',
+    init(m) { m.x = 122; m.y = 0; m.vy = 0; m.bull = null; m.charges = 0; m.passes = 0; m.next = 0.4; m.ole = 0; m.timeoutWins = true; },
+    onOutcome(m) { m.roses = []; m.cheered = 0; m.up = m.won ? 0 : 1.5; },
+    bullStep(m) {
+      const bu = m.bull;
+      if (!bu) return;
+      bu.x += bu.dir * bu.speed * timeDelta;
+      if (bu.x < -40 || bu.x > 280) m.bull = null;
+    },
+    update(m) {
+      if (m.press && !m.y) { m.vy = 240; S.drum('hat', S.now(), 0.14); }
+      m.vy -= 800 * timeDelta; m.y = Math.max(0, m.y + m.vy * timeDelta); if (!m.y) m.vy = 0;
+      m.ole = Math.max(0, m.ole - timeDelta * 1.5);
+      if (!m.bull && m.t >= m.next && m.charges < 3) {
+        const left = m.charges % 2 === 0;
+        m.bull = { x: left ? -26 : 258, dir: left ? 1 : -1, speed: 150 + m.charges * 30 };
+        m.charges++;
+        S.drum('thunder', S.now(), 0.3);
+      }
+      const bu = m.bull;
+      if (bu) {
+        if (bu.x + 22 > m.x + 2 && bu.x + 2 < m.x + 10 && m.y < 14) m.lose();
+        if (!bu.passed && (bu.dir > 0 ? bu.x > m.x + 12 : bu.x + 24 < m.x)) {
+          bu.passed = 1; m.passes++; m.ole = 1; S.drum('crowd', S.now(), 0.2); chime(m.passes + 2, 0.05);
+          puff(m.x + 6, GROUND + 30, [COL.gold, COL.red], 8, 1.2, { life: 0.7 });
+          if (m.passes === 3) m.win();
+        }
+        m.act.bullStep(m);
+        if (!m.bull) m.next = m.t + 0.3;
+      }
+    },
+    updateOutcome(m) {
+      m.act.bullStep(m);
+      settle(m.roses);
+      if (m.t > m.up && !m.cheered) {
+        m.cheered = 1; S.drum('crowd', S.now(), 0.28);
+        m.roses.push(puff(128, 136, [COL.red, COL.pink], 40, 0.6, { size: vec2(220, 8), life: 4, keep: 1, g: 1, angle: PI, cone: 0.6 }));
+      }
+    },
+    render(m) {
+      shake(m);
+      const o = out(m), roar = o && m.cheered;
+      backdrop('#21161c');
+      // the crowd: dim and still while he fights, on their feet after
+      for (let i = 0; i < 32; i++) for (let r = 0; r < 3; r++) {
+        const jump = roar && (i + r + Math.floor(m.beat * 2)) % 2 ? 2 : 0;
+        PX.rect(i * 8 + 2, 106 + r * 9 + jump, 4, 4, c([COL.red, COL.gold, COL.ink][(i + r) % 3], roar ? 0.9 : 0.3));
+      }
+      PX.rect(0, GROUND, 256, 40, c('#5a2a20'));               // the barrera
+      PX.rect(0, GROUND + 38, 256, 2, c('#8a5a3a'));
+      stageFloor(COL.sand);
+      if (o && m.t > 1.2) glow(SP.joseShadow, 14, GROUND, COL.green, 0.6);   // José, at the gate
+      if (m.bull) PX.draw(SP.bull, m.bull.x, GROUND, { flip: m.bull.dir < 0 });
+      // tossed: up, over, down, and up again
+      const tt = o && !m.won ? Math.max(0, m.t) : 9;
+      if (tt < 0.8) PX.draw(SP.esca, m.x, GROUND + Math.sin(tt / 0.8 * PI) * 40, { angle: tt * 9 });
+      else if (tt < m.up) PX.draw(SP.esca, m.x, GROUND - 5, { angle: PI / 2 });
+      else glow(SP.esca, m.x, GROUND + (o ? Math.round(MG.bounce() * 2) : m.y), COL.white, o ? 0.5 : 0);
+      if (m.ole > 0.3) say('OLÉ !', m.x + 16, GROUND + 30, COL.gold);
+      if (roar && m.t > m.up + 0.2) say('OLÉ !', m.x + 16, GROUND + 30, COL.gold);
+    },
+    renderOutcome: verdictDraw,
+    outcome: (m) => m.won ? ['THREE PASSES. THE CROWD IS HIS.'] : ['TOSSED. HE GETS UP. THE CROWD IS HIS.'],
+    music: {
+      curtain: (t, b) => { stingUp(t); S.setRoom(3200, 0.45, 1, t); S.drum('crowd', t, 0.18); sing('pulse', ['1', '3', '5', '1+'], [0.25, 0.25, 0.25, 1], t + b, b, { vol: 0.09 }); },
+      bar: (t, b, i) => {
+        // F major fanfare over a creeping minor second in the bass
+        S.key(5, 'major');
+        if (i % 4 === 0) sing('tenor', TOREADOR, TOREADOR_D, t, b, { vol: 0.13, light: 'lead' });
+        for (let k = 0; k < 4; k++) { S.voice('bass', S.deg('1-') + (k % 2), t + k * b, b * 0.5, { vol: 0.13 }); S.drum(k % 2 ? 'hat' : 'kick', t + k * b, 0.14); }
+        S.key(2, 'minor');
+      },
+      outcome: (t, b, won) => { S.key(5, 'major'); if (won) { S.drum('crowd', t, 0.25); sing('tenor', ['5', '5', '5', '1+'], [0.33, 0.33, 0.33, 2], t, b, { vol: 0.15 }); S.arp('I', 2.5 * b, 25, t + b, { vol: 0.07, octave: 1 }); } else { S.drum('snare', t, 0.25); S.voice('bass', S.deg('1-'), t, 2, { vol: 0.16, grit: true }); } S.key(2, 'minor'); },
+    },
+  },
+  // ---------------------------------------------------------------- VI
+  // he walks up a step a beat; when he is in reach the ring shines: throw it back at him
+  { name: 'ACT IV · OUTSIDE THE ARENA', aria: 'THE FINALE', command: 'REJECT!', bpm: 150, beats: 12, verb: 'tap', outcomeSeconds: 4.2,
+    init(m) { m.jx = 90; m.cx = 196; m.step = 0; m.near = false; },
+    onOutcome(m) { m.cut('mid', 160, GROUND + 22); m.knife = 0; m.land = 0; m.rx = m.cx - 8; m.to = m.jx + 18; m.blood = []; },
+    update(m) {
+      const step = Math.floor(m.beat);
+      if (step > m.step) { m.step = step; m.jx = 90 + step * 8; S.drum('kick', S.now(), 0.18, 'kick'); }
+      m.near = m.cx - m.jx < 66;
+      if (m.press) { if (m.near) m.win(); else S.drum('hat', S.now(), 0.1); }
+    },
+    updateOutcome(m) {
+      settle(m.blood);
+      // the ring lands at his feet: thrown in an arc, or dropped and rolling
+      const k = m.won ? clamp(m.t / 0.5) : Math.min(1, Math.max(0, (m.t - 0.35) / 0.6));
+      m.rx = lerp(m.cx - 8, m.to, k);
+      m.ry = m.won ? GROUND + 14 * (1 - k) + Math.sin(k * PI) * 18 : GROUND + Math.max(0, 14 - m.t * 45);
+      if (k >= 1 && !m.land) { m.land = 1; chime(6, 0.04); S.drum('hat', S.now(), 0.12); }
+      if (m.t > 1.6 && !m.knife) {
+        m.knife = 1; S.drum('snare', S.now(), 0.3, 'knife');
+        m.blood.push(puff(m.cx + 10, GROUND + 14, [COL.red, COL.pink], 30, 0.9, { life: 1.6, keep: 1, g: 0.8, damp: 0.93, size: 8 }));
+      }
+    },
+    render(m) {
+      shake(m);
+      backdrop('#40202a');
+      PX.rect(0, GROUND + 62, 256, 60, c('#2a1418'));           // the arena wall
+      stageFloor(COL.sand);
+      const o = out(m), fallen = o && m.t > 1.6;
+      if (fallen) PX.draw(SP.carmenWhite, m.cx + 4, GROUND - 4, { angle: -PI / 2 });
+      else PX.draw(SP.carmen, m.cx, GROUND, { flip: true });
+      PX.draw(SP.jose, m.jx, GROUND, { color: m.phase === ACTION && m.near ? c(COL.green) : WHITE });
+      if (!o) {
+        const y = GROUND + 14 + (m.near ? Math.round(MG.bounce() * 3) : 0);
+        if (m.near) glow(SP.ring, m.cx - 8, y, COL.white);
+        else PX.draw(SP.ring, m.cx - 8, y, { color: c('#ffffff', 0.5) });
+      } else PX.draw(SP.ring, m.rx, m.ry);
+      if (o && m.t > 1.3) PX.draw(SP.knife, m.jx + 12, GROUND + 12);
+      if (o && m.t > 1.6 && m.t < 1.75) PX.rect(0, 0, 256, 144, c(COL.white, 0.9));
+      if (o && m.t > 2.6) say('MERDE !', m.jx + 14, GROUND + 28, COL.ink);   // the wink: José, deadpan, a beat too late
+    },
+    renderOutcome: verdictDraw,
+    outcome: (m) => m.won ? ['SHE THROWS HIS RING AWAY. HE HAS A KNIFE.'] : ['SHE LETS HIS RING FALL. HE HAS A KNIFE.'],
+    music: {
+      curtain: (t, b) => { stingUp(t); S.setRoom(600, 0.55, 1, t); S.voice('tenor', S.deg('1-'), t, 3 * b, { vol: 0.12, grit: 0.5 }); },
+      bar: (t, b) => { for (let k = 0; k < 4; k++) S.voice('tenor', S.deg(k % 2 ? '2b' : '1'), t + k * b, b * 0.6, { vol: 0.12, grit: 0.75, light: 'lead' }); S.voice('soprano', S.deg('5+'), t + 2 * b, 1.4 * b, { vol: 0.1 }); },
+      outcome: (t, b, won) => { const k = t + 1.6; S.drum('snare', k, 0.3); S.voice('bass', S.deg('1-'), k + 0.1, 1.5, { vol: 0.18 }); S.arp('i', 1.6, 25, k + 0.3, { vol: 0.06, octave: 1 }); S.setRoom(320, 0.6, 1.5, k); },
+    },
+  },
+];
+// every act gets the verdict: the sting at the first frame of the outcome
+for (const a of ACTS) { const on = a.onOutcome; a.onOutcome = (m) => { verdict(m); on?.(m); }; }
 
 MG.opera({
   title: 'CARMEN',
@@ -72,241 +429,11 @@ MG.opera({
   key: [2, 'minor'],
   colours: COL,
   sprites: carmenSprites,
-  ending: (m, bravos) => bravos === 6 ? ['CARMEN IS DEAD.', 'YOU DID EVERYTHING RIGHT.']
+  ending: (m, bravos) => bravos === 5 ? ['CARMEN IS DEAD.', 'YOU DID EVERYTHING RIGHT.']
     : bravos === 0 ? ['CARMEN IS DEAD.', 'YOU DID NOTHING RIGHT. SAME ENDING.']
     : ['CARMEN IS DEAD.', 'IT WAS NEVER UP TO YOU.'],
   music: { result: (t, n) => { S.setRoom(3600, 0.5, 1, t); for (let i = 0; i < 4; i++) S.arp(['i', 'VI', 'III', 'VII'][i], 0.9, 25, t + i, { vol: 0.07, octave: 1 }); S.voice('soprano', S.deg('5+'), t + 4, 2.4, { vol: 0.12 }); } },
   renderTitle: () => { stageFloor(COL.sand); PX.draw(SP.carmen, 121, GROUND); PX.draw(SP.flower, 110, GROUND + 30 + MG.bounce(timeReal) * 4); },
-  renderResult: (m, n) => { stageFloor(COL.dark); PX.draw(SP.jose, 100, GROUND); PX.draw(SP.carmenWhite, 130, GROUND - 6, { angle: -PI / 2 }); },
-
-  acts: [
-    // ---------------------------------------------------------------- I
-    { name: 'ACT I · THE FACTORY', aria: 'HABANERA', command: 'CATCH!', bpm: 120, beats: 12, verb: 'move',
-      init(m) { m.x = 60; m.fx = 128; m.fy = 112; m.fall = 0; m.sway = rand(2, 4); m.vx = 0; },
-      update(m) {
-        MG.walk(m, 'x', 80, 4, 240);
-        // the blossom falls, swaying, for the whole window; a random drift each play
-        m.fall += timeDelta;
-        m.fy = 112 - m.fall * (80 / (m.beats * MG.beat() * 0.9));
-        m.fx = 128 + Math.sin(m.fall * m.sway) * 40 + Math.sin(m.fall * 0.7) * 20;
-        if (m.fy <= GROUND + 22 && Math.abs(m.fx + 5 - (m.x + 6)) < 10) m.win();
-        else if (m.fy <= GROUND) m.lose();
-      },
-      render(m) {
-        PX.rect(0, 0, 256, 144, c(COL.sand, 0.12));
-        stageFloor(COL.sand);
-        // the factory door and Carmen in it, up on the step
-        PX.rect(104, GROUND + 56, 48, 64, c(COL.dark));
-        PX.draw(SP.carmen, 121, GROUND + 58);
-        if (m.phase === MG.phase.OUTCOME) {
-          if (m.won) { PX.draw(SP.jose, m.x, GROUND); PX.draw(SP.flower, m.x + 2, GROUND + 12); if (m.t > 0.6) PX.draw(SP.heart, m.x + 14, GROUND + 26 + MG.bounce() * 3); }
-          else { const bend = m.t < 1.2; PX.draw(bend ? SP.bend : SP.jose, m.x, GROUND); PX.draw(SP.flower, bend ? m.fx : m.x + 2, bend ? GROUND : GROUND + 12); }
-        } else {
-          PX.draw(SP.jose, m.x, GROUND, { flip: m.facing < 0 });
-          if (m.phase === MG.phase.ACTION) PX.draw(SP.flower, m.fx, m.fy);
-        }
-        PX.rect(0, GROUND, 256, 1, c(COL.dim));
-      },
-      outcome: (m) => m.won ? ['HE CATCHES IT. HE IS LOST.'] : ['HE PICKS IT UP ANYWAY.'],
-      music: {
-        curtain: (t, b) => { stingUp(t); habanera(t, b, 2, 0.12); },
-        bar: (t, b, i) => { habanera(t, b, 2); if (i % 2 === 0) sing('tenor', SLIDE, SLIDE_D, t, b, { vol: 0.14, light: 'lead' }); else sing('pulse', ['5', '4', '5', '6', '5', '4', '3'], [0.5, 0.25, 0.25, 0.5, 0.5, 0.5, 1.5], t, b, { vol: 0.07 }); },
-        outcome: (t, b, won) => { habanera(t, b, 1); sing('soprano', won ? ['5', '6', '5', '3'] : ['3', '2', '1', '7-'], [0.5, 0.5, 0.5, 1.5], t, b, { vol: 0.13 }); },
-      },
-    },
-    // ---------------------------------------------------------------- II
-    { name: 'ACT I · THE ESCAPE', aria: 'SEGUIDILLA', command: 'UNTIE!', bpm: 140, beats: 12, verb: 'mash', shot: 'close', focus: () => [108, GROUND + 14],
-      onOutcome(m) { m.cut('wide'); },
-      init(m) { m.knot = 0; m.look = 0; m.snap = 0; m.mashes = 0; },
-      update(m) {
-        if (m.press) { m.knot = Math.min(1, m.knot + 0.09); m.mashes++; S.drum('hat', S.now(), 0.12); }
-        m.knot = Math.max(0, m.knot - 0.22 * timeDelta);
-        m.look = Math.sin(m.t * 1.3);                         // Zuniga's head turns, flavour only
-        if (m.knot >= 1) { m.win(); m.snap = m.t; }
-      },
-      render(m) {
-        stageFloor(COL.night);
-        PX.rect(0, GROUND, 256, 120, c(COL.night, 0.5));
-        PX.rect(196, GROUND, 32, 70, c(COL.dark));               // the guardroom door
-        PX.draw(SP.zuniga, 206, GROUND, { flip: m.look > 0 });
-        const done = m.phase === MG.phase.OUTCOME;
-        const cx = done && m.won ? Math.min(300, 100 + m.t * 160) : 100;
-        PX.draw(SP.jose, 76, GROUND, { flip: false });
-        PX.draw(SP.carmen, cx, GROUND);
-        if (!(done && m.won)) PX.draw(SP.rope, cx - 1, GROUND + 6, { color: done ? WHITE : c(COL.sand) });
-        // the close-up: her hands, the rope, each mash a shake
-        if (!done) PX.draw(m.knot > 0.6 ? SP.wristsLoose : SP.wristsTied, 94 + (m.press ? 1 : 0), GROUND + 6);
-        if (m.phase === MG.phase.ACTION || (done && !m.won)) {
-          // the knot loosening: a bar that shakes with each mash
-          const w = Math.round(60 * m.knot);
-          PX.rect(84, GROUND + 30, 62, 5, c(COL.dark));
-          PX.rect(85, GROUND + 31, w, 3, c(m.knot > 0.8 ? COL.gold : COL.sand));
-        }
-        if (done && !m.won && m.t > 1) say('ALLONS !', 176, GROUND + 26, COL.gold);
-      },
-      outcome: (m) => m.won ? ['SHE RUNS. HE STAYS FOR THE COURT MARTIAL.'] : ['THE KNOT HOLDS. HE GOES TO JAIL ANYWAY.'],
-      music: {
-        curtain: (t, b) => { stingUp(t); for (let i = 0; i < 12; i++) S.voice('pulse', S.deg(['1', '3', '5'][i % 3]), t + i * b / 3, b / 4, { vol: 0.06 }); },
-        bar: (t, b) => { for (let i = 0; i < 12; i++) { S.voice('pulse', S.deg(['1', '3', '5', '3', '5', '1+'][i % 6]), t + i * b / 3, b / 4, { vol: 0.07, light: i % 3 ? null : 'lead' }); if (i % 3 === 0) S.voice('bass', S.deg(i % 6 ? '5-' : '1-'), t + i * b / 3, b / 2, { vol: 0.12 }); } },
-        outcome: (t, b, won) => { if (won) { S.drum('snare', t, 0.2); sing('soprano', ['1+', '5', '3', '1'], [0.33, 0.33, 0.33, 1.5], t, b, { vol: 0.13 }); } else { S.drum('kick', t, 0.2); S.drum('kick', t + b, 0.2); S.voice('bass', S.deg('1-'), t + 2 * b, 1.5, { vol: 0.18 }); } },
-      },
-    },
-    // ---------------------------------------------------------------- III
-    { name: 'ACT II · THE TAVERN', aria: 'LA FLEUR', command: 'HOLD!', bpm: 120, beats: 14, verb: 'hold', shot: 'mid', focus: () => [128, GROUND + 22],
-      init(m) { m.held = 0; m.total = 0; m.colour = 1; m.wasHeld = false; m.lamps = [-40, 60, 160]; m.timeoutWins = false; },
-      update(m) {
-        m.total += timeDelta;
-        if (m.hold) { m.held += timeDelta; m.colour = Math.min(1, m.colour + timeDelta * 0.5); }
-        else {
-          m.colour = Math.max(0, m.colour - timeDelta * 0.9);
-          if (m.wasHeld) S.voice('tenor', S.deg('1-'), S.now(), 0.35, { vol: 0.1, grit: true });
-        }
-        m.wasHeld = m.hold;
-        m.timeoutWins = m.held / Math.max(0.01, m.total) >= 0.8 && m.colour > 0.5;
-        // the searchlights sweep; flavour, they can't catch you
-        m.lamps = m.lamps.map((x) => ((x + timeDelta * 60 + 60) % 380) - 60);
-      },
-      render(m) {
-        stageFloor(COL.dark);
-        for (const x of m.lamps) PX.rect(x, GROUND, 28, 120, c(COL.sand, 0.14));
-        PX.draw(SP.jose, 122, GROUND);
-        const fl = m.colour > 0.35 ? SP.flower : SP.flowerDead;
-        const drained = m.phase === MG.phase.OUTCOME && !m.won;
-        PX.draw(drained ? SP.flowerDead : fl, 124, GROUND + 12, { color: c('#ffffff', 0.4 + 0.6 * m.colour) });
-        if (m.phase === MG.phase.ACTION) {
-          // the flower's colour as a bar under him
-          PX.rect(111, GROUND - 8, 34, 4, c(COL.dark));
-          PX.rect(112, GROUND - 7, Math.round(32 * m.colour), 2, c(m.colour > 0.5 ? COL.pink : COL.dim));
-          if (!m.hold && m.t > 0.5) say('HOLD IT', 138, GROUND + 26, COL.tragic);
-        }
-      },
-      outcome: (m) => m.won ? ['THE FLOWER KEEPS ITS COLOUR. SO DOES HE.'] : ['THE COLOUR DRAINS. HE DESERTS.'],
-      music: {
-        curtain: (t, b) => { stingUp(t); S.setRoom(900, 0.5, 1, t); sing('tenor', ['5', '5', '6', '5'], [0.5, 0.5, 0.5, 1.5], t + b, b, { vol: 0.12, vibrato: 6 }); },
-        bar: (t, b, i) => { habanera(t, b, 2, 0.09); const tune = i % 2 ? ['3', '1', '2', '3', '5', '4', '3'] : ['5', '5', '6', '5', '3', '5', '1+']; sing('tenor', tune, [0.5, 0.5, 0.5, 0.5, 1, 0.5, 1.5], t, b, { vol: 0.12, vibrato: 7, light: 'lead' }); },
-        outcome: (t, b, won) => { S.setRoom(2400, 0.4, 2, t); if (won) sing('tenor', ['1+', '7', '6', '5'], [0.5, 0.5, 0.5, 2], t, b, { vol: 0.13, vibrato: 8 }); else sing('tenor', ['5', '4b', '3', '1-'], [0.5, 0.5, 0.5, 2], t, b, { vol: 0.13, grit: true }); },
-      },
-    },
-    // ---------------------------------------------------------------- IV
-    { name: 'ACT III · THE PASS', aria: 'THE CARDS', command: 'FLIP!', bpm: 110, beats: 10, verb: 'choose', shot: 'mid', focus: () => [120, GROUND + 18],
-      init(m) { m.cur = 1; m.flipped = -1; m.was = false; },
-      update(m) {
-        const d = MG.stepped(m);
-        if (d) { m.cur = clamp(m.cur + d, 0, 2); S.drum('hat', S.now(), 0.1); }
-        if (m.press) { m.flipped = m.cur; m.win(); }
-      },
-      render(m) {
-        stageFloor(COL.night);
-        PX.rect(0, GROUND, 256, 120, c(COL.night, 0.3));
-        PX.draw(SP.carmen, 40, GROUND);
-        for (let i = 0; i < 3; i++) {
-          const x = 100 + i * 36, y = GROUND + 4 + (m.phase === MG.phase.ACTION && i === m.cur ? Math.round(MG.bounce() * 2) : 0);
-          const show = m.phase === MG.phase.OUTCOME && (i === m.flipped || m.t > 1.2 + i * 0.4);
-          PX.draw(show ? SP.spade : SP.cardBack, x, y);
-          if (m.phase === MG.phase.ACTION && i === m.cur) PX.rect(x, y - 3, 14, 1, c(COL.gold));
-        }
-        if (m.phase === MG.phase.OUTCOME && m.t > 2.2) say('LA MORTE', 56, GROUND + 26, COL.tragic);
-      },
-      outcome: (m) => m.won ? ['THE SPADE. SHE READS IT TWICE. THE SPADE.'] : ["SHE DOESN'T LOOK. IT'S STILL THE SPADE."],
-      music: {
-        curtain: (t, b) => { S.drone(S.deg('1-'), t, 5 * b, { tritone: true, vol: 0.05 }); S.drum('kick', t, 0.16, 'kick'); },
-        bar: (t, b) => { S.drone(S.deg('1-'), t, 4.2 * b, { tritone: true, vol: 0.05 }); S.drum('kick', t, 0.14); S.drum('kick', t + 2 * b, 0.14); S.voice('soprano', S.deg('5'), t + b, 1.2, { vol: 0.09 }); },
-        outcome: (t, b) => { S.drum('snare', t, 0.22, 'kick'); sing('soprano', ['5', '4', '3'], [1, 1, 2], t + b * 0.5, b, { vol: 0.14 }); S.drone(S.deg('1-'), t, 4 * b, { tritone: true, vol: 0.06 }); },
-      },
-    },
-    // ---------------------------------------------------------------- V
-    { name: 'ACT IV · THE BULLRING', aria: 'TOREADOR', command: 'GLORY!', bpm: 140, beats: 16, verb: 'dodge',
-      init(m) { m.x = 128; m.bull = null; m.charges = 0; m.next = 1.2; m.cheer = 0; m.shadow = -20; m.timeoutWins = true; },
-      update(m) {
-        MG.walk(m, 'x', 100, 4, 240);
-        const b = MG.beat();
-        if (!m.bull && m.t >= m.next) {
-          const fromLeft = m.charges % 2 === 0 ? rand() < 0.5 : m.lastLeft === false;
-          m.lastLeft = fromLeft;
-          m.bull = { x: fromLeft ? -26 : 262, dir: fromLeft ? 1 : -1, speed: 150 + m.charges * 25 };
-          m.charges++;
-          S.drum('thunder', S.now(), 0.25, 'bull');
-        }
-        if (m.bull) {
-          m.bull.x += m.bull.dir * m.bull.speed * timeDelta;
-          if (m.bull.x + 22 > m.x + 2 && m.bull.x + 2 < m.x + 10 && !m.gored) { m.gored = true; m.lose(); }
-          if (m.bull.x < -28 || m.bull.x > 264) { m.bull = null; m.next = m.t + 2 * b + rand(0, b); m.cheer = 1; S.drum('crowd', S.now(), 0.2); }
-        }
-        m.cheer = Math.max(0, m.cheer - timeDelta);
-        m.shadow = Math.min(50, m.shadow + timeDelta * 7);     // José creeps in behind
-      },
-      render(m) {
-        stageFloor(COL.sand);
-        // the crowd: rows of dots that jump on a cheer
-        for (let i = 0; i < 32; i++) for (let r = 0; r < 3; r++) {
-          const jump = m.cheer > 0 && (i + r) % 2 ? 2 : 0;
-          PX.rect(i * 8 + 2, 106 + r * 9 + jump, 4, 4, c([COL.red, COL.gold, COL.ink][(i + r) % 3], 0.8));
-        }
-        PX.rect(0, 100, 256, 2, c(COL.dark));
-        PX.draw(SP.joseShadow, m.shadow, GROUND + 46);
-        if (m.bull) PX.draw(SP.bull, m.bull.x, GROUND, { flip: m.bull.dir < 0 });
-        const gored = m.phase === MG.phase.OUTCOME && !m.won;
-        PX.draw(SP.esca, m.x, gored ? GROUND - 10 : GROUND, { flip: m.facing < 0, angle: gored ? PI / 2 : 0 });
-        if (m.phase === MG.phase.OUTCOME && m.won) {
-          PX.rect(m.x - 10, GROUND + 4, 10, 16, c(COL.red));      // the cape
-          if (m.t > 0.4) say('OLÉ !', m.x + 16, GROUND + 26, COL.gold);
-        }
-        if (m.phase === MG.phase.OUTCOME && m.t > 1.5) PX.draw(SP.joseShadow, 60, GROUND + 46);
-      },
-      outcome: (m) => m.won ? ['THE CROWD IS HIS. JOSÉ IS IN THE SHADOW.'] : ['GORED. THE CROWD GASPS. JOSÉ WAITS.'],
-      music: {
-        curtain: (t, b) => { stingUp(t); S.setRoom(3200, 0.45, 1, t); S.drum('crowd', t, 0.18); sing('pulse', ['1', '3', '5', '1+'], [0.25, 0.25, 0.25, 1], t + b, b, { vol: 0.09 }); },
-        bar: (t, b, i) => {
-          // F major fanfare over a creeping minor second in the bass
-          S.key(5, 'major');
-          sing('tenor', i % 2 ? ['5', '5', '5', '4', '3', '2', '1'] : TOREADOR, i % 2 ? [0.5, 0.5, 0.5, 0.5, 0.75, 0.25, 1] : TOREADOR_D, t, b, { vol: 0.13, light: 'lead' });
-          for (let k = 0; k < 4; k++) { S.voice('bass', S.deg('1-') + (k % 2), t + k * b, b * 0.5, { vol: 0.13 }); S.drum(k % 2 ? 'hat' : 'kick', t + k * b, 0.14); }
-          S.key(2, 'minor');
-        },
-        outcome: (t, b, won) => { S.key(5, 'major'); if (won) { S.drum('crowd', t, 0.25); sing('tenor', ['5', '5', '5', '1+'], [0.33, 0.33, 0.33, 2], t, b, { vol: 0.15 }); S.arp('I', 2.5 * b, 25, t + b, { vol: 0.07, octave: 1 }); } else { S.drum('snare', t, 0.25); S.voice('bass', S.deg('1-'), t, 2, { vol: 0.16, grit: true }); } S.key(2, 'minor'); },
-      },
-    },
-    // ---------------------------------------------------------------- VI
-    { name: 'ACT IV · OUTSIDE THE ARENA', aria: 'THE FINALE', command: 'REJECT!', bpm: 150, beats: 12, verb: 'tap', outcomeSeconds: 4.2, shot: 'wide',
-      onOutcome(m) { m.cut('mid', m.cx - 10, GROUND + 20); },
-      init(m) { m.jx = 16; m.cx = 200; m.thrown = false; m.ring = null; m.step = 0; m.knife = 0; m.lineY = 10; },
-      update(m) {
-        const b = MG.beat();
-        // José advances one step a beat; the ring window is when he's within reach
-        const step = Math.floor(m.beat);
-        if (step > m.step) { m.step = step; m.jx = 16 + step * 14; S.drum('kick', S.now(), 0.18, 'kick'); }
-        const near = m.cx - m.jx < 64 && m.cx - m.jx > 24;
-        m.near = near;
-        if (m.press) {
-          if (near) { m.win(); m.ring = { x: m.cx, y: GROUND + 14, vx: -140 }; S.silence(S.now(), 1.2); }
-          else S.drum('hat', S.now(), 0.1);
-        }
-        if (m.jx >= m.cx - 20) m.lose();
-      },
-      updateOutcome(m) {
-        if (m.ring) { m.ring.x += m.ring.vx * timeDelta; m.ring.vx *= 0.97; m.ring.y -= 10 * timeDelta; }
-        if (m.t > 1.6 && !m.knife) { m.knife = 1; S.drum('snare', S.now(), 0.3, 'knife'); }
-      },
-      render(m) {
-        stageFloor(COL.sand);
-        PX.rect(0, 100, 256, 2, c(COL.dark));
-        PX.rect(0, 102, 256, 40, c(COL.red, 0.15));
-        const out = m.phase === MG.phase.OUTCOME;
-        const fallen = out && m.t > 1.6;
-        if (fallen) { PX.rect(0, 0, 256, 144, c(COL.white, m.t < 1.75 ? 0.9 : 0)); PX.draw(SP.carmenWhite, m.cx + 6, GROUND - 6, { angle: -PI / 2 }); }
-        else PX.draw(SP.carmen, m.cx, GROUND, { flip: true });
-        PX.draw(SP.jose, m.jx, GROUND, { color: m.phase === MG.phase.ACTION && m.near ? c(COL.green) : WHITE });
-        if (m.phase === MG.phase.ACTION) { PX.draw(SP.ring, m.cx - 10, GROUND + 14 + (m.near ? Math.round(MG.bounce() * 3) : 0), { color: m.near ? WHITE : c('#ffffff', 0.5) }); if (m.near) say('NOW', m.cx - 6, GROUND + 26, COL.gold); }
-        if (m.ring && !fallen) PX.draw(SP.ring, m.ring.x, m.ring.y);
-        if (out && m.t > 1.4 && !fallen) PX.draw(SP.knife, m.jx + 12, GROUND + 12);
-        if (fallen && m.t > 2.4) say('MERDE !', m.jx + 14, GROUND + 26, COL.ink);   // the wink
-      },
-      outcome: (m) => m.won ? ['SHE THROWS THE RING. HE HAS A KNIFE.'] : ['SHE SAYS NOTHING. HE HAS A KNIFE.'],
-      music: {
-        curtain: (t, b) => { stingUp(t); S.setRoom(600, 0.55, 1, t); S.voice('tenor', S.deg('1-'), t, 3 * b, { vol: 0.12, grit: 0.5 }); },
-        bar: (t, b) => { for (let k = 0; k < 4; k++) S.voice('tenor', S.deg(k % 2 ? '2b' : '1'), t + k * b, b * 0.6, { vol: 0.12, grit: 0.75, light: 'lead' }); S.voice('soprano', S.deg('5+'), t + 2 * b, 1.4 * b, { vol: 0.1 }); },
-        outcome: (t, b, won) => { const k = t + 1.6; S.drum('snare', k, 0.3); S.voice('bass', S.deg('1-'), k + 0.1, 1.5, { vol: 0.18 }); S.arp('i', 1.6, 25, k + 0.3, { vol: 0.06, octave: 1 }); S.setRoom(320, 0.6, 1.5, k); },
-      },
-    },
-  ],
+  renderResult: () => { stageFloor(COL.dark); PX.draw(SP.jose, 100, GROUND); PX.draw(SP.carmenWhite, 130, GROUND - 4, { angle: -PI / 2 }); },
+  acts: ACTS,
 });
