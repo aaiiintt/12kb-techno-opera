@@ -17,7 +17,7 @@ const COL = {
   bg: '#12060e', ink: '#f7ecdf', dim: '#7d6272', card: '#f7ecdf', cardInk: '#12060e',
   bravo: '#f4c95d', tragic: '#ff5a64', fuse: '#f7ecdf',
   crimson: '#8f1d2c', gold: '#f4c95d', white: '#ffffff', violet: '#5b3a8c', grey: '#9a9aaa', black: '#1a1420',
-  skin: '#f1c9a5', pale: '#f0e4ee', dark: '#1a1020', green: '#2f7a45', camellia: '#ff3355', candle: '#ffb347',
+  skin: '#f1c9a5', pale: '#efc9cc', dark: '#1a1020', green: '#2f7a45', camellia: '#ff3355', candle: '#ffb347',
   suit: '#34427e', hair: '#3a2418', paper: '#f7ecdf', ink2: '#241838', snow: '#dfe8ff',
 };
 const c = PX.c;
@@ -34,13 +34,14 @@ function traviataSprites() {
   // the cast, animated (lib/cast.js)
   const body = (h, f, b, l, s = COL.white, e = COL.dark) => CAST.body({ h, f, b, l, s, e, m: e === COL.dark ? undefined : e });
   const dress = (h, f, r, k) => CAST.dress({ h, f, r, k, e: COL.dark });
-  SP.violetta = dress(COL.hair, COL.skin, COL.white, COL.camellia);
+  SP.violetta = dress(COL.hair, COL.skin, COL.pale, COL.camellia);
   SP.violettaPale = dress(COL.hair, '#e8c4bc', COL.pale, COL.camellia);
   SP.alfredo = body(COL.hair, COL.skin, COL.suit, '#1e2650');
   SP.germont = body('#e0e0e8', COL.skin, COL.grey, '#4a4a5a');
   const g = '#3a1624';
   SP.guest = body(g, g, g, g, g, g);
   SP.coupe = PX.sprite(['wyyyw', '.wyw.', '..w..', '..w..', '.www.'], { w: '#dfe6f5', y: COL.gold });
+  SP.broken = PX.sprite(['w.y.w', '.www.', 'wwwww'], { w: '#dfe6f5', y: COL.gold });
   SP.camellia = PX.sprite(['.r.r.', 'rrrrr', 'rrprr', 'rrrrr', '.r.r.'], { r: COL.camellia, p: '#ffd0da' });
   SP.camelliaW = PX.sprite(['.r.r.', 'rrrrr', 'rrprr', 'rrrrr', '.r.r.'], { r: COL.white, p: COL.gold });
   SP.bud = PX.sprite(['.r.', 'grg', '.g.'], { r: COL.camellia, g: '#5fbf6a' });
@@ -70,6 +71,8 @@ const puff = (x, y, cols, o = {}) => new ParticleEmitter(
 const shake = (m) => { if (m.shk > 0.4) { setCameraPos(cameraPos.add(vec2(Math.round(rand(-m.shk, m.shk)), Math.round(rand(-m.shk, m.shk))))); m.shk *= 0.88; } };
 // an arm: a 2-pixel line of squares from a shoulder to a hand
 const limb = (x0, y0, x1, y1, col) => { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1); for (let i = 0; i <= n; i++) PX.rect(Math.round(x0 + (x1 - x0) * i / n), Math.round(y0 + (y1 - y0) * i / n), 2, 2, col); };
+// a soft rounded glow: rows of a rect with the corner pixels left out, no overlap so the alpha stays even
+const halo = (x, y, w, h, col) => { PX.rect(x + 2, y, w - 4, 1, col); PX.rect(x + 2, y + h - 1, w - 4, 1, col); PX.rect(x + 1, y + 1, w - 2, 1, col); PX.rect(x + 1, y + h - 2, w - 2, 1, col); PX.rect(x, y + 2, w, h - 4, col); };
 const box = (x, y, w, h, col) => { PX.rect(x, y, w, 1, col); PX.rect(x, y + h - 1, w, 1, col); PX.rect(x, y, 1, h, col); PX.rect(x + w - 1, y, 1, h, col); };
 // the verdict, heard the instant the act ends: a rising bell run, or a falling growl
 const verdictSound = (won, gentle) => {
@@ -81,7 +84,7 @@ const verdictSound = (won, gentle) => {
 const act = (a) => ({
   ...a,
   onOutcome(m) { m.age = 0; if (!a.toy) { verdictSound(m.won, a.gentle); m.shk = m.won ? (a.gentle ? 0 : 2) : (a.gentle ? 2 : 4); } a.hit?.(m); },
-  updateOutcome(m) { m.age += timeDelta; a.after?.(m); },
+  updateOutcome(m) { m.age = m.t; a.after?.(m); },
   renderOutcome(m) {
     if (a.toy) return;
     const k = Math.max(0, 1 - m.age * (a.gentle ? 2.5 : 4));
@@ -137,7 +140,7 @@ MG.opera({
     // A waltz. The two glasses swing apart and back together once a bar; a gold square
     // closes on the point where they meet. Press as it closes: the glasses ring.
     act({ name: 'ACT I · THE SALON', aria: 'LIBIAMO', command: 'TOAST!', bpm: 125, beats: 15, verb: 'tap on the downbeat', shot: 'mid', focus: () => [128, GROUND + 30],
-      init(m) { m.clinks = 0; m.timeoutWins = false; m.flash = 0; m.lastBar = -1; },
+      init(m) { m.tink = 0; m.clinks = 0; m.timeoutWins = false; m.flash = 0; m.lastBar = -1; },
       update(m) {
         // the downbeat is every third beat; tap on it
         const bar = Math.round(m.beat / 3), off = Math.abs(m.beat / 3 - bar) * 3;
@@ -161,7 +164,10 @@ MG.opera({
           puff(CLINK_X, CLINK_Y, [COL.camellia, COL.gold], { v: 2.6, life: 2, fade: 1, rate: 700, time: 0.08 });
         } else puff(CLINK_X + 12, CLINK_Y - 6, [COL.gold], { a: PI, cone: 0.5, v: 0.8, g: 1, life: 0.8, rate: 250, time: 0.1 });   // the champagne spills
       },
-      after(m) { if (m.age > 1.3 && !m.coughed) { m.coughed = 1; S.drum('breath', S.now(), 0.3); CAST.hit(SP.violetta); puff(152, GROUND + 19, ['#8a7a8a'], { a: PI / 2, cone: 0.6, v: 0.8, life: 0.8, g: -0.2, time: 0.1, rate: 200 }); } },
+      after(m) {
+        if (!m.won && m.age > 0.4 && !m.tink) { m.tink = 1; S.voice('arp', S.deg('5+') + 24, S.now(), 0.2, { vol: 0.07 }); S.voice('arp', S.deg('2+') + 24, S.now() + 0.06, 0.15, { vol: 0.05 }); S.drum('hat', S.now(), 0.08); }
+        if (m.age > 1.3 && !m.coughed) { m.coughed = 1; S.drum('breath', S.now(), 0.3); CAST.hit(SP.violetta); puff(152, GROUND + 19, ['#8a7a8a'], { a: PI / 2, cone: 0.6, v: 0.8, life: 0.8, g: -0.2, time: 0.1, rate: 200 }); }
+      },
       render(m) {
         shake(m);
         salon();
@@ -169,16 +175,20 @@ MG.opera({
         // the glasses meet on the downbeat and part in between: the waltz you can see
         const q = ((m.beat / 3) % 1 + 1) % 1;
         let sep = isAct(m) ? Math.round(9 * Math.sin(PI * q)) : 9;
-        if (out) sep = m.won ? 0 : Math.round(8 * Math.max(0, 1 - m.age / 1.2));
+        if (out) sep = m.won ? 0 : Math.round(9 * Math.max(0, 1 - Math.max(0, m.age - 1.1) / 0.3));
         const cough = out && m.age > 1.3 && m.age < 2.2;
         const lift = m.flash > 0 ? 2 : 0;
+        // a loss: her glass drops, breaks on the floor, and she is handed another
+        const ft = Math.max(0, m.age - 0.15), gy = CLINK_Y - 8 + lift - 300 * ft * ft, dropped = out && !m.won && m.age < 1.1;
+        const ay = CLINK_Y - 8 + lift - (dropped ? Math.min(1, ft / 0.3) * 12 : 0);   // her empty hand sinks
         // the arms that hold the glasses up
         limb(106, GROUND + 11, CLINK_X - 7 - sep, CLINK_Y - 8 + lift, c(COL.suit));
-        limb(146, GROUND + 11, CLINK_X + sep + 5, CLINK_Y - 8 + lift, c(COL.pale));
+        limb(146, GROUND + 11, CLINK_X + sep + 5, ay, c(COL.pale));
         CAST.draw(SP.alfredo, 96, GROUND);
         CAST.draw(SP.violetta, 146, GROUND - (cough ? 1 : 0), { flip: true });
         PX.draw(SP.coupe, CLINK_X - 10 - sep, CLINK_Y - 8 + lift);
-        PX.draw(SP.coupe, CLINK_X + sep, CLINK_Y - 8 + lift, { angle: out && !m.won && m.age < 0.6 ? 0.5 : 0 });
+        if (dropped && gy <= GROUND) PX.draw(SP.broken, CLINK_X + sep + 2, GROUND + 1, { color: c(COL.white, Math.min(1, (1.1 - m.age) * 5)) });
+        else PX.draw(SP.coupe, CLINK_X + sep, dropped ? gy : CLINK_Y - 8 + lift, { angle: dropped ? 0.5 + ft * 8 : 0 });
         if (isAct(m)) {
           // the beat target: a square that closes on the meeting point, landing on the downbeat
           const s = Math.round(8 + 40 * (1 - q)), near = q > 0.85 || q < 0.1;
@@ -205,10 +215,11 @@ MG.opera({
     // ---------------------------------------------------------------- II
     // The toy. The country house, the happy months: snip camellias off the hedge,
     // each one a puff of petals and a note, and they grow back. No win, no loss.
-    act({ name: 'ACT II · THE COUNTRY', aria: 'UN DÌ, FELICE', command: 'SNIP!', bpm: 135, beats: 12, verb: 'play', toy: true, shot: 'mid', focus: () => [128, GROUND + 30],
+    act({ name: 'ACT II · THE COUNTRY', aria: 'UN DÌ, FELICE', command: 'SNIP!', bpm: 135, beats: 12, verb: 'play', toy: true, lineY: 3, shot: 'mid', focus: () => [128, GROUND + 22],
       init(m) {
         m.bloom = [1, 1, 1, 1, 1]; m.next = 0; m.snips = 0; m.snipT = 9;
-        puff(128, 104, [COL.camellia, '#ffd0da'], { a: PI, w: vec2(150, 2), time: 0, rate: 5, cone: 0.6, v: 0.3, g: 0.2, damp: 0.96, life: 6, fade: 1 });
+        puff(128, 104, [COL.camellia, '#ffd0da'], { a: PI, w: vec2(150, 2), time: 0, rate: 3, cone: 0.6, v: 0.3, g: 0.2, damp: 0.96, life: 5, fade: 1 });
+        m.st = [];
       },
       update(m) {
         m.snipT += timeDelta;
@@ -218,7 +229,8 @@ MG.opera({
         else if (m.press) {
           const x = 120 + m.next * 10, y = GROUND + (m.next % 2 ? 20 : 14);
           m.snipT = 0; m.bloom[m.next] = 0; m.snips++;
-          puff(x + 5, y + 5, [m.next % 2 ? COL.white : COL.camellia, '#ffd0da'], { v: 1.2, g: 0.15, damp: 0.95, life: 1.8, fade: 1, rate: 300, time: 0.04 });
+          m.st = m.st.filter((q) => m.t - q < 1.2); m.st.push(m.t);
+          if (m.st.length <= 3) puff(x + 5, y + 5, [m.next % 2 ? COL.white : COL.camellia, '#ffd0da'], { v: 1.2, g: 0.15, damp: 0.95, life: 1.2, fade: 1, rate: 200, time: 0.04 });   // at most three bursts live at once
           S.drum('hat', S.now(), 0.1);
           S.voice('arp', S.deg(['1', '2', '3', '5', '6', '1+', '2+', '3+'][m.snips % 8]) + 12, S.now(), 0.25, { vol: 0.06 });
           m.next = (m.next + 1) % 5;
@@ -247,6 +259,7 @@ MG.opera({
         // the scissors hover over the next blossom, on the beat
         if (isAct(m)) {
           const x = 120 + m.next * 10, y = GROUND + (m.next % 2 ? 20 : 14);
+          if (m.bloom[m.next] >= 1) box(x - 1, y - 1, 12, 12, c(COL.gold));   // the blossom about to be snipped
           PX.draw(SP.scissors, x, y + 10 + (m.snipT < 0.12 ? -3 : Math.round(MG.bounce() * 2)));
         }
         // a bee, the one thing that wanders
@@ -377,7 +390,7 @@ MG.opera({
     // She reads Germont's letter by one candle. Draughts blow in from the window or
     // the door; the streaks show which side. Put your hand on that side.
     act({ name: 'ACT III · THE DEATHBED', aria: 'ADDIO, DEL PASSATO', command: 'READ!', bpm: 100, beats: 12, verb: 'shield', gentle: true, shot: 'mid', focus: () => [128, GROUND + 30],
-      init(m) { m.flame = 1; m.side = 0; m.draft = 0; m.nextDraft = 1.2; m.timeoutWins = true; },
+      init(m) { m.relit = 0; m.flame = 1; m.side = 0; m.draft = 0; m.nextDraft = 1.2; m.timeoutWins = true; },
       update(m) {
         // drafts come from a side, telegraphed a beat early; put the hand on that side
         const b = MG.beat();
@@ -392,6 +405,7 @@ MG.opera({
         else m.flame = Math.min(1, m.flame + timeDelta * 0.15);
         if (m.flame <= 0) m.lose();
       },
+      after(m) { if (!m.won && m.age > 1.5 && !m.relit) { m.relit = 1; S.drum('hat', S.now(), 0.1); S.voice('arp', S.deg('5') + 12, S.now(), 0.3, { vol: 0.05 }); } },
       hit(m) {
         if (m.won) puff(128, GROUND + 34, [COL.gold, '#fff2a8'], { v: 1.2, g: -0.2, life: 1.2, rate: 500, time: 0.05 });
         else puff(128, GROUND + 30, ['#6a6a7a', '#3a3a4a'], { a: 0, cone: 0.4, v: 0.5, g: -0.2, life: 2, rate: 60, time: 0.5, s: 3 });
@@ -402,8 +416,8 @@ MG.opera({
         shake(m);
         deathroom();
         const out = isOut(m);
-        const lit = out ? m.won : m.flame > 0;
-        const moon = out && !m.won ? Math.min(1, m.age / 1.2) : out ? 0.4 : 0;
+        const relit = out && !m.won && m.age > 1.5, lit = out ? m.won || relit : m.flame > 0;
+        const moon = out && !m.won ? (m.age < 1.5 ? Math.min(1, m.age / 1.2) : 0.4 + 0.6 * Math.max(0, 1 - (m.age - 1.5) / 0.5)) : out ? 0.4 : 0;
         // the window (left) and the door (right): where the draughts come from
         PX.rect(68, GROUND + 28, 24, 32, c('#0c1030')); box(67, GROUND + 27, 26, 34, c('#4a3a6a')); PX.rect(79, GROUND + 28, 2, 32, c('#4a3a6a'));
         if (moon) PX.rect(68, GROUND + 28, 24, 32, c('#9aa8ff', 0.25 * moon));
@@ -417,12 +431,13 @@ MG.opera({
         PX.draw(SP.candle, 125, GROUND + 16);
         if (lit) {
           const lean = isAct(m) && m.draft && !m.blocked ? -m.draft * 2 : 0;
-          const k = out ? (m.won ? 1 + 0.5 * Math.max(0, 1 - m.age) : 1) : 0.5 + 0.5 * m.flame;
-          PX.rect(116 + lean, GROUND + 22, 24, 30, c(COL.candle, 0.06 * k));
-          PX.rect(120 + lean, GROUND + 26, 16, 22, c(COL.candle, 0.1 * k));
-          PX.rect(123 + lean, GROUND + 28, 10, 16, c(COL.candle, 0.2 * k));
+          const k = out ? (m.won ? 1 + 0.5 * Math.max(0, 1 - m.age) : Math.min(1, 0.3 + (m.age - 1.5) * 3)) : 0.5 + 0.5 * m.flame;
+          halo(116 + lean, GROUND + 22, 24, 30, c(COL.candle, 0.06 * k));
+          halo(120 + lean, GROUND + 26, 16, 22, c(COL.candle, 0.1 * k));
+          halo(123 + lean, GROUND + 28, 10, 16, c(COL.candle, 0.2 * k));
           PX.draw(SP.flame, 128 - 4.5 * k + lean, GROUND + 28, { scale: 3 * k });
         } else PX.rect(127, GROUND + 28, 2, 2, c(COL.dark));
+        if (out && !m.won && m.age > 1.2 && m.age < 2.1) PX.draw(SP.hand, 121, GROUND + 22);   // a hand relights it
         if (isAct(m)) {
           // the hand: left, right, or resting on the stand at the start
           PX.draw(SP.hand, m.side < 0 ? 112 : m.side > 0 ? 136 : 124, m.side ? GROUND + 28 : GROUND + 16);
@@ -458,7 +473,7 @@ MG.opera({
         if (m.reach >= 1) { m.win(); S.silence(S.now() + 0.5, 2); }
       },
       hit(m) {
-        m.from = 122 + Math.round(m.reach * 22);
+        m.from = 104 + Math.round(m.reach * 40);
         if (m.won) puff(150, GROUND + 22, [COL.gold, COL.white], { v: 1.2, g: -0.1, life: 1, rate: 500, time: 0.05 });
       },
       after(m) {
@@ -471,22 +486,23 @@ MG.opera({
         const out = isOut(m), lay = out && m.age > 1.8;
         bed(80);
         if (lay) lying(80, c('#ffffff', 0.85), 0);
-        else { CAST.draw(SP.violettaPale, 108, GROUND + 6); PX.rect(78, GROUND + 6, 46, 6, c(COL.violet)); }
-        limb(157, GROUND + 11, 151, GROUND + 17, c(COL.suit));
-        CAST.draw(SP.alfredo, 156, GROUND, { flip: true });
+        else { CAST.draw(SP.violettaPale, 102, GROUND + 6); PX.rect(78, GROUND + 6, 46, 6, c(COL.violet)); }
+        const lean = out ? 6 : Math.round(m.reach * 6);       // he leans toward her as she reaches
+        limb(157 - lean, GROUND + 11, 152 - lean, GROUND + 17, c(COL.suit));
+        CAST.draw(SP.alfredo, 156 - lean, GROUND, { flip: true });
         CAST.draw(SP.germont, 182, GROUND, { flip: true });
         // his open hand, the target, bobbing on the beat until it holds the portrait
-        const hx = 122 + Math.round(m.reach * 22);
+        const hx = 104 + Math.round(m.reach * 40), tx = 152 - lean;
         let px = hx, py = GROUND + 20;
         if (out) {
-          if (m.won) { px = 144; py = GROUND + 20; }
+          if (m.won) { px = tx - 2; py = GROUND + 20; }
           else if (m.age < 1.5) { px = m.from; py = Math.max(GROUND, GROUND + 20 - m.age * 60); }
-          else { px = 144; py = GROUND + 20; }
+          else { px = tx - 2; py = GROUND + 20; }
         }
-        PX.draw(SP.hand, 144, GROUND + 14 + (isAct(m) ? Math.round(MG.bounce() * 2) : 0));
-        if (isAct(m)) box(142, GROUND + 12, 12, 14, c(COL.gold, 0.4 + 0.6 * MG.bounce()));
+        PX.draw(SP.hand, tx, GROUND + 14 + (isAct(m) ? Math.round(MG.bounce() * 2) : 0));
+        if (isAct(m)) box(tx - 2, GROUND + 12, 12, 14, c(COL.gold, 0.4 + 0.6 * MG.bounce()));
         // her arm and hand while she reaches
-        if (!out || (!lay && m.won && m.age < 0.6)) { PX.rect(118, GROUND + 18, hx - 116, 2, c(COL.pale)); PX.draw(SP.hand, hx, GROUND + 14); }
+        if (!out || (!lay && m.won && m.age < 0.6)) { PX.rect(Math.min(hx, 112), GROUND + 18, Math.abs(hx - 112) + 4, 2, c(COL.pale)); PX.draw(SP.hand, hx, GROUND + 14); }
         PX.draw(SP.portrait, px, py);
         if (isAct(m) && m.t > 0.4 && !(m.right || m.hold)) say('HOLD RIGHT', 104, GROUND + 44, COL.gold);
         if (out && m.age > 2.4) say('SCUSA.', 192, GROUND + 30, COL.grey);           // the wink: Germont, deadpan, a little late
