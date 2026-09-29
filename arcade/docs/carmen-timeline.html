@@ -1,0 +1,321 @@
+<title>Carmen Timeline</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* layout: one reading column; a vertical timeline whose beats alternate WATCH (letterboxed, quiet) and PLAY (fuse bar, bright) */
+:root {
+  --bg: #f6efe6; --fg: #1e1620; --muted: #6d5e66; --line: #d9cbc0; --panel: #fbf7f1;
+  --red: #c4122c; --gold: #d99a1e; --blue: #2f5fcf; --green: #4f9d2e; --sand: #e4cfa4;
+  --watch-bg: #e9e1d8; --play-bg: #fff8ec;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #100b12; --fg: #f1e7dc; --muted: #a2909a; --line: #35293a; --panel: #1a1320;
+  --red: #ff3b58; --gold: #f4b93a; --blue: #6f9bff; --green: #62c43a; --sand: #7a6a52;
+  --watch-bg: #171120; --play-bg: #1f1620; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #100b12; --fg: #f1e7dc; --muted: #a2909a; --line: #35293a; --panel: #1a1320;
+  --red: #ff3b58; --gold: #f4b93a; --blue: #6f9bff; --green: #62c43a; --sand: #7a6a52;
+  --watch-bg: #171120; --play-bg: #1f1620; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); line-height: 1.5; padding-inline: 16px; padding-block: 24px 64px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+h1 { font-family: var(--display); font-size: clamp(1.6rem, 5vw, 2.4rem); line-height: 1.1; margin: 0 0 4px; text-wrap: balance; }
+h2 { font-family: var(--display); font-size: 1rem; letter-spacing: .04em; margin: 40px 0 12px; text-transform: uppercase; }
+h3 { font-size: 1.05rem; margin: 0; }
+p { margin: 0 0 12px; max-width: 65ch; }
+.eyebrow { font-family: var(--display); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--muted); font-size: 1.05rem; }
+.rules { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.rules li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+.rules b { font-family: var(--display); font-size: .8rem; color: var(--red); padding-top: 3px; }
+
+/* the grammar: two kinds of beat */
+.grammar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 0; }
+@media (max-width: 560px) { .grammar { grid-template-columns: 1fr; } }
+.kind { border: 1px solid var(--line); padding: 14px 16px; }
+.kind.watch { background: var(--watch-bg); }
+.kind.play { background: var(--play-bg); }
+.kind .eyebrow { color: var(--fg); }
+.kind ul { margin: 8px 0 0; padding-left: 18px; }
+.kind li { margin: 2px 0; }
+.screen { position: relative; aspect-ratio: 16/9; max-width: 100%; background: #14101a; margin: 10px 0 8px; overflow: hidden; border: 1px solid var(--line); }
+.screen .bar { position: absolute; left: 0; right: 0; height: 14%; background: #000; }
+.screen .bar.top { top: 0 } .screen .bar.bot { bottom: 0 }
+.screen .fuse { position: absolute; top: 4%; left: 3%; right: 3%; height: 5%; background: linear-gradient(90deg, #f4e9d8 62%, #3a2d3f 62%); }
+.screen .fig { position: absolute; bottom: 22%; width: 7%; height: 26%; background: var(--blue); }
+.screen .fig.c { background: var(--red); left: 62%; }
+.screen .fig.j { left: 30%; }
+.screen .cap { position: absolute; left: 0; right: 0; bottom: 16%; text-align: center; font-family: var(--display); font-size: .55rem; color: #f4e9d8; letter-spacing: .05em; }
+.screen .verb { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); background: #f4e9d8; color: #14101a; font-family: var(--display); font-weight: 700; font-size: .8rem; padding: 3px 8px; }
+.screen .hint { position: absolute; left: 50%; top: 52%; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; font-family: var(--display); font-size: .5rem; color: #f4b93a; }
+
+/* input icons */
+.icons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0 0; }
+@media (max-width: 560px) { .icons { grid-template-columns: repeat(2, 1fr); } }
+.icon { border: 1px solid var(--line); background: var(--panel); padding: 12px; display: grid; gap: 6px; justify-items: center; text-align: center; font-size: .85rem; }
+.icon svg { width: 56px; height: 56px; display: block; }
+.icon .name { font-family: var(--display); font-size: .75rem; }
+.icon .key { color: var(--muted); font-size: .78rem; }
+@keyframes tap { 0%, 100% { transform: translateY(0) } 45% { transform: translateY(6px) } }
+@keyframes ring { 0% { r: 6; opacity: .9 } 100% { r: 16; opacity: 0 } }
+@keyframes mash { 0%, 100% { transform: translateY(0) } 25% { transform: translateY(5px) } 50% { transform: translateY(0) } 75% { transform: translateY(5px) } }
+@keyframes drag { 0%, 100% { transform: translateX(-10px) } 50% { transform: translateX(10px) } }
+@keyframes holdfill { 0% { stroke-dashoffset: 88 } 70%, 100% { stroke-dashoffset: 0 } }
+.finger { animation: tap 1.2s ease-in-out infinite; transform-origin: center; }
+.finger.m { animation: mash .6s ease-in-out infinite; }
+.finger.d { animation: drag 1.6s ease-in-out infinite; }
+.finger.h { animation: none; }
+.ripple { animation: ring 1.2s ease-out infinite; }
+.holdarc { stroke-dasharray: 88; animation: holdfill 1.8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .finger, .ripple, .holdarc { animation: none; } }
+
+/* the timeline */
+.tl { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.beat { display: grid; grid-template-columns: 64px 1fr; gap: 12px; border: 1px solid var(--line); padding: 12px 14px; }
+.beat.watch { background: var(--watch-bg); }
+.beat.play { background: var(--play-bg); border-left: 4px solid var(--red); }
+.beat.toy { background: var(--play-bg); border-left: 4px solid var(--gold); }
+.beat .t { font-family: var(--display); font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.beat .t b { display: block; color: var(--fg); font-size: .75rem; }
+.beat h3 span { font-family: var(--display); font-size: .7rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.beat dl { display: grid; grid-template-columns: 84px 1fr; gap: 3px 10px; margin: 8px 0 0; font-size: .92rem; }
+.beat dt { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; padding-top: 2px; }
+.beat dd { margin: 0; min-width: 0; }
+.cap { font-family: var(--display); font-size: .72rem; letter-spacing: .03em; }
+.tag { display: inline-block; background: #14101a; color: #f4e9d8; padding: 1px 6px; font-family: var(--display); font-size: .65rem; margin: 1px 2px 1px 0; }
+.instr { display: inline-flex; align-items: center; gap: 8px; background: #f4e9d8; color: #14101a; font-family: var(--display); font-weight: 700; font-size: .78rem; padding: 3px 8px; }
+.instr svg { width: 18px; height: 18px; }
+.win { color: var(--gold); } .lose { color: var(--red); }
+.q { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; counter-reset: q; }
+.q li { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; display: grid; grid-template-columns: 30px 1fr; gap: 10px; }
+.q li::before { counter-increment: q; content: counter(q); font-family: var(--display); color: var(--red); }
+.q .rec { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+.sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0 0; }
+@media (max-width: 560px) { .sum { grid-template-columns: 1fr; } }
+.sum div { border: 1px solid var(--line); background: var(--panel); padding: 10px 12px; font-size: .9rem; }
+.sum b { display: block; font-family: var(--display); font-size: 1.1rem; }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Dot Opera Arcade · plan for approval · 29 Sep</div>
+  <h1>Carmen, beat by beat</h1>
+  <p class="lede">How the story and the instructions take turns. Nothing here is built yet. Approve it, change it, or answer the questions at the end, and the same grammar goes onto Il barbiere and La traviata.</p>
+
+  <h2>The grammar</h2>
+  <p>Every moment is one of two kinds, and the screen says which before the brain has to. A <b>WATCH</b> beat is a cutscene: letterbox bars, a story caption, nothing to do. A <b>PLAY</b> beat is a microgame: the fuse bar, a verb, one input icon, and it only appears when there is something to do. The player never has to guess.</p>
+  <div class="grammar">
+    <div class="kind watch">
+      <div class="eyebrow">WATCH</div>
+      <div class="screen">
+        <div class="bar top"></div><div class="bar bot"></div>
+        <div class="fig j"></div><div class="fig c"></div>
+        <div class="cap">JOSÉ IS HER GUARD.</div>
+      </div>
+      <ul>
+        <li>Letterbox bars top and bottom. No fuse. No verb.</li>
+        <li>One caption, present tense, typed in on the beat. It says what is happening and who feels what.</li>
+        <li>Characters move on their own. The music carries on.</li>
+        <li>Four to six seconds. A tap skips nothing on the first play (question 3).</li>
+      </ul>
+    </div>
+    <div class="kind play">
+      <div class="eyebrow">PLAY</div>
+      <div class="screen">
+        <div class="fuse"></div>
+        <div class="verb">UNTIE!</div>
+        <div class="hint">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#f4b93a" stroke-width="1.5" class="ripple"/><rect class="finger m" x="10" y="6" width="4" height="12" rx="2" fill="#f4e9d8"/></svg>
+          TAP TAP TAP
+        </div>
+        <div class="fig j"></div><div class="fig c"></div>
+      </div>
+      <ul>
+        <li>The verb card snaps in with its input icon under it: <span class="instr">UNTIE! <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span></li>
+        <li>The fuse burns along the top for exactly the play window, then stops.</li>
+        <li>The icon stays beside the character until the first correct input, then fades.</li>
+        <li>Win or lose lands in the first frame after, and the story is the same either way.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Four inputs, four pictograms</h2>
+  <p>Only these four, so a player learns them in the first opera and never again. Touch and mouse are the same gesture. The keyboard is a courtesy, shown small on desktop.</p>
+  <div class="icons">
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="34" r="6" fill="none" stroke="var(--gold)" stroke-width="2" class="ripple"/><rect class="finger" x="24" y="12" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">TAP</div>
+      <div>once, or when the thing glows</div>
+      <div class="key">Space · click</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="34" r="6" fill="none" stroke="var(--gold)" stroke-width="2" class="ripple"/><rect class="finger m" x="24" y="12" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">TAP TAP TAP</div>
+      <div>as fast as you can</div>
+      <div class="key">Space, repeatedly</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="30" r="14" fill="none" stroke="var(--line)" stroke-width="3"/><circle cx="28" cy="30" r="14" fill="none" stroke="var(--gold)" stroke-width="3" class="holdarc" transform="rotate(-90 28 30)"/><rect class="finger h" x="24" y="19" width="8" height="22" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">HOLD</div>
+      <div>keep it pressed</div>
+      <div class="key">hold Space</div>
+    </div>
+    <div class="icon">
+      <svg viewBox="0 0 56 56" aria-hidden="true"><path d="M8 44h40" stroke="var(--line)" stroke-width="2"/><path d="M6 44l5-4v8zM50 44l-5-4v8z" fill="var(--gold)"/><rect class="finger d" x="24" y="14" width="8" height="24" rx="4" fill="var(--fg)"/></svg>
+      <div class="name">DRAG</div>
+      <div>slide left and right</div>
+      <div class="key">← → arrows</div>
+    </div>
+  </div>
+
+  <h2>The timeline</h2>
+  <p>Fourteen beats, about 95 seconds. Six to play, seven to watch, one to feel. Times are targets at the act's tempo. Captions are the exact words on screen; character tags sit beside the speaker as now.</p>
+  <ol class="tl">
+
+    <li class="beat watch"><div class="t">0:00<b>title</b></div><div>
+      <h3>CARMEN <span>title card</span></h3>
+      <dl><dt>See</dt><dd>Seville, sand-lit. Carmen in the doorway. The title.</dd>
+      <dt>Hear</dt><dd>Habanera bass alone, waiting.</dd>
+      <dt>Do</dt><dd><span class="instr">TAP TO BEGIN <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> The only instruction on the card. Starts the sound.</dd></dl>
+    </div></li>
+
+    <li class="beat watch"><div class="t">0:03<b>5 s</b></div><div>
+      <h3>Seville <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>The square. The crowd turns as Carmen walks to the factory door. José on guard, not looking. She looks at him.</dd>
+      <dt>Hear</dt><dd>The Habanera, "L'amour est un oiseau rebelle", verified.</dd>
+      <dt>Caption</dt><dd><span class="cap">SEVILLE. THE CIGARETTE FACTORY.</span><br><span class="cap">EVERYONE LOOKS AT CARMEN. EXCEPT JOSÉ.</span></dd>
+      <dt>Story</dt><dd>Who she is, who he is, and that she has chosen him before he knows it.</dd></dl>
+    </div></li>
+
+    <li class="beat play"><div class="t">0:08<b>8 s</b></div><div>
+      <h3>CATCH! <span>PLAY · drag</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">DRAG TO CATCH THE FLOWER <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M3 18l3-3v6zM21 18l-3-3v6z" fill="currentColor"/></svg></span> She throws the cassia flower. Slide José under it. Only the flower and José are bright.</dd>
+      <dt>Win</dt><dd class="win">It lands in his hands. A heart. <span class="cap">HE CATCHES IT.</span></dd>
+      <dt>Lose</dt><dd class="lose">It lands in the dust. He bends and picks it up. <span class="cap">HE PICKS IT UP ANYWAY.</span></dd>
+      <dt>Then</dt><dd>Both: José holding the flower, Carmen gone inside. <span class="cap">HE KEEPS IT. HE IS LOST.</span></dd></dl>
+    </div></li>
+
+    <li class="beat watch"><div class="t">0:18<b>5 s</b></div><div>
+      <h3>The arrest <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>A fight in the factory (a flash, a scream, a knife-shaped shadow). Carmen marched out with her wrists tied. Zuniga hands her to José. Close-up on the rope.</dd>
+      <dt>Hear</dt><dd>Snare, the Habanera bass slowed, a whistle.</dd>
+      <dt>Caption</dt><dd><span class="cap">SHE CUTS A GIRL IN A FIGHT. SHE IS ARRESTED.</span><br><span class="cap">JOSÉ IS HER GUARD.</span></dd>
+      <dt>Story</dt><dd>Why she is tied, and why it is his problem.</dd></dl>
+    </div></li>
+
+    <li class="beat play"><div class="t">0:25<b>7 s</b></div><div>
+      <h3>UNTIE! <span>PLAY · tap tap tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TAP TAP TO UNTIE HER <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> Close on the wrists. Each tap loosens a coil; the coils are the meter, no bar.</dd>
+      <dt>Win</dt><dd class="win">The rope bursts. She's off.</dd>
+      <dt>Lose</dt><dd class="lose">She wriggles free of the last coil herself, pushes him over, and runs.</dd>
+      <dt>Then</dt><dd>Both: José on the ground, rope on the floor, Zuniga in the doorway. <span class="cap">SHE RUNS. JOSÉ GOES TO JAIL FOR HER.</span></dd></dl>
+    </div></li>
+
+    <li class="beat watch"><div class="t">0:34<b>5 s</b></div><div>
+      <h3>The tavern <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Lillas Pastia's. Dim, warm. Carmen dancing with her back to the door. José walks in with the flower, dried and grey.</dd>
+      <dt>Hear</dt><dd>The Habanera in the major, soft, a guitar arpeggio.</dd>
+      <dt>Caption</dt><dd><span class="cap">TWO MONTHS LATER. OUT OF JAIL.</span><br><span class="cap">HE KEPT THE FLOWER THE WHOLE TIME.</span></dd>
+      <dt>Story</dt><dd>Time has passed; the flower is now a relic; she has not been waiting.</dd></dl>
+    </div></li>
+
+    <li class="beat play"><div class="t">0:41<b>8 s</b></div><div>
+      <h3>HOLD! <span>PLAY · hold</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">HOLD TO MAKE IT BLOOM <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/></svg></span> José kneels and holds out the flower. While held it blooms red; let go and it wilts. A hold ring fills round the icon.</dd>
+      <dt>Win</dt><dd class="win">Full bloom. She turns. Petals.</dd>
+      <dt>Lose</dt><dd class="lose">It droops. She turns anyway and laughs.</dd>
+      <dt>Then</dt><dd>Both: the two of them face to face. <span class="cap">SHE WANTS HIM TO DESERT THE ARMY. HE DOES.</span></dd></dl>
+    </div></li>
+
+    <li class="beat watch"><div class="t">0:51<b>6 s</b></div><div>
+      <h3>Escamillo <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>The door bangs open. Escamillo in gold. The tavern cheers. Carmen looks at him. Cut to a close-up of José: he turns green from the feet up.</dd>
+      <dt>Hear</dt><dd>The Toreador refrain, verified, then a minor second underneath.</dd>
+      <dt>Caption</dt><dd><span class="cap">ESCAMILLO. THE TOREADOR.</span><br><span class="cap">JOSÉ IS JEALOUS.</span> <span class="tag">GREEN = JEALOUS</span></dd>
+      <dt>Story</dt><dd>The rival, and the colour rule spelled out once so it reads for the rest of the opera.</dd></dl>
+    </div></li>
+
+    <li class="beat play"><div class="t">0:59<b>8 s</b></div><div>
+      <h3>FLIP! <span>PLAY · tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TO TURN ALL 3 CARDS <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> The smugglers' camp at night. Carmen reads her fortune. The next card glows; tap when it glows. Three cards, three taps, three spades.</dd>
+      <dt>Win</dt><dd class="win">All three turned in time. She reads them twice.</dd>
+      <dt>Lose</dt><dd class="lose">The wind turns the rest. Same cards.</dd>
+      <dt>Then</dt><dd>Both: three spades on the table. <span class="cap">THE CARDS SAY DEATH. SHE SHRUGS.</span></dd></dl>
+    </div></li>
+
+    <li class="beat watch"><div class="t">1:09<b>4 s</b></div><div>
+      <h3>The bullring <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Seville again, the arena, the crowd. Carmen on Escamillo's arm. José's shadow at the gate, green-rimmed.</dd>
+      <dt>Hear</dt><dd>Toreador fanfare, the crowd wash.</dd>
+      <dt>Caption</dt><dd><span class="cap">SEVILLE. THE BULLRING. CARMEN IS WITH ESCAMILLO NOW.</span></dd>
+      <dt>Story</dt><dd>She has moved on; José has not; the two are in the same place.</dd></dl>
+    </div></li>
+
+    <li class="beat play"><div class="t">1:15<b>8 s</b></div><div>
+      <h3>GLORY! <span>PLAY · tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TO JUMP THE BULL <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> You are Escamillo. Three charges, alternating sides. Tap as the bull reaches you.</dd>
+      <dt>Win</dt><dd class="win">Three clean passes, OLÉ each time, roses.</dd>
+      <dt>Lose</dt><dd class="lose">Tossed, lands, gets up, bows anyway.</dd>
+      <dt>Then</dt><dd>Both: Escamillo saluting, the crowd on its feet, José's shadow closer. <span class="cap">THE CROWD IS HIS. JOSÉ WAITS OUTSIDE.</span></dd></dl>
+    </div></li>
+
+    <li class="beat watch"><div class="t">1:25<b>6 s</b></div><div>
+      <h3>Outside the arena <span>WATCH</span></h3>
+      <dl><dt>See</dt><dd>Empty square, cheers from inside. José walks to Carmen, a step on every beat. She does not move. He holds out her ring.</dd>
+      <dt>Hear</dt><dd>Ring-modulated tenor on the beat, the crowd far away.</dd>
+      <dt>Caption</dt><dd><span class="cap">JOSÉ BEGS HER TO COME BACK.</span><br><span class="tag">JAMAIS !</span> beside Carmen.</dd>
+      <dt>Story</dt><dd>The walk is watched, not played: it is his act, not the player's. This is the beat you said felt like accidentally dabbing her.</dd></dl>
+    </div></li>
+
+    <li class="beat play"><div class="t">1:33<b>6 s</b></div><div>
+      <h3>REJECT! <span>PLAY · tap</span></h3>
+      <dl><dt>Do</dt><dd><span class="instr">TAP TO THROW THE RING BACK <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span> The ring glows in her hand when he is close enough. One tap in the glow. Early taps: NOT YET.</dd>
+      <dt>Win</dt><dd class="win">She throws it in his face.</dd>
+      <dt>Lose</dt><dd class="lose">She lets it drop at his feet.</dd>
+      <dt>Then</dt><dd>Both: the ring on the ground between them. Silence. The knife. White flash. She falls. Two beats later, beside José: <span class="tag">MERDE !</span></dd></dl>
+    </div></li>
+
+    <li class="beat toy"><div class="t">1:41<b>12 s</b></div><div>
+      <h3>Libre <span>TOY · no fuse, no verb</span></h3>
+      <dl><dt>See</dt><dd>The stage empties to black. José alone, glowing faintly. Red petals begin to fall, slowly, everywhere. This is the poetic scene from the Dot Opera's last act, moved here where it belongs.</dd>
+      <dt>Hear</dt><dd>The lament: the fate motif slow on the bass, a long soprano line, the room opening. Two fortissimo red chords at the end, then blackout and silence.</dd>
+      <dt>Do</dt><dd>Nothing required. A touch or a drag anywhere stirs the petals and sounds a soft note (question 6). A tiny TAP icon appears once and fades on first touch.</dd>
+      <dt>Caption</dt><dd><span class="cap">SHE IS FREE.</span> Nothing else.</dd></dl>
+    </div></li>
+
+    <li class="beat watch"><div class="t">1:55<b>result</b></div><div>
+      <h3>The card <span>result</span></h3>
+      <dl><dt>See</dt><dd>Six marks, bravos out of six, one line of ending. <span class="cap">CARMEN IS DEAD. IT WAS NEVER UP TO YOU.</span></dd>
+      <dt>Do</dt><dd><span class="instr">TAP TO PLAY AGAIN <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10" y="6" width="4" height="12" rx="2" fill="currentColor"/></svg></span></dd></dl>
+    </div></li>
+  </ol>
+
+  <div class="sum">
+    <div><b>6</b>to play: drag, tap tap tap, hold, tap, tap, tap</div>
+    <div><b>7</b>to watch, four to six seconds each, one caption each</div>
+    <div><b>~95 s</b>title to result, with the petals given their time</div>
+  </div>
+
+  <h2>What this changes in the build</h2>
+  <ul class="rules">
+    <li><b>1</b><span>The runner gets a third kind of beat, WATCH, with letterbox bars, a typed caption and no fuse. The curtain cards go: the WATCH beats do their job with story instead of a title. The act counter stays tiny in the corner.</span></li>
+    <li><b>2</b><span>The command card carries the verb, the full instruction line and the input icon: <span class="cap">CATCH!</span> big, <span class="cap">DRAG TO CATCH THE FLOWER</span> under it, the icon animating. The icon then sits beside the character until the first correct input.</span></li>
+    <li><b>3</b><span>The four icons live in the runner and every opera uses only those four. Counts go in the words when they matter (ALL 3 CARDS).</span></li>
+    <li><b>4</b><span>Touch and mouse become direct: tap and drag anywhere on the stage. The on-screen gamepad goes (question 2).</span></li>
+    <li><b>5</b><span>Carmen's Act I becomes CATCH again; the petals move to the end as the lament. The toy at the end has no fuse and no verb, only the one small icon.</span></li>
+    <li><b>6</b><span>Plot points get their own WATCH beats and close-ups: the arrest, the two months, Escamillo's entrance with JOSÉ IS JEALOUS, the bullring.</span></li>
+  </ul>
+
+  <h2>Questions for you</h2>
+  <ol class="q">
+    <li><div>Length. With seven WATCH beats and the petals, Carmen runs about 95 seconds, not "about a minute". Keep the story and accept 90 to 100 seconds, or cut the WATCH beats to three seconds each and lose some of the telling?<div class="rec">My recommendation: accept the length. The story was the thing you said was missing.</div></div></li>
+    <li><div>Input. Drop the on-screen gamepad and make touch and mouse direct (tap anywhere, drag anywhere), with the keyboard as a courtesy for desktop?<div class="rec">My recommendation: yes. Four gestures, one grammar, no controller chrome on the stage.</div></div></li>
+    <li><div>Skipping. Can a tap during a WATCH beat skip it? On a first play I'd say no (the story is the point); on a replay after the result card, yes.<div class="rec">My recommendation: skippable only on replays.</div></div></li>
+    <li><div>The finale. Keep the ring as the last PLAY (her defiance is hers to do), with the knife always following? Or make the whole ending a WATCH beat and let the cards be the last thing the player does?<div class="rec">My recommendation: keep the ring as a play. Losing it (letting it drop) is still hers.</div></div></li>
+    <li><div>Narration voice. Present tense, short, a little dry: HE KEEPS IT. HE IS LOST. / SHE SHRUGS. Is that the register, or warmer and more operatic?<div class="rec">My recommendation: this register. It is the wink's register, so the wink doesn't jump out of nowhere.</div></div></li>
+    <li><div>The petals. Purely watched, or does a touch stir them and sound a note? And should José walk in them (drag) or stand still and glow?<div class="rec">My recommendation: he stands and glows; a touch stirs the petals and plays a note. Playful, but the scene stays hers.</div></div></li>
+    <li><div>Score. Six bravos or a simpler "you saw the whole opera" card with no count, now that the story is doing more of the work?<div class="rec">My recommendation: keep the count. It is the reason to play twice.</div></div></li>
+    <li><div>Order of work. Carmen first end to end on this grammar, then the same runner changes flow into the other two with their own timelines for approval?<div class="rec">My recommendation: yes, and the runner changes (WATCH beats, icons, direct touch) are shared, so the other two are mostly writing.</div></div></li>
+  </ol>
+</div>
