@@ -1,0 +1,5 @@
+{
+  "title": "CARMEN",
+  "sources": ["../../lib/synth.js", "../../lib/pixels.js", "../../lib/microgame.js", "game.js"],
+  "gate": 65536
+}

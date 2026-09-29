@@ -41,12 +41,25 @@ Dot Opera's engine (`src/engine/`) is a timeline: `build(k)` schedules lights an
 - Headless deterministic stepping (`setHeadlessMode`, `setEngineManualStep`, `engineStep(n)`) for tests of time-driven logic without a browser.
 - Save data (`readSaveData`, `writeSaveData`, always an object), medals, a UI system with buttons and sliders if we ever want a menu drawn on the canvas.
 
-## Things to decide when the examples arrive
+## The decisions, 28 Sep
 
-- **The grid.** Keep the 9x9 dot identity or let a game be its own shape. `hello` keeps it: `drawCircle` for 81 discs is nothing for the batcher; hundreds of moving dots want atlas tiles instead.
+Iain's answers to the eight questions the microgame treatments raised, and what they mean for the code:
+
+- **Look:** 8-bit sprites, a new look, not the dot grid. 256x144 landscape, pixel-doubled sprites drawn in code (`lib/pixels.js`), a 3x5 font. Dot Opera stays its own series.
+- **Input:** keyboard first (Left, Right, Space), LittleJS's on-screen gamepad on phones (a d-pad and one button). The runner reads both through one helper.
+- **Sound:** the Dot Opera synth, ported (`lib/synth.js`), for the arias and the drama. ZzFX stays available for arcade hits.
+- **Ending:** a result card, bravos out of six and one line of story. The story never changes with the score.
+- **Jobs:** one per microgame. The treatments' second jobs (steer José's eyes while mashing) are flavour or dropped.
+- **Wink:** yes, one per opera, in the last outcome. Commands and captions in English only.
+- **Form:** six acts on a beat grid (curtain 4 beats, command 1, action 8 to 16, outcome 4 beats and at least 3 s), a shared runner (`lib/microgame.js`), one file per opera.
+
+## Things still open
+
 - **Chrome.** The Dot Opera shell (title, MENU, PLAY, pause, the language toggle) is HTML around the grid. The arcade page is a bare canvas; the chrome can be DOM again over it, or drawn. Iain's rule that the buttons never move still holds.
 - **Review tooling.** The opera's step mode (`?step=N`) rebuilt the whole timeline at a frame. A game cannot be rebuilt at a frame, but headless stepping plus screenshots (`SHOT=dir npm test`) covers most of it, and a `?seed=` and a replay of inputs would make a play reproducible.
-- **Budget.** A gate per game once we know the shape. The build's default is 64 KB; hello is 16 KB.
+- **Budget.** A gate per game once we know the shape. The build's default is 64 KB; an opera is about 26 KB, hello 16 KB.
+- **The tunes.** Every quoted phrase is written from memory as scale degrees and marked so in the game file. Check them against the scores before anyone hears them as the real thing.
+- **Sound, unheard.** Nothing here has been listened to. The synth graph runs without errors in headless Chromium, which is all the tests can say.
 
 ## Commands
 
