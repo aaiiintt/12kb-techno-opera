@@ -18,6 +18,8 @@ Budget: $70 for the redesign pass, set 29 Sep. Tokens are estimates: the harness
 
 
 | 29 Sep | Fable | the Carmen timeline document, its revision, the runner rewrite (WATCH beats, cards, icons, direct input), Carmen rebuilt to the timeline, gallery loops | ~350k in (cached context), ~45k out | ~$8 |
+| 29 Sep | Sonnet 5.5 x2, Barber and Traviata agents | each opera rewritten to its timeline on the new runner, gallery loops: Barber 237k, Traviata 241k tokens (reported) | 478k | ~$2.3 |
+| 29 Sep | Fable | skill rewrite, the two timelines, runner fixes, reviewing the sheets, ledgers | ~250k in (cached), ~25k out | ~$5 |
 
 Agent lines are priced at an assumed 85% input / 15% output split of the reported total.
-Running total: about $59 of $70.
+Running total: about $66 of $70.
