@@ -30,7 +30,7 @@ All are pure white, so `drawTile`'s color arg multiplies to any hue. `glow` and 
 
 ## Quick start
 
-1. Wire `textureGenerator.js` — a `<script>` tag in `index.html` (after the engine, before `game.js`) AND a `sources` entry in `build.json` if the project has one. In this repo it is vendored at `arcade/lib/textureGenerator.js`; a game under `arcade/games/<id>/` loads it as `<script src=../../lib/textureGenerator.js></script>` and lists `../../lib/textureGenerator.js` in its `build.json` sources. Never copy it into a game folder.
+1. Wire `textureGenerator.js` — a `<script>` tag in `index.html` (after the engine, before `game.js`) AND a `sources` entry in `build.json` if the project has one. If the project doesn't already contain it, copy it from this plugin: `${CLAUDE_SKILL_DIR}/../../templates/textureGenerator.js` → the project's `templates/` folder (create it), then load it with `<script src=templates/textureGenerator.js></script>`. In a clone of the LittleJS-AI repo, games under `examples/<name>/` load it as `../../templates/textureGenerator.js` instead — never copy it there.
 
 2. Bake the atlas once in `gameInit` and keep the returned name→TileInfo map:
 

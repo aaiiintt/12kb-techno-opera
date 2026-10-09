@@ -1,0 +1,16 @@
+{
+  "name": "rave-games",
+  "private": true,
+  "description": "Gaz '89: twelve very small games about getting to a rave. A fork of Dot Opera.",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/smoke.mjs",
+    "walk": "node test/walk.mjs",
+    "serve": "python3 -m http.server 4175",
+    "review": "npm run build && npm test && npm run walk"
+  },
+  "devDependencies": {
+    "littlejsengine": "^1.27.0",
+    "terser": "^5"
+  }
+}

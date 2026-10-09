@@ -5,16 +5,16 @@ description: Use when you need the exact signature, parameter order, defaults, o
 
 # littlejs-api
 
-The curated LittleJS API reference (vendored from KilledByAPixel/LittleJS-AI, MIT) lives beside this skill at:
+The curated LittleJS API reference ships with this plugin at:
 
-`.claude/skills/littlejs-api/reference.md`
+`${CLAUDE_SKILL_DIR}/../../reference.md`
 
-npm does not ship REFERENCE.md, so when `reference.md` here is not enough read the engine source in `arcade/node_modules/littlejsengine/src/*.js`, or the upstream sheet at https://github.com/KilledByAPixel/LittleJS/blob/main/REFERENCE.md.
-
-It is ~900 lines / 48KB — do **NOT** read the whole file into context. Grep it for the symbol you need and read only the surrounding lines:
+It is ~2300 lines / 180KB — do **NOT** read the whole file into context. Grep it for the symbol you need and read only the surrounding lines:
 
 - Look up one symbol: grep for the symbol name (e.g. `ParticleEmitter`, `drawTile`, `tileCollisionTest`) and read ~20 lines around the first hit — entries are one-line signatures with a trailing `//` comment, grouped in sections.
-- Broader area (e.g. "what sound functions exist?"): grep for the section keyword (`Audio`, `Input`, `Drawing`, `Particles`, `Tile Collision`) and skim that section only.
-- If a symbol is NOT in the reference, verify against the engine build itself before concluding it exists: grep `arcade/node_modules/littlejsengine/dist/littlejs.js` for it (run `npm install` in `arcade/` first if it is missing). Trust the engine source over memory.
+- Broader area (e.g. "what sound functions exist?"): grep for the section heading (`## LittleJS` lists them all — `Drawing System`, `Audio System`, `Input System`, `Object System`, `Tile Layer System`, `Particle System`, `3D Math`, `3D Rendering`, `3D Levels`, `Tweakables`, `Level Editor`, `Post Processing`, `Box2D Physics`, ...) and skim that section only. The 3D Rendering section alone is ~600 lines, so inside it grep for the symbol rather than reading it through.
+- Renamed or removed symbols: check the `## Deprecated` section at the end.
+- The reference links to `EDITOR.md` (customizing the level editors). It is bundled with the **custom-level-editor** skill, at `${CLAUDE_SKILL_DIR}/../custom-level-editor/EDITOR.md` — use that skill for anything about level editors.
+- If a symbol is NOT in the reference, verify against the engine build itself before concluding it exists: grep `${CLAUDE_SKILL_DIR}/../../dist/littlejs.js` for it. Trust the engine source over memory.
 
 For engine *conventions and pitfalls* (argument-order traps, per-frame vs per-second units, naming rules), use the **littlejs-conventions** skill instead — this skill is only for exact API lookup.

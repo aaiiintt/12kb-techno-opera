@@ -1,0 +1,7 @@
+{
+  "title": "GAZ '89",
+  "plugins": ["lightSystem"],
+  "libs": ["../../lib/synth.js", "../../lib/pixels.js", "../../lib/people.js", "../../lib/loops.js", "../../lib/shell.js"],
+  "levels": ["levels/01-bedroom.js"],
+  "gate": 131072
+}
